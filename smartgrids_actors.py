@@ -6,6 +6,7 @@ Created on Fri Sep 18 12:51:47 2020
 """
 import time
 import numpy as np
+import itertools as it
 
 import fonctions_auxiliaires as fct_aux
 
@@ -182,11 +183,68 @@ def test_classe_agent():
     Si_maxs = np.random.randint(1, 30, N_INSTANCE) + np.random.randn(1, N_INSTANCE) 
     gamma_is = np.random.randint(1, 3, N_INSTANCE) + np.random.randn(1, N_INSTANCE)
     
+    print("Pis={}, CiS={}, Sis={},Si_maxs={}, gamma_is={}"
+          .format(Pis.shape, Cis.shape, Sis.shape, Si_maxs.shape, gamma_is.shape))
+    
     # utiliser itertools pour des tuples de pi, ci, si, ...
     # creer des instances d'agents
-    # faire les fonctions. 
+    cpt_instance = 0
+    for ag in zip(Pis, Cis, Sis, Si_maxs, gamma_is):
+        print("ag={}".format(ag))
+        cpt_instance += 1
+        ai = Agent(*ag)
+    
+        # faire les fonctions. 
         # pour chaque fonction, calculer le rapport de ri = OK/(NOK+OK)
-    # les afflicher ces indicateurs ri
+        OK = 0;
+        nb = np.random.randint(1,30)
+        
+        # Pi
+        oldPi = ai.get_Pi(); ai.set_Pi(nb, True)
+        print("oldPi={}, nb={}, ai.get_Pi={}".format(oldPi, nb, ai.get_Pi()))
+        OK = OK+1 if ai.get_Pi() == oldPi+nb else OK-1
+        ai.set_Pi(oldPi, False)
+        
+        # Ci
+        oldCi = ai.get_Ci(); ai.set_Ci(nb, True)
+        OK = OK+1 if ai.get_Ci() == oldCi + nb else OK-1
+        ai.set_Ci(oldCi, False)
+        
+        # Si
+        oldSi = ai.get_Si(); ai.set_Si(nb, True)
+        OK = OK+1 if ai.get_Si() == oldSi + nb else OK-1
+        ai.set_Si(oldSi, False)
+        
+        # Si_max
+        oldSi_max = ai.get_Si_max()(); ai.set_Si_max(nb, True)
+        OK = OK+1 if ai.get_Si_max() == oldSi_max + nb else OK-1
+        ai.set_Si_max(oldPi, False)
+        
+        # gamma_i
+        oldGamma_i = ai.get_gamma_i(); ai.set_gamma_i(nb)
+        OK = OK+1 if ai.get_gamma_i() == nb else OK-1
+        ai.set_gamma_i(oldGamma_i)
+        
+        # state_i
+        OK_state = 0; OK_state_none = 0
+        state_i = ai.identify_state()
+        if state_i == "state1" and ai.get_Pi() + ai.get_Si() <= ai.get_Ci():
+            OK_state += 1
+        elif state_i == "state2" and ai.get_Pi() + ai.get_Si() > ai.get_Ci() \
+            and ai.get_Pi() < ai.get_Ci():
+                OK_state += 1
+        elif state_i == "state3" and ai.get_Pi() > ai.get_Ci():
+            OK_state += 1
+        elif state_i == None:
+            OK_state_none += 1
+            
+        # mode_i
+        
+        # afficher indicateurs
+        print("OK={}, OK_state={}, OK_state_none={}"
+              .format(OK, OK_state, OK_state_none))
+        
+    # les afficher ces indicateurs ri
     
 #------------------------------------------------------------------------------
 #           execution
