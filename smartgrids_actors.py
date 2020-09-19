@@ -48,7 +48,7 @@ class Agent:
         
         self.Pi = new_Pi if update==True else self.Pi + new_Pi
         """
-        self.Pi = (update==True)*new_Pi + (update==False)*(self.Pi + new_Pi)
+        self.Pi = (update==False)*new_Pi + (update==True)*(self.Pi + new_Pi)
             
     def get_Ci(self):
         """
@@ -78,7 +78,7 @@ class Agent:
         
         self.Si = new_Si if update==True else self.Si + new_Si
         """
-        self.Si = (update==True)*new_Si + (update==False)*(self.Si + new_Si)
+        self.Si = (update==False)*new_Si + (update==True)*(self.Si + new_Si)
         
     def get_Si_max(self):
         """
@@ -93,8 +93,8 @@ class Agent:
         
         self.Si = new_Pi if update==True else self.Pi + new_Pi
         """
-        self.Si_max = (update==True)*new_Si_max \
-                        + (update==False)*(self.Si_max + new_Si_max)
+        self.Si_max = (update==False)*new_Si_max \
+                        + (update==True)*(self.Si_max + new_Si_max)
                         
     def get_gamma_i(self):
         """
