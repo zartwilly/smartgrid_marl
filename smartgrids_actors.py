@@ -189,7 +189,7 @@ def test_classe_agent():
     # utiliser itertools pour des tuples de pi, ci, si, ...
     # creer des instances d'agents
     cpt_instance = 0
-    for ag in zip(Pis, Cis, Sis, Si_maxs, gamma_is):
+    for ag in np.concatenate((Pis, Cis, Sis, Si_maxs, gamma_is)).T:
         print("ag={}".format(ag))
         cpt_instance += 1
         ai = Agent(*ag)
@@ -216,7 +216,7 @@ def test_classe_agent():
         ai.set_Si(oldSi, False)
         
         # Si_max
-        oldSi_max = ai.get_Si_max()(); ai.set_Si_max(nb, True)
+        oldSi_max = ai.get_Si_max(); ai.set_Si_max(nb, True)
         OK = OK+1 if ai.get_Si_max() == oldSi_max + nb else OK-1
         ai.set_Si_max(oldPi, False)
         
@@ -246,10 +246,24 @@ def test_classe_agent():
         
     # les afficher ces indicateurs ri
     
+def test_merge_vars():
+    nitems = 5; init_val = 1;
+    a = np.arange(init_val,init_val+nitems).reshape((1,-1))
+    b = np.arange(init_val+nitems+1, init_val+2*nitems+1).reshape((1,-1))
+    c = np.arange(init_val+2*nitems+1, init_val+3*nitems+1).reshape((1,-1))
+    d = np.arange(init_val+3*nitems+1, init_val+4*nitems+1).reshape((1,-1))
+    e = np.arange(init_val+4*nitems+1, init_val+5*nitems+1).reshape((1,-1))
+    
+    print("a = {}".format(a.shape))
+    pars = np.concatenate([a,b,c,d,e])
+    
+    return pars
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
     test_classe_agent()
+    # y = test_merge_vars()
     print("classe agent runtime = {}".format(time.time() - ti))
