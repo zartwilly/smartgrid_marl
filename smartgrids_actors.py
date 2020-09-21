@@ -142,7 +142,7 @@ class Agent:
         mode_i, prod_i, cons_i
 
         """
-        res = (None, np.inf, np.inf)
+        res = (None, None, np.inf, np.inf)
         rd_num =  np.random.choice([0,1])
         if state_ai == None:
             print("Conditions non respectees pour state1,2,3")
@@ -152,13 +152,13 @@ class Agent:
             cons_i = (1-rd_num)*( self.Ci - (self.Pi - self.Si) ) \
                         + rd_num*(self.Ci - self.Pi) 
             self.Si = (1-rd_num)*0 + rd_num * self.Si
-            res = (mode_i, prod_i, cons_i)
+            res = (state_ai, mode_i, prod_i, cons_i)
         elif state_ai == "state2":
             mode_i = STATE2_STRATS[rd_num]
             prod_i = 0
             cons_i = (1-rd_num)*(self.Ci - self.Pi) + rd_num*0
             self.Si = (1-rd_num)*0 + rd_num*(self.Si - (self.Ci - self.Pi))
-            res = (mode_i, prod_i, cons_i)
+            res = (state_ai, mode_i, prod_i, cons_i)
         elif state_ai == "state3":
             mode_i = STATE3_STRATS[rd_num]
             cons_i = 0
@@ -169,9 +169,9 @@ class Agent:
             prod_i = (1-rd_num)*(self.Pi - self.Ci) \
                         + rd_num*fct_aux.fct_positive(sum([self.Pi]), 
                                                       sum([self.Ci, Ri]))
-            res = (mode_i, prod_i, cons_i)
+            res = (state_ai, mode_i, prod_i, cons_i)
         return res
-    
+
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------
@@ -234,23 +234,23 @@ def test_classe_agent():
         OK = OK+1 if ai.get_gamma_i() == nb else OK-1
         ai.set_gamma_i(oldGamma_i)
         
-        # state_i
+        # state_ai
         OK_state = 0; OK_state_none = 0
-        state_i = ai.identify_state()
-        if state_i == "state1" and ai.get_Pi() + ai.get_Si() <= ai.get_Ci():
+        state_ai = ai.identify_state()
+        if state_ai == "state1" and ai.get_Pi() + ai.get_Si() <= ai.get_Ci():
             OK_state += 1
-        elif state_i == "state2" and ai.get_Pi() + ai.get_Si() > ai.get_Ci() \
+        elif state_ai == "state2" and ai.get_Pi() + ai.get_Si() > ai.get_Ci() \
             and ai.get_Pi() < ai.get_Ci():
                 OK_state += 1
-        elif state_i == "state3" and ai.get_Pi() > ai.get_Ci():
+        elif state_ai == "state3" and ai.get_Pi() > ai.get_Ci():
             OK_state += 1
-        elif state_i == None:
+        elif state_ai == None:
             OK_state_none += 1
             OK_state += -1
             
         # mode_i
-        if state_i in ["state1", "state2", "state3"]:
-            mode_i,  prod_i, cons_i = ai.select_mode(state_i)
+        if state_ai in ["state1", "state2", "state3"]:
+            state_ai, mode_i,  prod_i, cons_i = ai.select_mode(state_ai)
             if mode_i != None and prod_i != np.inf and cons_i != np.inf:
                 OK += 1
         
