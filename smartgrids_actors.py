@@ -6,11 +6,10 @@ Created on Fri Sep 18 12:51:47 2020
 """
 import time
 import numpy as np
-import itertools as it
 
 import fonctions_auxiliaires as fct_aux
 
-N_INSTANCE = 10
+N_INSTANCE = 100
 
 MODES = ("CONS","PROD","DIS")
 
@@ -177,6 +176,14 @@ class Agent:
 #           unit test of functions
 #------------------------------------------------------------------------------
 def test_classe_agent():
+    """
+    Verify if each function runs without problems.
+
+    Returns
+    -------
+    None.
+
+    """
     Pis = np.random.randint(1, 30, N_INSTANCE) + np.random.randn(1, N_INSTANCE)
     Cis = np.random.randint(1, 30, N_INSTANCE) + np.random.randn(1, N_INSTANCE)
     Sis = np.random.randint(1, 15, N_INSTANCE) + np.random.randn(1, N_INSTANCE) 
@@ -188,9 +195,9 @@ def test_classe_agent():
     
     # utiliser itertools pour des tuples de pi, ci, si, ...
     # creer des instances d'agents
-    cpt_instance = 0
+    cpt_instance = 0; nb_test = 7; nb_ok = 0;
     for ag in np.concatenate((Pis, Cis, Sis, Si_maxs, gamma_is)).T:
-        print("ag={}".format(ag))
+        # print("ag={}".format(ag))
         cpt_instance += 1
         ai = Agent(*ag)
     
@@ -201,9 +208,11 @@ def test_classe_agent():
         
         # Pi
         oldPi = ai.get_Pi(); ai.set_Pi(nb, True)
-        print("oldPi={}, nb={}, ai.get_Pi={}".format(oldPi, nb, ai.get_Pi()))
+        # print("* oldPi={}, nb={}, ai.get_Pi={}".format(oldPi, nb, ai.get_Pi()))
         OK = OK+1 if ai.get_Pi() == oldPi+nb else OK-1
         ai.set_Pi(oldPi, False)
+        # print("ai.get_Pi={}".format(ai.get_Pi()))
+        
         
         # Ci
         oldCi = ai.get_Ci(); ai.set_Ci(nb, True)
@@ -237,14 +246,23 @@ def test_classe_agent():
             OK_state += 1
         elif state_i == None:
             OK_state_none += 1
+            OK_state += -1
             
         # mode_i
+        if state_i in ["state1", "state2", "state3"]:
+            mode_i,  prod_i, cons_i = ai.select_mode(state_i)
+            if mode_i != None and prod_i != np.inf and cons_i != np.inf:
+                OK += 1
         
-        # afficher indicateurs
-        print("OK={}, OK_state={}, OK_state_none={}"
-              .format(OK, OK_state, OK_state_none))
         
-    # les afficher ces indicateurs ri
+        # afficher indicateurs et calcul nb_ok
+        nb_ok += (OK + OK_state)/nb_test
+        # print("OK={}, OK_state={}, OK_state_none={}"
+                # .format(OK, OK_state, OK_state_none))
+        
+    # les afficher ces indicateurs rp
+    rp = round(nb_ok/N_INSTANCE, 3)
+    print("rapport execution rp={}".format(rp))
     
 def test_merge_vars():
     nitems = 5; init_val = 1;
