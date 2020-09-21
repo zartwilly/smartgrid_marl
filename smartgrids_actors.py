@@ -14,8 +14,15 @@ N_INSTANCE = 100
 MODES = ("CONS","PROD","DIS")
 
 STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
+STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
+STATE3_STRATS = ("DIS", "PROD")                                                # strategies possibles pour l'etat 3 de a_i
+"""
+STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
 STATE2_STRATS = ("CONS-", "DIS")                                               # strategies possibles pour l'etat 2 de a_i
 STATE3_STRATS = ("PROD", "DIS")                                                # strategies possibles pour l'etat 3 de a_i
+
+"""
+
 
 class Agent:
     
@@ -141,6 +148,11 @@ class Agent:
         -------
         mode_i, prod_i, cons_i
 
+        STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
+        STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
+        STATE3_STRATS = ("DIS", "PROD")                                                # strategies possibles pour l'etat 3 de a_i
+        
+
         """
         res = (None, None, np.inf, np.inf)
         rd_num =  np.random.choice([0,1])
@@ -156,22 +168,32 @@ class Agent:
         elif state_ai == "state2":
             mode_i = STATE2_STRATS[rd_num]
             prod_i = 0
-            cons_i = (1-rd_num)*(self.Ci - self.Pi) + rd_num*0
-            self.Si = (1-rd_num)*0 + rd_num*(self.Si - (self.Ci - self.Pi))
+            cons_i = rd_num*(self.Ci - self.Pi) + (1-rd_num)*0
+            self.Si = rd_num*0 + (1-rd_num)*(self.Si - (self.Ci - self.Pi))
             res = (state_ai, mode_i, prod_i, cons_i)
         elif state_ai == "state3":
             mode_i = STATE3_STRATS[rd_num]
             cons_i = 0
-            self.Si = (1-rd_num)*self.Si \
-                        + rd_num*(max(self.Si_max, 
-                                       self.Si + (self.Pi - self.Ci))) 
+            self.Si = rd_num*self.Si \
+                        + (1-rd_num)*(max(self.Si_max, 
+                                          self.Si + (self.Pi - self.Ci))) 
             Ri = self.Si_max - self.Si
-            prod_i = (1-rd_num)*(self.Pi - self.Ci) \
-                        + rd_num*fct_aux.fct_positive(sum([self.Pi]), 
+            prod_i = rd_num*(self.Pi - self.Ci) \
+                        + (1-rd_num)*fct_aux.fct_positive(sum([self.Pi]), 
                                                       sum([self.Ci, Ri]))
             res = (state_ai, mode_i, prod_i, cons_i)
         return res
+    
+    def compute_ri(self, state_ai):
+        """
+        ri is the energy stored or preserved by the agent.
 
+        Returns
+        -------
+        .
+
+        """
+        if 
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------
