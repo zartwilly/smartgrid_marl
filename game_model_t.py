@@ -94,7 +94,7 @@ def select_storage_politic(ai, state_ai, mode_i, Ci_t_plus_1, Pi_t_plus_1,
             Z = X + (Y-X)*res
             ai.set_gamma_i(math.floor(Z))
     
-def generate_players():
+def generate_players(case=3, low_Pi=1, high_Pi=30):
     """
     generate N_PLAYERS+1 players.
 
@@ -103,8 +103,60 @@ def generate_players():
     list of N+1 players of type Agents
 
     """
+    Cis = np.random.randint(low_Pi, high_Pi, M_PLAYERS) \
+            + np.random.randn(low_Pi, M_PLAYERS)
     
-    return None
+    low = 0; high = 0.3
+    if case == 1:
+        low = 0.75; high = 1.5
+    elif case == 2:
+        low = 0.4; high = 0.75
+    else:
+        low = 0; high = 0.3
+    Pis = np.array(list(map(lambda x: np.random.randn()*(high-low)*x+low*x, 
+                            Cis.reshape(-1))))\
+                        .reshape(1, -1)
+    Si_maxs = np.random.randint(1, 30, M_PLAYERS).reshape(1,-1)
+    Sis = np.array(list(map(lambda x: np.random.randn()*(1-low)*x+low*x, 
+                            Si_maxs.reshape(-1))))\
+                    .reshape(1,-1)
+    
+    #TODO create a agent with prod_i, cons_i, state_ai, mode_i
+    
+    return Pis, Cis, Si_maxs, Sis
+
+# ###############################################################################
+# def random_range_numbers(array, low, high, decrease="yes"):
+#     """
+#     generate a range of random numbers between inter_min and inter_max of 
+#     each item of array 
+
+#     Parameters
+#     ----------
+#     Si_maxs : TYPE
+#         DESCRIPTION.
+#     inter_min : TYPE
+#         DESCRIPTION.
+#     inter_max : TYPE
+#         DESCRIPTION.
+#     decrease : TYPE, optional
+#         DESCRIPTION. The default is "yes".
+
+#     Returns
+#     -------
+#     an np.array of the same shape of array. 
+
+#     """
+#     generate_around_item = np.random.randn()*(high-low)*x+low*x
+#     if decrease != "yes" or decrease != "no":
+#         return np.array(list(map(lambda x: np.random.randn()*(high-low)*x+low*x, 
+#                                  array.reshape(-1))))\
+#                         .reshape(1, -1)
+#     elif decrease == "yes":
+        
+#     else:
+#         None
+# ###############################################################################
 
 def create_strategy_profile():
     """
@@ -211,6 +263,10 @@ def test_select_storage_politic():
             
     print("test_select_storage_politic: OK = {}".format(round(OK/N_INSTANCE)))
         
+def test_generate_players():
+    Pis, Cis, Si_maxs, Sis = generate_players()
+    print("shapes: Pis={}, Cis={}, Si_maxs={}, Sis={}".format(
+            Pis.shape, Cis.shape, Si_maxs.shape, Sis.shape))
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -219,4 +275,5 @@ if __name__ == "__main__":
     test_compute_energy_unit_price()
     test_compute_utility_ai()
     test_select_storage_politic()
+    test_generate_players()
     print("runtime = {}".format(time.time() - ti))
