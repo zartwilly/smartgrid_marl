@@ -140,13 +140,14 @@ class Agent:
 
         return None
     
-    def select_mode(self, state_ai):
+    def select_mode_compute_r_i(self, state_ai):
         """
-        choose a mode for an agent under its state and its characteristics
+        choose a mode for an agent under its state and its characteristics 
+        and then compute ri, the energy stored or preserved by the agent.
 
         Returns
         -------
-        mode_i, prod_i, cons_i
+        state_ai, mode_i, prod_i, cons_i, r_i
 
         STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
         STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
@@ -154,7 +155,7 @@ class Agent:
         
 
         """
-        res = (None, None, np.inf, np.inf)
+        res = (None, None, np.inf, np.inf, np.inf)
         rd_num =  np.random.choice([0,1])
         if state_ai == None:
             print("Conditions non respectees pour state1,2,3")
@@ -164,36 +165,31 @@ class Agent:
             cons_i = (1-rd_num)*( self.Ci - (self.Pi - self.Si) ) \
                         + rd_num*(self.Ci - self.Pi) 
             self.Si = (1-rd_num)*0 + rd_num * self.Si
-            res = (state_ai, mode_i, prod_i, cons_i)
+            R_i = self.Si_max - self.Si
+            r_i = min(R_i, self.Ci - self.Pi) if mode_i == "CONS-" else 0 
+            res = (state_ai, mode_i, prod_i, cons_i, r_i)
         elif state_ai == "state2":
             mode_i = STATE2_STRATS[rd_num]
             prod_i = 0
             cons_i = rd_num*(self.Ci - self.Pi) + (1-rd_num)*0
+            #TODO demander si le r_i est mis avant ou apres la mise a jour de S_i
+            r_i = self.Si - (self.Ci - self.Pi) if mode_i == "DIS" else 0
             self.Si = rd_num*0 + (1-rd_num)*(self.Si - (self.Ci - self.Pi))
-            res = (state_ai, mode_i, prod_i, cons_i)
+            res = (state_ai, mode_i, prod_i, cons_i, r_i)
         elif state_ai == "state3":
             mode_i = STATE3_STRATS[rd_num]
             cons_i = 0
             self.Si = rd_num*self.Si \
                         + (1-rd_num)*(max(self.Si_max, 
-                                          self.Si + (self.Pi - self.Ci))) 
-            Ri = self.Si_max - self.Si
+                                          self.Si + (self.Pi - self.Ci)))
+            R_i = self.Si_max - self.Si
+            r_i = min(R_i, self.Pi - self.Ci) if mode_i == "DIS" else 0
             prod_i = rd_num*(self.Pi - self.Ci) \
                         + (1-rd_num)*fct_aux.fct_positive(sum([self.Pi]), 
-                                                      sum([self.Ci, Ri]))
-            res = (state_ai, mode_i, prod_i, cons_i)
+                                                      sum([self.Ci, R_i]))
+            res = (state_ai, mode_i, prod_i, cons_i, r_i)
         return res
     
-    def compute_ri(self, state_ai):
-        """
-        ri is the energy stored or preserved by the agent.
-
-        Returns
-        -------
-        .
-
-        """
-        if 
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------
@@ -272,8 +268,10 @@ def test_classe_agent():
             
         # mode_i
         if state_ai in ["state1", "state2", "state3"]:
-            state_ai, mode_i,  prod_i, cons_i = ai.select_mode(state_ai)
-            if mode_i != None and prod_i != np.inf and cons_i != np.inf:
+            state_ai, mode_i,  prod_i, cons_i, r_i = \
+                ai.select_mode_compute_r_i(state_ai)
+            if mode_i != None and prod_i != np.inf \
+                and cons_i != np.inf and r_i != np.inf:
                 OK += 1
         
         
