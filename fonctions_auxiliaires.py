@@ -32,6 +32,20 @@ def fct_positive(sum_list1, sum_list2):
     diff = 0 if sum_list1 - sum_list2 <= 0 else sum_list1 - sum_list2
     return diff
 
+def generate_energy_unit_price_SG(pi_hp_plus, pi_hp_minus):
+    """
+    generate intern cost and intern price of one unit of energy inside SG
+
+    Returns
+    -------
+    pi_0_plus, pi_0_minus
+
+    """
+    rd_num = np.random.random()
+    pi_0_plus = pi_hp_plus * rd_num
+    pi_0_minus = pi_hp_minus * rd_num
+    return pi_0_plus, pi_0_minus
+     
 
 #------------------------------------------------------------------------------
 #           unit test of functions
@@ -61,12 +75,27 @@ def test_fct_positive():
             # print("NOK2, n={} {}>{} => diff={}"\
             #       .format(n, sum(list1), sum(list2), diff))
                 
-    print("%OK={}, %NOK={}".format(OK/(OK+NOK), NOK/(OK+NOK)))
+    print("fct_positive: %OK={}, %NOK={}".format(OK/(OK+NOK), NOK/(OK+NOK)))
       
+    
+def test_generate_energy_unit_price_SG():
+    N = 10
+    pi_hp_plus = np.random.random_sample(N) * 20
+    pi_hp_minus = np.random.random_sample(N) * 20
+    res = np.array(list(map(generate_energy_unit_price_SG, 
+                                     *(pi_hp_plus, pi_hp_minus))))
+    
+    pi_0_plus, pi_0_minus = res[:,0], res[:,1]
+    if (pi_0_plus<pi_hp_plus).all() and (pi_0_minus<pi_hp_minus).all():
+        print("generate_energy_unit_price_SG: OK")
+    else:
+        print("generate_energy_unit_price_SG: NOK")
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------    
 if __name__ == "__main__":
     ti = time.time()
     test_fct_positive()
-    print("fct_positive runtime = {}".format(time.time() - ti))
+    test_generate_energy_unit_price_SG()
+    print("runtime = {}".format(time.time() - ti))
