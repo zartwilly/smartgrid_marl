@@ -84,15 +84,20 @@ def select_storage_politic(ai, state_ai, mode_i, Ci_t_plus_1, Pi_t_plus_1,
         
     
     if fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_minus:
-        ai.set_gamma_i(X-1)
+        # ai.set_gamma_i(X-1)
+        return X-1
     elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_plus:
-        ai.set_gamma_i(Y-1)
+        # ai.set_gamma_i(Y-1)
+        return Y-1
     elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_minus and \
         fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_plus:
             res = (fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1)- Si_minus)\
                    / (Si_plus - Si_minus)
             Z = X + (Y-X)*res
-            ai.set_gamma_i(math.floor(Z))
+            # ai.set_gamma_i(math.floor(Z))
+            return math.floor(Z)
+    else:
+        return None
     
 def generate_players(case=3, low_Pi=1, high_Pi=30):
     """
@@ -106,6 +111,7 @@ def generate_players(case=3, low_Pi=1, high_Pi=30):
     Cis = np.random.randint(low_Pi, high_Pi, M_PLAYERS) \
             + np.random.randn(low_Pi, M_PLAYERS)
     
+    # generate Pi, Si, Si_max
     low = 0; high = 0.3
     if case == 1:
         low = 0.75; high = 1.5
@@ -120,8 +126,34 @@ def generate_players(case=3, low_Pi=1, high_Pi=30):
     Sis = np.array(list(map(lambda x: np.random.randn()*(1-low)*x+low*x, 
                             Si_maxs.reshape(-1))))\
                     .reshape(1,-1)
+    gamma_is = np.zeros(shape=(1,M_PLAYERS))
+    
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = \
+        np.random.random_sample(), np.random.random_sample()
+    
+    # generate pi_0^{+,-}, pi_sg^{+,-}
+    pi_0_plus, pi_0_minus = fct_aux.generate_energy_unit_price_SG(
+                            pi_hp_plus, 
+                            pi_hp_minus)
     
     #TODO create a agent with prod_i, cons_i, state_ai, mode_i
+    for ag in np.concatenate((Pis, Cis, Sis, Si_maxs, gamma_is)).T:
+        ai = sg.Agent(*ag)
+        
+        # identify state_ai and others properties
+        state_ai, mode_i, prod_i, cons_i, r_i = ai.select_mode_compute_r_i(
+                                                    ai.identify_state())
+        # identify Ci_t_plus_1, Pi_t_plus_1
+        
+        # choose gamma_i
+        # new_gamma_i = select_storage_politic(
+        #                 ai, state_ai, mode_i, 
+        #                 Ci_t_plus_1, Pi_t_plus_1, 
+        #                 pi_0_plus, pi_0_minus, 
+        #                 pi_hp_plus, pi_hp_minus)
+        # ai.set_gamma_i(new_gamma_i)
+        
     
     return Pis, Cis, Si_maxs, Sis
 
@@ -252,11 +284,13 @@ def test_select_storage_politic():
         #       " cons_i={} cons_i={},".format(type(cons_i), cons_i)+
         #       " r_i={} r_i={},".format(type(r_i), r_i)+
         #       " gamma_i={} gamma_i={}.".format(type(ai.get_gamma_i()), ai.get_gamma_i()))
-              
-        select_storage_politic(ai, state_ai, mode_i, Ci_t_plus_1, Pi_t_plus_1, 
-                           pi_0_plus, pi_0_minus, pi_hp_plus, pi_hp_minus)
-        new_gamma_i = ai.get_gamma_i()
-        if gamma_i_old != new_gamma_i:
+           
+        new_gamma_i = select_storage_politic(ai, state_ai, mode_i, 
+                                             Ci_t_plus_1, Pi_t_plus_1, 
+                                             pi_0_plus, pi_0_minus, 
+                                             pi_hp_plus, pi_hp_minus)
+        ai.set_gamma_i(new_gamma_i) if new_gamma_i != None else None
+        if gamma_i_old != ai.get_gamma_i():
             OK += 1
             # print("gamma_i: cpt={}, old ={}, new ={}, type={} \n".format(
             #         cpt, gamma_i_old, new_gamma_i, type(new_gamma_i)))
@@ -275,5 +309,5 @@ if __name__ == "__main__":
     test_compute_energy_unit_price()
     test_compute_utility_ai()
     test_select_storage_politic()
-    test_generate_players()
+    # test_generate_players()
     print("runtime = {}".format(time.time() - ti))
