@@ -123,13 +123,19 @@ def generate_players(pi_hp_plus, pi_hp_minus,
         low = 0.4; high = 0.75
     else:
         low = 0; high = 0.3
-    Pis = np.array(list(map(lambda x: np.random.randn()*(high-low)*x+low*x, 
-                            Cis.reshape(-1))))\
-                        .reshape(1, -1)
+    
+    #### generate random number between CASE0*Ci et CASE1*Ci
+    inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
+    Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
+                for (low_item,high_item) in inters]).reshape((1,-1))
+    
+    
+    #### generate random number between CASE0*Si_max et CASE1*Si_max
     Si_maxs = np.random.randint(1, 30, M_PLAYERS).reshape(1,-1)
-    Sis = np.array(list(map(lambda x: np.random.randn()*(1-low)*x+low*x, 
-                            Si_maxs.reshape(-1))))\
-                    .reshape(1,-1)
+    inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
+    Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
+                for (low_item,high_item) in inters]).reshape((1,-1))
+    
     gamma_is = np.zeros(shape=(1,M_PLAYERS))
     
     # generate pi_0^{+,-}, pi_sg^{+,-}
@@ -332,7 +338,8 @@ def test_generate_players(case=3):
         elif case == 1:
             CASE = CASE1
         print("CASE={}".format(CASE))
-        if arr[0].Pi/arr[0].Ci <= CASE[1] and arr[0].Pi/arr[0].Ci >= CASE[0]:
+        if np.abs(arr[0].Pi/arr[0].Ci) <= CASE[1] and \
+            np.abs(arr[0].Pi/arr[0].Ci) >= CASE[0]:
             OK += 1
         nb_test_arr += 1
         # verify if gamma_i is diff of 0
@@ -342,9 +349,10 @@ def test_generate_players(case=3):
         #state_ai = 
         nb_test_ARR = nb_test_arr
         # print r_i
-        print("name={},gamma_i={}, state_i={}, mode_i={}, prod_i={}, cons_i={}, ri={}, nb_test_arr={}, OK={}"
-              .format(arr[0].name, arr[0].get_gamma_i(), arr[1], arr[2], arr[3], 
-                      arr[4], arr[5], nb_test_arr, OK))
+        # print("name={},gamma_i={}, state_i={}, mode_i={}, prod_i={}, cons_i={}, ri={}, nb_test_arr={}, OK={}"
+        #       .format(arr[0].name, arr[0].get_gamma_i(), arr[1], arr[2], arr[3], 
+        #               arr[4], arr[5], nb_test_arr, OK))
+        print("case={}, rap={}".format(CASE, round(arr[0].Pi/arr[0].Ci, 2)))
         pass
     
     print("test_generate_players: OK={}".format( 
