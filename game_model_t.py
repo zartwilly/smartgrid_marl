@@ -176,52 +176,21 @@ def generate_players(pi_hp_plus, pi_hp_minus,
     
     return arr_AG
 
-# ###############################################################################
-# def random_range_numbers(array, low, high, decrease="yes"):
-#     """
-#     generate a range of random numbers between inter_min and inter_max of 
-#     each item of array 
-
-#     Parameters
-#     ----------
-#     Si_maxs : TYPE
-#         DESCRIPTION.
-#     inter_min : TYPE
-#         DESCRIPTION.
-#     inter_max : TYPE
-#         DESCRIPTION.
-#     decrease : TYPE, optional
-#         DESCRIPTION. The default is "yes".
-
-#     Returns
-#     -------
-#     an np.array of the same shape of array. 
-
-#     """
-#     generate_around_item = np.random.randn()*(high-low)*x+low*x
-#     if decrease != "yes" or decrease != "no":
-#         return np.array(list(map(lambda x: np.random.randn()*(high-low)*x+low*x, 
-#                                  array.reshape(-1))))\
-#                         .reshape(1, -1)
-#     elif decrease == "yes":
-        
-#     else:
-#         None
-# ###############################################################################
-
 def create_strategy_profile():
     """
     create a serie of players having a decision of state and a mode. 
     gamma_i is chosen following the formula on the document.
         
-    
+    JE PENSE QUE CETTE FONCTION NE SERT PLUS A RIEN car la fonction  
+    retourne la liste des players avec leurs caracteristiques a t
     Returns
     -------
     a list of agents.
 
     """
-    return None    
     
+    return None    
+       
 
 #------------------------------------------------------------------------------
 #           unit test of functions
