@@ -99,7 +99,8 @@ def select_storage_politic(ai, state_ai, mode_i, Ci_t_plus_1, Pi_t_plus_1,
     else:
         return None
     
-def generate_players(case=3, low_Pi=1, high_Pi=30):
+def generate_players(pi_hp_plus, pi_hp_minus, 
+                     case=3, low_Pi=1, high_Pi=30):
     """
     generate N_PLAYERS+1 players.
 
@@ -128,16 +129,14 @@ def generate_players(case=3, low_Pi=1, high_Pi=30):
                     .reshape(1,-1)
     gamma_is = np.zeros(shape=(1,M_PLAYERS))
     
-    # generate pi_hp_plus, pi_hp_minus
-    pi_hp_plus, pi_hp_minus = \
-        np.random.random_sample(), np.random.random_sample()
-    
     # generate pi_0^{+,-}, pi_sg^{+,-}
     pi_0_plus, pi_0_minus = fct_aux.generate_energy_unit_price_SG(
                             pi_hp_plus, 
                             pi_hp_minus)
     
-    #TODO create a agent with prod_i, cons_i, state_ai, mode_i
+    #create a agent with prod_i, cons_i, state_ai, mode_i
+    AG = []; state_ais = []; mode_is = []; prod_is = []; cons_is = []; r_is = []
+    AG, state_ais, mode_is, prod_is, cons_is, r_is = [[]]*6
     for ag in np.concatenate((Pis, Cis, Sis, Si_maxs, gamma_is)).T:
         ai = sg.Agent(*ag)
         
@@ -145,17 +144,29 @@ def generate_players(case=3, low_Pi=1, high_Pi=30):
         state_ai, mode_i, prod_i, cons_i, r_i = ai.select_mode_compute_r_i(
                                                     ai.identify_state())
         # identify Ci_t_plus_1, Pi_t_plus_1
+        rd_num = np.random.random_sample()
+        Ci_t_plus_1 = rd_num * ai.get_Ci()
+        Pi_t_plus_1 = rd_num * ai.get_Pi()
         
         # choose gamma_i
-        # new_gamma_i = select_storage_politic(
-        #                 ai, state_ai, mode_i, 
-        #                 Ci_t_plus_1, Pi_t_plus_1, 
-        #                 pi_0_plus, pi_0_minus, 
-        #                 pi_hp_plus, pi_hp_minus)
-        # ai.set_gamma_i(new_gamma_i)
-        
+        new_gamma_i = select_storage_politic(
+                        ai, state_ai, mode_i, 
+                        Ci_t_plus_1, Pi_t_plus_1, 
+                        pi_0_plus, pi_0_minus, 
+                        pi_hp_plus, pi_hp_minus)
+        ai.set_gamma_i(new_gamma_i)
+        dico[ai.name] = {"ai":ai, "state_ai":state_ai, "mode_i":mode_i, 
+                         "prod_i":prod_i, "cons_i":cons_i, "r_i":r_i}
+        AG.append(ai)
+        state_ais.append(state_ai)
+        mode_is.append(mode_i)
+        prod_is.append(prod_i)
+        cons_is.append(cons_i)
+        r_is.append(r_i)
+    arr_AG = np.stack([AG, state_ais, mode_is, prod_is, cons_is, r_is], 
+                      axis=1)
     
-    return Pis, Cis, Si_maxs, Sis
+    return arr_AG
 
 # ###############################################################################
 # def random_range_numbers(array, low, high, decrease="yes"):
@@ -298,9 +309,20 @@ def test_select_storage_politic():
     print("test_select_storage_politic: OK = {}".format(round(OK/N_INSTANCE)))
         
 def test_generate_players():
-    Pis, Cis, Si_maxs, Sis = generate_players()
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = \
+        np.random.random_sample(), np.random.random_sample()
+        
+    Pis, Cis, Si_maxs, Sis, AG = generate_players(pi_hp_plus, pi_hp_minus)
     print("shapes: Pis={}, Cis={}, Si_maxs={}, Sis={}".format(
             Pis.shape, Cis.shape, Si_maxs.shape, Sis.shape))
+    OK, NOK = 0, 0;
+    if (Sis<Si_maxs).all() == True:
+        OK += 1
+    for ai in AG:
+        #state_ai = 
+        pass
+    print("test_generate_players: OK={}".format( round(OK/(OK+NOK),3) ))
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
