@@ -36,7 +36,14 @@ class Agent:
         self.Si_max = Si_max
         self.gamma_i = gamma_i
         Agent.cpt_agent += 1
-       
+        
+        # variables depend on a decision of the instance
+        # self.prod_i = 0
+        # self.cons_i = 0
+        # self.R_i = 0
+        # self.r_i = 0
+        # self.state_ai = "DIS"
+        
         
     #--------------------------------------------------------------------------
     #           definition of caracteristics of an agent
