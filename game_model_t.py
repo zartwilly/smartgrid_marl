@@ -336,18 +336,19 @@ def test_generate_players(case=3):
             OK += 1
         nb_test_arr += 1
         # verify if gamma_i is diff of 0
-        OK += 1 if arr[0].get_gamma_i() > 0 \
-                    and arr[0].get_gamma_i() is not None else 0
+        OK += 1 if np.abs(arr[0].get_gamma_i()) > 0 \
+                    and np.abs(arr[0].get_gamma_i()) is not None else 0
         nb_test_arr += 1
         #state_ai = 
         nb_test_ARR = nb_test_arr
         # print r_i
-        print("name={},state_i={}, mode_i={}, prod_i={}, cons_i={}, ri={}"
-              .format(arr[0].name, arr[1], arr[2], arr[3], arr[4], arr[5]))
+        print("name={},gamma_i={}, state_i={}, mode_i={}, prod_i={}, cons_i={}, ri={}, nb_test_arr={}, OK={}"
+              .format(arr[0].name, arr[0].get_gamma_i(), arr[1], arr[2], arr[3], 
+                      arr[4], arr[5], nb_test_arr, OK))
         pass
     
     print("test_generate_players: OK={}".format( 
-                round(OK/(nb_test_ARR*OK),3) ))
+                round(OK/(nb_test_ARR*len(arr_AG)),3) ))
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
