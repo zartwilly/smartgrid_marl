@@ -12,6 +12,9 @@ import fonctions_auxiliaires as fct_aux
 
 N_INSTANCE = 10
 M_PLAYERS = 10
+CASE1 = (0.75, 1.5)
+CASE2 = (0.4, 0.75)
+CASE3 = (0, 0.3)
 
 #------------------------------------------------------------------------------
 #           definitions of functions
@@ -136,7 +139,7 @@ def generate_players(pi_hp_plus, pi_hp_minus,
     
     #create a agent with prod_i, cons_i, state_ai, mode_i
     AG = []; state_ais = []; mode_is = []; prod_is = []; cons_is = []; r_is = []
-    AG, state_ais, mode_is, prod_is, cons_is, r_is = [[]]*6
+    #AG, state_ais, mode_is, prod_is, cons_is, r_is = [[]]*6
     for ag in np.concatenate((Pis, Cis, Sis, Si_maxs, gamma_is)).T:
         ai = sg.Agent(*ag)
         
@@ -155,8 +158,7 @@ def generate_players(pi_hp_plus, pi_hp_minus,
                         pi_0_plus, pi_0_minus, 
                         pi_hp_plus, pi_hp_minus)
         ai.set_gamma_i(new_gamma_i)
-        dico[ai.name] = {"ai":ai, "state_ai":state_ai, "mode_i":mode_i, 
-                         "prod_i":prod_i, "cons_i":cons_i, "r_i":r_i}
+    
         AG.append(ai)
         state_ais.append(state_ai)
         mode_is.append(mode_i)
@@ -308,21 +310,44 @@ def test_select_storage_politic():
             
     print("test_select_storage_politic: OK = {}".format(round(OK/N_INSTANCE)))
         
-def test_generate_players():
+def test_generate_players(case=3):
     # generate pi_hp_plus, pi_hp_minus
     pi_hp_plus, pi_hp_minus = \
         np.random.random_sample(), np.random.random_sample()
         
-    Pis, Cis, Si_maxs, Sis, AG = generate_players(pi_hp_plus, pi_hp_minus)
-    print("shapes: Pis={}, Cis={}, Si_maxs={}, Sis={}".format(
-            Pis.shape, Cis.shape, Si_maxs.shape, Sis.shape))
-    OK, NOK = 0, 0;
-    if (Sis<Si_maxs).all() == True:
-        OK += 1
-    for ai in AG:
+    arr_AG = generate_players(pi_hp_plus, pi_hp_minus, case)
+    
+    OK = 0; nb_test_ARR = 0
+    for arr in arr_AG:
+        nb_test_arr = 0
+        # Sis<Si_maxs
+        OK += 1 if arr[0].get_Si() <= arr[0].get_Si_max() else 0
+        nb_test_arr += 1
+        # Pi < Ci selon conditions
+        CASE = ""
+        if case == 3:
+            CASE = CASE3
+        elif case == 2:
+            CASE = CASE2
+        elif case == 1:
+            CASE = CASE1
+        print("CASE={}".format(CASE))
+        if arr[0].Pi/arr[0].Ci <= CASE[1] and arr[0].Pi/arr[0].Ci >= CASE[0]:
+            OK += 1
+        nb_test_arr += 1
+        # verify if gamma_i is diff of 0
+        OK += 1 if arr[0].get_gamma_i() > 0 \
+                    and arr[0].get_gamma_i() is not None else 0
+        nb_test_arr += 1
         #state_ai = 
+        nb_test_ARR = nb_test_arr
+        # print r_i
+        print("name={},state_i={}, mode_i={}, prod_i={}, cons_i={}, ri={}"
+              .format(arr[0].name, arr[1], arr[2], arr[3], arr[4], arr[5]))
         pass
-    print("test_generate_players: OK={}".format( round(OK/(OK+NOK),3) ))
+    
+    print("test_generate_players: OK={}".format( 
+                round(OK/(nb_test_ARR*OK),3) ))
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -331,5 +356,5 @@ if __name__ == "__main__":
     test_compute_energy_unit_price()
     test_compute_utility_ai()
     test_select_storage_politic()
-    # test_generate_players()
+    test_generate_players(case=3)
     print("runtime = {}".format(time.time() - ti))
