@@ -57,7 +57,7 @@ def initialize_game_create_agents_t0(sys_inputs):
     Returns
     -------
      arr_pls:  array of players of shape 1*M M*T
-     arr_pls_M_T: array of players of shape M*T*9
+     arr_pls_M_T: array of players of shape M_PLAYERS*NUM_PERIODS*9
      pl_m^t contains a list of 
              Pi, Ci, Si, Si_max, gamma_i, prod_i, cons_i, r_i, state_i
      m \in [0,M-1] and t \in [0,T-1] 
@@ -220,6 +220,27 @@ def compute_energy_unit_price(pi_0_plus, pi_0_minus,
     
     return b0, c0
 
+def extract_values_to_array(arr_pls_M_T, t, attribut_position=4):
+    """
+    extract list of values for one variable at time t for all players
+
+    Parameters
+    ----------
+    arr_pls_M_T :  array of shape M_PLAYERS*NUM_PERIODS*9
+        DESCRIPTION.
+    attribut_position : Integer, optional
+        DESCRIPTION. The default is 4. 
+        exemple, thes positions of gamma_i, prod_i, cons_i and r_i are 
+                respectively 4, 5, 6, 7
+
+    Returns
+    -------
+    list of len=M_PLAYERS.
+
+    """
+    vals = arr_pls_M_T[:, t, attribut_position]
+    return vals
+    
 def determine_new_pricing_sg(prod_is, cons_is, pi_hp_plus, pi_hp_minus):
     """
     determine the new price of energy in the SG from the amounts produced 
@@ -304,13 +325,14 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         B0s.append(b0);
         C0s.append(c0);
         # compute cost and benefit players by energy exchanged.
-        gamma_is = extract_values_to_array(arr_pls, attribut_position=0)        
+        gamma_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=4)        
         bens, csts = compute_utility_players(arr_pls, gamma_is)
         BENs.append(bens), CSTs.append(csts)
         
         #compute the new prices pi_0_plus and pi_0_minus from a pricing model in the document
-        cons_is = extract_values_to_array(arr_pls, attribut_position=4)
-        prod_is = extract_values_to_array(arr_pls, attribut_position=3)
+        # a changer par arr_pls_M_T et aussi leur position
+        prod_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=5)
+        cons_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=6)
         pi_0_plus, pi_0_minus = determine_new_pricing_sg(
                                     prod_is, cons_is,
                                     pi_hp_plus, pi_hp_minus)
@@ -428,6 +450,31 @@ def test_compute_energy_unit_price():
                                        pi_hp_plus, pi_hp_minus,
                                        In_sg, Out_sg)
     print("b0={}, c0={}".format(b0[0], c0[0]))
+    
+def test_extract_values_to_array():
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    OK = 0
+    for t in range(0,NUM_PERIODS):    
+        vals = extract_values_to_array(arr_pls_M_T, t, attribut_position=4)
+        if len(vals) == M_PLAYERS:
+            OK += 1
+            #print("test_extract_values_to_array: OK")
+        else:
+            pass
+            #print("test_extract_values_to_array: NOK")
+    print("test_extract_values_to_array: OK={}".format(round(OK/NUM_PERIODS,2)))
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -436,5 +483,6 @@ if __name__ == "__main__":
     test_initialize_game_create_agents_t0()
     test_compute_prod_cons_SG()
     test_compute_energy_unit_price()
+    test_extract_values_to_array()
     print("runtime = {}".format(time.time() - ti))    
     
