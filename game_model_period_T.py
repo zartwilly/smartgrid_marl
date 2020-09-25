@@ -127,6 +127,8 @@ def initialize_game_create_agents_t0(sys_inputs):
             gamma_i = pl.get_gamma_i(); prod_i = pl.get_prod_i() 
             cons_i = pl.get_cons_i(); r_i = pl.get_r_i(); 
             state_i = pl.get_state_i()
+            # print("Type: gamma_i={}:{}, cons_i={}:{}, prod_i={}, r_i={}, Pi={}, Ci={}".format(
+            #     type(gamma_i), gamma_i, type(cons_i), cons_i, type(prod_i), type(r_i), type(Pi), type(Ci)))
             a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, prod_i, 
                             cons_i, r_i, state_i])
             
@@ -137,7 +139,7 @@ def initialize_game_create_agents_t0(sys_inputs):
         # # arr_pls_M_T.reshape(M_PLAYERS,NUM_PERIODS+1,-1) #--> FALSE
         arr_pls_M_T.append(a_i_t_s)
         
-    arr_pls_M_T = np.array(arr_pls_M_T)
+    arr_pls_M_T = np.array(arr_pls_M_T, dtype=object)
     return arr_pls, arr_pls_M_T
     """
     initialize a game by
@@ -158,7 +160,25 @@ def initialize_game_create_agents_t0(sys_inputs):
     """
     return None
 
-def compute_prod_cons_SG(arr_val_pls):
+def compute_prod_cons_SG(arr_pls_M_T, t):
+    """
+    
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of shape M_PLAYERS*NUM_PERIODS+1*9
+        DESCRIPTION.
+    t : integer
+        DESCRIPTION.
+
+    Returns
+    -------
+    In_sg, Out_sg : float, float.
+    
+    """
+    In_sg = sum( arr_pls_M_T[:,t, 5] )
+    Out_sg = sum( arr_pls_M_T[:,t, 6] )
+    return In_sg, Out_sg
     """
     compute the production In_sg and the consumption Out_sg in the SG.
 
@@ -338,11 +358,48 @@ def test_initialize_game_create_agents_t0():
         print("shape: arr_pls={}, arr_pls_M_T={}".format(
             arr_pls.shape, arr_pls_M_T.shape))
     
+def test_compute_prod_cons_SG():
+    """
+    compute the percent of unbalanced grid (production, consumption, balanced)
+    at each time.
+
+    Returns
+    -------
+    None.
+
+    """
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    production = 0; consumption = 0; balanced = 0
+    for t in range(0, NUM_PERIODS):
+        In_sg_t, Out_sg_t = compute_prod_cons_SG(arr_pls_M_T, t)
+        if In_sg_t > Out_sg_t:
+            production += 1
+        elif In_sg_t < Out_sg_t:
+            consumption += 1
+        else:
+            balanced += 1
+    
+    print("SG: production={}, consumption={}, balanced={}".format(
+            round(production/NUM_PERIODS,2), round(consumption/NUM_PERIODS,2),
+            round(balanced/NUM_PERIODS,2) ))
+        
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
     test_initialize_game_create_agents_t0()
+    test_compute_prod_cons_SG()
     print("runtime = {}".format(time.time() - ti))    
     
