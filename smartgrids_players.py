@@ -6,6 +6,7 @@ Created on Thu Sep 24 08:29:33 2020
 """
 
 import time
+import math
 import numpy as np
 
 import fonctions_auxiliaires as fct_aux
@@ -110,15 +111,19 @@ class Player:
         gamma denotes the behaviour of the agent to store energy or not. 
         the value implies the price of purchase/sell energy.
         return the value of the behaviour  
+    
+        NB: if gamma_i = np.inf, the agent has a random behaviour ie he has 
+            50% of chance to store energy
         """
         return self.gamma_i
     
     def set_gamma_i(self, new_gamma_i):
         """
         return the new value of the behaviour or the energy 
-        quantity to add from the last quantity of teh maximum storage.
+        quantity to add from the last quantity of the maximum storage.
         
-        self.Si = new_Pi if update==True else self.Pi + new_Pi
+        NB: if gamma_i = np.inf, the agent has a random behaviour ie he has 
+            50% of chance to store energy
         """
         self.gamma_i = new_gamma_i 
         
@@ -324,6 +329,62 @@ class Player:
             self.cons_i = np.nan
             self.r_i = np.nan
         
+    def select_storage_politic(self, Ci_t_plus_1, Pi_t_plus_1, 
+                               pi_0_plus, pi_0_minus, 
+                               pi_hp_plus, pi_hp_minus):
+        """
+        choose the storage politic gamma_i of the player i 
+        following the rules on the smartgrid system model document 
+        (see storage politic).
+
+        Parameters
+        ----------
+        Ci_t_plus_1 : float
+            DESCRIPTION.
+        Pi_t_plus_1 : float
+            DESCRIPTION.
+        pi_0_plus : float
+            DESCRIPTION.
+        pi_0_minus : float
+            DESCRIPTION.
+        pi_hp_plus : float
+            DESCRIPTION.
+        pi_hp_minus : float
+            DESCRIPTION.
+
+        Returns
+        -------
+        a float if conditions are not respected or np.inf else.
+
+        """
+        Si_minus, Si_plus = 0, 0
+        if self.state_i == "state1":
+            Si_minus = 0 if self.mode_i == "CONS+" else 0
+            Si_plus = self.get_Si() if self.mode_i == "CONS-" else 0
+        elif self.state_i == "state2":
+            Si_minus = self.get_Si() - (self.get_Ci() - self.get_Pi()) \
+                if self.mode_i == "DIS" else 0
+            Si_plus = self.get_Si() if self.mode_i == "CONS-" else 0
+        elif self.state_i == "state3":
+            Si_minus = self.get_Si() if self.mode_i == "PROD" else 0
+            Si_plus = max(self.get_Si_max(), 
+                          self.get_Si() + (self.get_Pi() - self.get_Ci()))
+        else:
+            Si_minus, Si_plus = np.inf, np.inf
+            
+        X = pi_0_minus; Y = pi_hp_minus
+        if fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_minus:
+            self.set_gamma_i(X-1)
+        elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_plus:
+            self.set_gamma_i(Y-1)
+        elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_minus and \
+            fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_plus:
+                res = (fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1)- Si_minus)\
+                       / (Si_plus - Si_minus)
+                Z = X + (Y-X)*res
+                self.set_gamma_i(math.floor(Z))   
+        else:
+            self.set_gamma_i(np.inf) 
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------
@@ -358,7 +419,7 @@ def test_class_player():
             Pis.shape, Cis.shape, Sis.shape, Si_maxs.shape, prod_is.shape, cons_is.shape, 
             gamma_is.shape, r_is.shape, state_is.shape))
     
-    nb_test = 10; nb_ok = 0;
+    nb_test = 11; nb_ok = 0;
     for ag in np.concatenate((Pis, Cis, Sis, Si_maxs, gamma_is, prod_is, 
                               cons_is, r_is, state_is)).T:
         pl = Player(*ag)
@@ -416,7 +477,15 @@ def test_class_player():
             pl.cons_i is not np.nan and \
             pl.r_i is not np.nan:
                 OK += 1
-        
+        # behaviour of gamma_i
+        pl.select_storage_politic(Ci_t_plus_1=0, Pi_t_plus_1=0, 
+                                  pi_0_plus=np.random.uniform(1,10), 
+                                  pi_0_minus=np.random.uniform(1,10), 
+                                  pi_hp_plus=np.random.uniform(1,10), 
+                                  pi_hp_minus=np.random.uniform(1,10))
+        if pl.get_gamma_i() is not np.inf:
+            OK += 1
+            print("pl {}: gamma_i={}".format(pl.name, pl.get_gamma_i()))
         
         # afficher indicateurs et calcul nb_ok
         nb_ok += (OK + OK_state)/nb_test
