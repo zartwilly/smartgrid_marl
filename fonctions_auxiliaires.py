@@ -51,7 +51,49 @@ def generate_energy_unit_price_SG(pi_hp_plus, pi_hp_minus):
     pi_0_minus = pi_hp_minus * rd_num
     return pi_0_plus, pi_0_minus
      
-
+def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
+    """
+    generate Cis, Pis, Sis and Si_maxs.
+    each variable has 1*n_items shape
+    low_1 and high_1 are the limit of Ci items generated
+    low_2 and high_2 are the limit of Pi, Si, Si_max items generated
+    
+    return:
+        Cis, Pis, Si_maxs, Sis
+    """
+    Cis = np.random.uniform(low=low_1, high=high_1, 
+                            size=(1, n_items))
+    
+    low = low_2; high = high_2
+    # Pi
+    inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
+    Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
+                    for (low_item,high_item) in inters]).reshape((1,-1))
+    # Si
+    inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
+    Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
+                    for (low_item,high_item) in inters]).reshape((1,-1))
+    inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
+    Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
+                    for (low_item,high_item) in inters]).reshape((1,-1))
+    
+    ## code initial 
+    # Cis = np.random.uniform(low=LOW_VAL_Ci, high=HIGH_VAL_Ci, 
+    #                         size=(1, M_PLAYERS))
+    
+    # low = sys_inputs['case'][0]; high = sys_inputs['case'][1]
+    # # Pi
+    # inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
+    # Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
+    #                 for (low_item,high_item) in inters]).reshape((1,-1))
+    # # Si
+    # inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
+    # Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
+    #                 for (low_item,high_item) in inters]).reshape((1,-1))
+    # inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
+    # Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
+    #                 for (low_item,high_item) in inters]).reshape((1,-1))
+    return Cis, Pis, Si_maxs, Sis
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------    
