@@ -7,6 +7,11 @@ Created on Fri Sep 18 16:45:38 2020
 import time
 import numpy as np
 
+
+STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
+STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
+STATE3_STRATS = ("DIS", "PROD")
+
 #------------------------------------------------------------------------------
 #           definitions of functions
 #------------------------------------------------------------------------------
