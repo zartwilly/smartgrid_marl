@@ -392,17 +392,13 @@ def test_class_player():
     Cis = np.random.uniform(low=1, high=30, size=(1,N_INSTANCE))
     
     low = 0; high = 0.3
-    # Pi
-    inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
-    Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
-    # Si
-    inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
-    Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
-    inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
-    Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
+    Cis, Pis, Si_maxs, Sis = fct_aux.generate_Cis_Pis_Sis(
+                                    n_items = N_INSTANCE, 
+                                    low_1 = 1, 
+                                    high_1 = 30,
+                                    low_2 = low,
+                                    high_2 = high
+                                    )
     
     bool_pis = (Pis/Cis> low).all() and (Pis/Cis<= high).all()
     bool_si_maxs = (Si_maxs/Pis> low).all() and (Si_maxs/Pis<= high).all()
