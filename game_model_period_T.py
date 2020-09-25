@@ -194,6 +194,32 @@ def compute_prod_cons_SG(arr_pls_M_T, t):
     """
     return None
 
+def compute_energy_unit_price(pi_0_plus, pi_0_minus, 
+                              pi_hp_plus, pi_hp_minus,
+                              In_sg, Out_sg):
+    """
+    compute the unit price of energy benefit and energy cost 
+    
+    pi_0_plus: the intern benefit price of one unit of energy inside SG
+    pi_0_minus: the intern cost price of one unit of energy inside SG
+    pi_hp_plus: the intern benefit price of one unit of energy between SG and HP
+    pi_hp_minus: the intern cost price of one unit of energy between SG and HP
+    Out_sg: the total amount of energy relative to the consumption of the SG
+    In_sg: the total amount of energy relative to the production of the SG
+    
+    Returns
+    -------
+    bo: the benefit of one unit of energy in SG.
+    co: the cost of one unit of energy in SG.
+
+    """
+    c0 = pi_0_minus if In_sg >= Out_sg \
+                    else (Out_sg - In_sg)*pi_hp_minus + In_sg*pi_0_minus
+    b0 = pi_0_plus if In_sg < Out_sg \
+                    else In_sg * pi_0_plus + (- Out_sg + In_sg)*pi_0_plus
+    
+    return b0, c0
+
 def determine_new_pricing_sg(prod_is, cons_is, pi_hp_plus, pi_hp_minus):
     """
     determine the new price of energy in the SG from the amounts produced 
@@ -276,7 +302,7 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
                         pi_hp_plus, pi_hp_minus,
                         In_sg, Out_sg)
         B0s.append(b0);
-        C0s.append(C0);
+        C0s.append(c0);
         # compute cost and benefit players by energy exchanged.
         gamma_is = extract_values_to_array(arr_pls, attribut_position=0)        
         bens, csts = compute_utility_players(arr_pls, gamma_is)
@@ -394,6 +420,14 @@ def test_compute_prod_cons_SG():
             round(production/NUM_PERIODS,2), round(consumption/NUM_PERIODS,2),
             round(balanced/NUM_PERIODS,2) ))
         
+def test_compute_energy_unit_price():
+    pi_0_plus, pi_0_minus, pi_hp_plus, pi_hp_minus = np.random.randn(4,1)
+    In_sg, Out_sg = np.random.randint(2, 10, 2)
+    
+    b0, c0 = compute_energy_unit_price(pi_0_plus, pi_0_minus, 
+                                       pi_hp_plus, pi_hp_minus,
+                                       In_sg, Out_sg)
+    print("b0={}, c0={}".format(b0[0], c0[0]))
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -401,5 +435,6 @@ if __name__ == "__main__":
     ti = time.time()
     test_initialize_game_create_agents_t0()
     test_compute_prod_cons_SG()
+    test_compute_energy_unit_price()
     print("runtime = {}".format(time.time() - ti))    
     
