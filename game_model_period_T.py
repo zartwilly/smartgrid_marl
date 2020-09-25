@@ -26,17 +26,21 @@ NUM_PERIODS = 5
 # ebouche de solution generale
 #                   definitions of functions
 #------------------------------------------------------------------------------
-def generate_random_values():
+def generate_random_values(zero=0):
     """
     at time t=0, the values of C_T_plus_1, P_T_plus_1 are null. 
     see decription of smartgrid system model document.
 
+    if zero=0 then this is zero array else not null array
     Returns
     -------
     array of shape (2,).
 
     """
     C_T_plus_1, P_T_plus_1 = np.array((0,0))
+    if zero != 0:
+        C_T_plus_1 = np.random.random_sample()
+        P_T_plus_1 = np.random.random_sample()
     return  C_T_plus_1, P_T_plus_1
 
 def initialize_game_create_agents_t0(sys_inputs):
@@ -59,27 +63,20 @@ def initialize_game_create_agents_t0(sys_inputs):
      m \in [0,M-1] and t \in [0,T-1] 
     """
     # declaration variables
-    arr_pls = None
+    arr_pls = np.array([]) 
+    arr_pls_M_T = [] # np.array([])
     Ci_t_plus_1, Pi_t_plus_1 = sys_inputs["Ci_t_plus_1"], sys_inputs["Pi_t_plus_1"] 
     pi_0_plus, pi_0_minus = sys_inputs["pi_0_plus"], sys_inputs["pi_0_minus"] 
     pi_hp_plus, pi_hp_minus = sys_inputs["pi_hp_plus"], sys_inputs["pi_hp_minus"]
     
     # create the M players
-    Cis = np.random.uniform(low=LOW_VAL_Ci, high=HIGH_VAL_Ci, 
-                            size=(1, M_PLAYERS))
-    
-    low = sys_inputs['case'][0]; high = sys_inputs['case'][1]
-    # Pi
-    inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
-    Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
-    # Si
-    inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
-    Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
-    inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
-    Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
+    Cis, Pis, Si_maxs, Sis = fct_aux.generate_Cis_Pis_Sis(
+                                n_items = M_PLAYERS, 
+                                low_1 = LOW_VAL_Ci, 
+                                high_1 = HIGH_VAL_Ci,
+                                low_2 = sys_inputs['case'][0],
+                                high_2 = sys_inputs['case'][1]
+                                )
     
     gamma_is = np.zeros(shape=(1, M_PLAYERS))
     prod_is = np.zeros(shape=(1, M_PLAYERS))
@@ -95,7 +92,7 @@ def initialize_game_create_agents_t0(sys_inputs):
         pl.select_storage_politic(Ci_t_plus_1, Pi_t_plus_1, 
                                   pi_0_plus, pi_0_minus, 
                                   pi_hp_plus, pi_hp_minus)
-        arr_pls.append(pl)
+        arr_pls = np.append(arr_pls, pl) #arr_pls.append(pl)
         
         a_i_t_s = []
         Ci = pl.get_Ci(); Pi = pl.get_Pi(); Si = pl.get_Si(); 
@@ -106,24 +103,13 @@ def initialize_game_create_agents_t0(sys_inputs):
                         cons_i, r_i, state_i])
         
         # for each player, generate the attribut values of players a each time.
-        # for t in range(1,NUM_PERIODS):
-            
-        #     a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, prod_i, 
-        #                 cons_i, r_i, state_i])
-        #Cis            
-        Cis = np.random.uniform(low=LOW_VAL_Ci, high=HIGH_VAL_Ci, 
-                            size=(1, NUM_PERIODS))    
-        # Pi
-        inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
-        Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                        for (low_item,high_item) in inters]).reshape((1,-1))
-        # Si
-        inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
-        Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
-                        for (low_item,high_item) in inters]).reshape((1,-1))
-        inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
-        Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                        for (low_item,high_item) in inters]).reshape((1,-1))
+        Cis, Pis, Si_maxs, Sis = fct_aux.generate_Cis_Pis_Sis(
+                                    n_items = NUM_PERIODS, 
+                                    low_1 = LOW_VAL_Ci, 
+                                    high_1 = HIGH_VAL_Ci,
+                                    low_2 = sys_inputs['case'][0],
+                                    high_2 = sys_inputs['case'][1]
+                                    )
         for (Ci, Pi, Si, Si_max) in np.concatenate((Cis, Pis, Sis, Si_maxs)).T:
             pl.set_Ci(Ci, update=False)
             pl.set_Pi(Pi, update=False)
@@ -143,7 +129,15 @@ def initialize_game_create_agents_t0(sys_inputs):
             state_i = pl.get_state_i()
             a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, prod_i, 
                             cons_i, r_i, state_i])
-        arr_pls_M_T.append(a_i_t_s)    
+            
+        # TODO a resoudre cela
+        # arr_pls_M_T = np.array(a_i_t_s) \
+        #     if len(arr_pls_M_T)==0 \
+        #     else np.concatenate((arr_pls_M_T, np.array(a_i_t_s)),axis=0) #arr_pls_M_T.append(a_i_t_s)
+        # # arr_pls_M_T.reshape(M_PLAYERS,NUM_PERIODS+1,-1) #--> FALSE
+        arr_pls_M_T.append(a_i_t_s)
+        
+    arr_pls_M_T = np.array(arr_pls_M_T)
     return arr_pls, arr_pls_M_T
     """
     initialize a game by
@@ -244,10 +238,10 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     S_0, S_1, = 0, 0;
     # TODO:how to determine Ci_t_plus_1_s, Pi_t_plus_1_s?
     ## generate random values of Ci_t_plus_1_s, Pi_t_plus_1_s
-    C_T_plus_1, P_T_plus_1 = generate_random_values()
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
     
     sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
-                    "C_T_plus_1":C_T_plus_1, "P_T_plus_1s":P_T_plus_1,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_T_plus_1,
                     "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
                     "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
     arr_pls = initialize_game_create_agents_t0(sys_inputs)
@@ -310,3 +304,45 @@ def game_model_SG():
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------    
+def test_initialize_game_create_agents_t0():
+    """
+    Si OK alors arr_pls.shape = (M_PLAYERS,)
+                et arr_pls_M_T.shape = (M_PLAYERS, NUM_PERIODS, 10)
+
+    Returns
+    -------
+    None.
+
+    """
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    print("shape: arr_pls={}, arr_pls_M_T={}".format(
+            arr_pls.shape, arr_pls_M_T.shape))
+    if arr_pls.shape == (M_PLAYERS,) \
+        and arr_pls_M_T.shape == (M_PLAYERS, NUM_PERIODS+1, 9):
+            print("test_initialize_game_create_agents_t0: OK")
+            print("shape: arr_pls={}, arr_pls_M_T={}".format(
+            arr_pls.shape, arr_pls_M_T.shape))
+    else:
+        print("test_initialize_game_create_agents_t0: NOK")
+        print("shape: arr_pls={}, arr_pls_M_T={}".format(
+            arr_pls.shape, arr_pls_M_T.shape))
+    
+#------------------------------------------------------------------------------
+#           execution
+#------------------------------------------------------------------------------
+if __name__ == "__main__":
+    ti = time.time()
+    test_initialize_game_create_agents_t0()
+    print("runtime = {}".format(time.time() - ti))    
+    
