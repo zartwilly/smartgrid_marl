@@ -1,0 +1,440 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 24 08:29:33 2020
+
+@author: jwehounou
+"""
+
+import time
+import numpy as np
+
+import fonctions_auxiliaires as fct_aux
+
+N_INSTANCE = 10
+
+MODES = ("CONS","PROD","DIS")
+
+# STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
+# STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
+# STATE3_STRATS = ("DIS", "PROD") 
+
+class Player:
+    
+    cpt_player =  0
+    
+    def __init__(self, Pi, Ci, Si, Si_max, 
+                 gamma_i, prod_i, cons_i, r_i, state_i):
+        self.name = ("").join(["a",str(self.cpt_player)])
+        self.Pi = Pi
+        self.Ci = Ci
+        self.Si = Si
+        self.Si_max = Si_max
+        self.gamma_i = gamma_i
+        Player.cpt_player += 1
+        
+        # variables depend on a decision of the instance
+        self.prod_i = prod_i
+        self.cons_i = cons_i
+        #self.R_i = self.Si_max - self.Si
+        self.r_i = r_i
+        self.state_i = state_i
+        self.mode_i = ""
+        
+        
+    #--------------------------------------------------------------------------
+    #           definition of caracteristics of an agent
+    #--------------------------------------------------------------------------
+    def get_Pi(self):
+        """
+        return the value of quantity of production
+        """
+        return self.Pi
+    
+    def set_Pi(self, new_Pi, update=False):
+        """
+        return the new quantity of production or the energy quantity 
+        to add from the last quantity of production.
+        
+        self.Pi = new_Pi if update==True else self.Pi + new_Pi
+        """
+        self.Pi = (update==False)*new_Pi + (update==True)*(self.Pi + new_Pi)
+            
+    def get_Ci(self):
+        """
+        return the quantity of consumption 
+        """
+        return self.Ci
+    
+    def set_Ci(self, new_Ci, update=False):
+        """
+        return the new quantity of consumption or the energy quantity 
+        to add from the last quantity of production.
+        
+        self.Ci = new_Ci if update==True else self.Ci + new_Ci
+        """
+        self.Ci = (update==False)*new_Ci + (update==True)*(self.Ci + new_Ci)
+        
+    def get_Si(self):
+        """
+        return the value of quantity of battery storage
+        """
+        return self.Si
+    
+    def set_Si(self, new_Si, update=False):
+        """
+        return the new quantity of battery storage or the energy quantity 
+        to add from the last quantity of storage.
+        
+        self.Si = new_Si if update==True else self.Si + new_Si
+        """
+        self.Si = (update==False)*new_Si + (update==True)*(self.Si + new_Si)
+        
+    def get_Si_max(self):
+        """
+        return the value of quantity of production
+        """
+        return self.Si_max
+    
+    def set_Si_max(self, new_Si_max, update=False):
+        """
+        return the new quantity of the maximum battery storage or the energy 
+        quantity to add from the last quantity of teh maximum storage.
+        
+        self.Si = new_Pi if update==True else self.Pi + new_Pi
+        """
+        self.Si_max = (update==False)*new_Si_max \
+                        + (update==True)*(self.Si_max + new_Si_max)
+                        
+    def get_gamma_i(self):
+        """
+        gamma denotes the behaviour of the agent to store energy or not. 
+        the value implies the price of purchase/sell energy.
+        return the value of the behaviour  
+        """
+        return self.gamma_i
+    
+    def set_gamma_i(self, new_gamma_i):
+        """
+        return the new value of the behaviour or the energy 
+        quantity to add from the last quantity of teh maximum storage.
+        
+        self.Si = new_Pi if update==True else self.Pi + new_Pi
+        """
+        self.gamma_i = new_gamma_i 
+        
+    def get_prod_i(self):
+        """
+        return the production amount to export to SG 
+
+        Returns
+        -------
+        an integer or float.
+
+        """
+        return self.prod_i
+    
+    def set_prod_i(self, new_prod_i, update=False):
+        """
+        turn the production amount into new_prod_i if update=False else add 
+        new_prod_i  to the last value
+
+        Parameters
+        ----------
+        new_prod_i : float
+            DESCRIPTION.
+        update : booelan, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        float.
+
+        """
+        self.prod_i = (update==False)*new_prod_i \
+                        + (update==True)*(self.prod_i + new_prod_i)
+                        
+    def get_cons_i(self):
+        """
+        return the consumption amount to import from HP to SG 
+
+        Returns
+        -------
+        an integer or float.
+
+        """
+        return self.cons_i
+    
+    def set_cons_i(self, new_cons_i, update=False):
+        """
+        turn the consumption amount into new_cons_i if update=False else add 
+        new_cons_i  to the last value
+
+        Parameters
+        ----------
+        new_cons_i : float
+            DESCRIPTION.
+        update : booelan, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        float.
+
+        """
+        self.cons_i = (update==False)*new_cons_i \
+                        + (update==True)*(self.cons_i + new_cons_i)
+                        
+    def get_r_i(self):
+        """
+        return the consumption amount to import from HP to SG 
+
+        Returns
+        -------
+        an integer or float.
+
+        """
+        return self.r_i
+    
+    def set_r_i(self, new_r_i, update=False):
+        """
+        turn the amount of energy stored (or preserved by a player) into 
+        new_r_i if update=False else add new_ri_i  to the last value
+
+        Parameters
+        ----------
+        new_r_i : float
+            DESCRIPTION.
+        update : booelan, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        float.
+
+        """
+        self.r_i = (update==False)*new_r_i \
+                        + (update==True)*(self.r_i + new_r_i)
+                        
+    def get_state_i(self):
+        """
+        return the state of the player depending on the operation conditions 
+
+        Returns
+        -------
+        a string.
+
+        """
+        if self.Pi + self.Si <= self.Ci:
+            self.state_i = "state1"
+        elif self.Pi + self.Si > self.Ci and self.Pi < self.Ci:
+            self.state_i = "state2"
+        elif self.Pi > self.Ci:
+            self.state_i = "state3"
+        else:
+            self.state_i = None
+        return self.state_i
+    
+    def set_state_i(self, new_state_i):
+        """
+        turn the player state into 
+        new_state_i
+
+        Parameters
+        ----------
+        new_state_i : string
+            DESCRIPTION.
+
+        Returns
+        -------
+        a string.
+
+        """
+        self.state_i = new_state_i 
+        
+    #--------------------------------------------------------------------------
+    #           definition of functions of an agent
+    #--------------------------------------------------------------------------
+    def select_mode_i(self):
+        """
+        select randomly a mode of an agent i
+
+        Returns
+        -------
+        update variable mode_i containing
+        string value if state_i != None or None if state_i == None
+
+        """
+        rd_num =  np.random.choice([0,1])
+        if self.state_i == None:
+            mode_i = None
+        elif self.state_i == "state1":
+            mode_i = fct_aux.STATE1_STRATS[rd_num]
+        elif self.state_i == "state2":
+            mode_i = fct_aux.STATE2_STRATS[rd_num]
+        elif self.state_i == "state3":
+            mode_i = fct_aux.STATE3_STRATS[rd_num]
+        self.mode_i = mode_i
+        
+    def update_prod_cons_r_i(self):
+        """
+        compute prod_i, cons_i and r_i following the characteristics of agent i 
+
+        Returns
+        -------
+        update variable prod_i, cons_i, r_i containing
+        float value if state != None or np.nan if state == None.
+
+        """
+        if self.state_i ==  "state1":
+            self.prod_i = 0
+            self.cons_i = (self.mode_i == "CONS+")*(self.Ci - (self.Pi - self.Si)) \
+                            + (self.mode_i == "CONS-")*(self.Ci - self.Pi)
+            self.Si = (self.mode_i == "CONS+")*0 \
+                        + (self.mode_i == "CONS-")*self.Si
+            R_i = self.Si_max - self.Si
+            self.r_i = min(R_i, self.Ci - self.Pi) \
+                        if self.mode_i == "CONS-" else 0
+            
+        elif self.state_i ==  "state2":
+            self.prod_i = 0
+            self.cons_i = (self.mode_i == "DIS")*0 \
+                            + (self.mode_i == "CONS-")*(self.Ci - self.Pi)
+            #TODO demander si le r_i est mis avant ou apres la mise a jour de S_i
+            self.r_i = self.Si - (self.Ci - self.Pi) \
+                        if self.mode_i == "DIS" else 0
+            self.Si = (self.mode_i == "DIS")*(self.Si - (self.Ci - self.Pi)) \
+                        + (self.mode_i == "CONS-")*0 
+    
+        elif self.state_i ==  "state3":
+            self.cons_i = 0
+            self.Si = (self.mode_i == "DIS") \
+                            *(max(self.Si_max, self.Si + (self.Pi - self.Ci))) \
+                        + (self.mode_i == "PROD")*self.Si
+            R_i = self.Si_max - self.Si
+            self.r_i = min(R_i, self.Pi - self.Ci) \
+                        if self.mode_i == "DIS" else 0
+            self.prod_i = (self.mode_i == "PROD")*(self.Pi - self.Ci)\
+                           + (self.mode_i == "DIS") \
+                               *fct_aux.fct_positive(sum([self.Pi]), 
+                                                      sum([self.Ci, R_i]))
+            
+        else:
+            # state_i = mode_i = None
+            self.prod_i = np.nan
+            self.cons_i = np.nan
+            self.r_i = np.nan
+        
+#------------------------------------------------------------------------------
+#           unit test of functions
+#------------------------------------------------------------------------------
+def test_class_player():
+    Cis = np.random.uniform(low=1, high=30, size=(1,N_INSTANCE))
+    
+    low = 0; high = 0.3
+    # Pi
+    inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
+    Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
+                    for (low_item,high_item) in inters]).reshape((1,-1))
+    # Si
+    inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
+    Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
+                    for (low_item,high_item) in inters]).reshape((1,-1))
+    inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
+    Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
+                    for (low_item,high_item) in inters]).reshape((1,-1))
+    
+    bool_pis = (Pis/Cis> low).all() and (Pis/Cis<= high).all()
+    bool_si_maxs = (Si_maxs/Pis> low).all() and (Si_maxs/Pis<= high).all()
+    bool_sis = (Sis/Si_maxs> low).all() and (Sis/Si_maxs<= high).all()
+    print("bool_pis={}, bool_si_maxs={}, bool_sis={}".format(
+        bool_pis, bool_si_maxs, bool_sis))
+    
+    gamma_is = np.zeros(shape=(1, N_INSTANCE))
+    prod_is = np.zeros(shape=(1, N_INSTANCE))
+    cons_is = np.zeros(shape=(1, N_INSTANCE))
+    r_is = np.zeros(shape=(1, N_INSTANCE))
+    state_is = np.array([None]*N_INSTANCE).reshape((1,-1))
+    print("Pis={}, Cis={}, Sis={}, Si_maxs={}, prod_is={}, cons_is={}, gamma_is={}, state_is={}, r_is={}".format(
+            Pis.shape, Cis.shape, Sis.shape, Si_maxs.shape, prod_is.shape, cons_is.shape, 
+            gamma_is.shape, r_is.shape, state_is.shape))
+    
+    nb_test = 10; nb_ok = 0;
+    for ag in np.concatenate((Pis, Cis, Sis, Si_maxs, gamma_is, prod_is, 
+                              cons_is, r_is, state_is)).T:
+        pl = Player(*ag)
+        
+        nb = np.random.randint(1,30); OK = 0
+        #Ci
+        oldCi = pl.get_Ci(); pl.set_Ci(nb, True)
+        OK = OK+1 if pl.get_Ci() == oldCi + nb else OK-1
+        pl.set_Ci(oldCi, False)
+        #Pi
+        oldPi = pl.get_Pi(); pl.set_Pi(nb, True)
+        OK = OK+1 if pl.get_Pi() == oldPi+nb else OK-1
+        pl.set_Pi(oldPi, False)
+        #Si_max
+        oldSi_max = pl.get_Si_max(); pl.set_Si_max(nb, True)
+        OK = OK+1 if pl.get_Si_max() == oldSi_max + nb else OK-1
+        pl.set_Si_max(oldPi, False)
+        #Si
+        oldSi = pl.get_Si(); pl.set_Si(nb, True)
+        OK = OK+1 if pl.get_Si() == oldSi + nb else OK-1
+        pl.set_Si(oldSi, False)
+        #gamma_i
+        oldGamma_i = pl.get_gamma_i(); pl.set_gamma_i(nb)
+        OK = OK+1 if pl.get_gamma_i() == nb else OK-1
+        pl.set_gamma_i(oldGamma_i)
+        #prod_i
+        oldProd_i = pl.get_prod_i(); pl.set_prod_i(nb, True)
+        OK = OK+1 if pl.get_prod_i() == oldProd_i + nb else OK-1
+        pl.set_prod_i(oldProd_i, False)
+        #cons_i
+        oldCons_i = pl.get_cons_i(); pl.set_cons_i(nb, True)
+        OK = OK+1 if pl.get_cons_i() == oldCons_i + nb else OK-1
+        pl.set_cons_i(oldCons_i, False)
+        #r_i
+        oldr_i = pl.get_r_i(); pl.set_r_i(nb, True)
+        OK = OK+1 if pl.get_r_i() == oldr_i + nb else OK-1
+        pl.set_r_i(oldr_i, False)
+        #state_i
+        OK_state = 0; OK_state_none = 0
+        state_i = pl.get_state_i()
+        if state_i == "state1" and pl.get_Pi() + pl.get_Si() <= pl.get_Ci():
+            OK_state += 1
+        elif state_i == "state2" and pl.get_Pi() + pl.get_Si() > pl.get_Ci() \
+            and pl.get_Pi() < pl.get_Ci():
+                OK_state += 1
+        elif state_i == "state3" and pl.get_Pi() > pl.get_Ci():
+            OK_state += 1
+        elif state_i == None:
+            OK_state_none += 1
+            OK_state += -1
+        # mode i
+        if pl.state_i in ["state1", "state2", "state3"] and \
+            pl.mode_i is not None and \
+            pl.prod_i is not np.nan  and \
+            pl.cons_i is not np.nan and \
+            pl.r_i is not np.nan:
+                OK += 1
+        
+        
+        # afficher indicateurs et calcul nb_ok
+        nb_ok += (OK + OK_state)/nb_test
+        
+    # les afficher ces indicateurs rp
+    rp = round(nb_ok/N_INSTANCE, 3)
+    print("rapport execution rp={}".format(rp))
+    pass
+
+
+
+#------------------------------------------------------------------------------
+#           execution
+#------------------------------------------------------------------------------
+if __name__ == "__main__":
+    ti = time.time()
+    test_class_player()
+    # y = test_merge_vars()
+    print("classe player runtime = {}".format(time.time() - ti))
+
+
