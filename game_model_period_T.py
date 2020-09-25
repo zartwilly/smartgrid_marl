@@ -4,6 +4,7 @@ Created on Wed Sep 23 18:33:06 2020
 
 @author: jwehounou
 """
+import sys
 import time
 import math
 import numpy as np
@@ -241,6 +242,32 @@ def extract_values_to_array(arr_pls_M_T, t, attribut_position=4):
     vals = arr_pls_M_T[:, t, attribut_position]
     return vals
     
+def compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0):
+    """
+    calculate the benefit and the cost of each player at time t
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of shape M_PLAYERS*NUM_PERIODS*9
+        DESCRIPTION.
+    gamma_is :  array of shape (M_PLAYERS,)
+        DESCRIPTION.
+    t : integer
+        DESCRIPTION.
+    b0 : float
+        benefit per unit.
+    c0 : float
+        cost per unit.
+
+    Returns
+    -------
+    bens: benefits of M_PLAYERS, shape (M_PLAYERS,).
+    csts: costs of M_PLAYERS, shape (M_PLAYERS,)
+    """
+    bens = b0 * arr_pls_M_T[:,t,5] + gamma_is * arr_pls_M_T[:,t,7]
+    csts = c0 *  arr_pls_M_T[:,t,6]
+    return bens, csts
+
 def determine_new_pricing_sg(prod_is, cons_is, pi_hp_plus, pi_hp_minus):
     """
     determine the new price of energy in the SG from the amounts produced 
@@ -326,7 +353,7 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         C0s.append(c0);
         # compute cost and benefit players by energy exchanged.
         gamma_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=4)        
-        bens, csts = compute_utility_players(arr_pls, gamma_is)
+        bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
         BENs.append(bens), CSTs.append(csts)
         
         #compute the new prices pi_0_plus and pi_0_minus from a pricing model in the document
@@ -394,8 +421,8 @@ def test_initialize_game_create_agents_t0():
                     "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
     arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
     
-    print("shape: arr_pls={}, arr_pls_M_T={}".format(
-            arr_pls.shape, arr_pls_M_T.shape))
+    print("shape: arr_pls={}, arr_pls_M_T={}, size={}".format(
+            arr_pls.shape, arr_pls_M_T.shape, sys.getsizeof(arr_pls_M_T) ))
     if arr_pls.shape == (M_PLAYERS,) \
         and arr_pls_M_T.shape == (M_PLAYERS, NUM_PERIODS+1, 9):
             print("test_initialize_game_create_agents_t0: OK")
@@ -473,8 +500,32 @@ def test_extract_values_to_array():
         else:
             pass
             #print("test_extract_values_to_array: NOK")
+    print("shape gamma_is: {}".format(vals.shape))
     print("test_extract_values_to_array: OK={}".format(round(OK/NUM_PERIODS,2)))
     
+def test_compute_utility_players():
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    OK = 0
+    for t in range(0,NUM_PERIODS):
+        b0, c0 = np.random.randn(), np.random.randn()
+        gamma_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=4)
+        bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
+        
+        if bens.shape == (M_PLAYERS,) and csts.shape == (M_PLAYERS,):
+            #print("bens={}, csts={}".format(bens.shape, csts.shape))
+            OK += 1
+    print("test_compute_utility_players: rp={}".format(round(OK/NUM_PERIODS,2)))
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -484,5 +535,6 @@ if __name__ == "__main__":
     test_compute_prod_cons_SG()
     test_compute_energy_unit_price()
     test_extract_values_to_array()
+    test_compute_utility_players()
     print("runtime = {}".format(time.time() - ti))    
     
