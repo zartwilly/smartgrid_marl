@@ -241,15 +241,15 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
     
     sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
-                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_T_plus_1,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
                     "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
                     "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
-    arr_pls = initialize_game_create_agents_t0(sys_inputs)
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
     B0s, C0s, BENs, CSTs = [], [], [], []
     pi_sg_plus, pi_sg_minus = 0, 0
     for t in range(0, T):
         # compute In_sg, Out_sg
-        In_sg, Out_sg = compute_prod_cons_SG(arr_pls)
+        In_sg, Out_sg = compute_prod_cons_SG(arr_pls, arr_pls_M_T, t)
         # compute price of an energy unit price for cost and benefit players
         b0, c0 = compute_energy_unit_price(
                         pi_0_plus, pi_0_minus, 
