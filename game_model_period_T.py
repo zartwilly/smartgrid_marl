@@ -236,7 +236,7 @@ def extract_values_to_array(arr_pls_M_T, t, attribut_position=4):
 
     Returns
     -------
-    list of len=M_PLAYERS.
+    numpy array of shape=(M_PLAYERS,).
 
     """
     vals = arr_pls_M_T[:, t, attribut_position]
@@ -268,7 +268,8 @@ def compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0):
     csts = c0 *  arr_pls_M_T[:,t,6]
     return bens, csts
 
-def determine_new_pricing_sg(prod_is, cons_is, pi_hp_plus, pi_hp_minus):
+def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t, 
+                             pi_hp_plus, pi_hp_minus, t):
     """
     determine the new price of energy in the SG from the amounts produced 
     (prod_is), consumpted (cons_is) and the price of one unit of energy 
@@ -276,21 +277,48 @@ def determine_new_pricing_sg(prod_is, cons_is, pi_hp_plus, pi_hp_minus):
 
     Parameters
     ----------
-    prod_is : array of 1 x N
+    prod_is_0_t : array of (M_PLAYERS, t)
         DESCRIPTION.
-    cons_is : array of 1 x N
+    cons_is_0_t : array of (M_PLAYERS, t)
         DESCRIPTION.
     pi_hp_plus : a float 
-        DESCRIPTION.
+        Energy unit price for exporting from SG to HP.
     pi_hp_minus : float
-        DESCRIPTION.
-
+        Energy unit price for importing from HP to SG.
+    t : integer
+        period of time
     Returns
     -------
-    new_pi_0_plus, new_pi_0_minus.
+    new_pi_0_plus, new_pi_0_minus: float, float.
 
     """
-    return None
+    """
+    sum_ener_res_plus : sum of residual energy (diff between prod_i and cons_i) 
+                        for all periods i.e 0 to t-1 
+    sum_ener_res_minus : sum of residual energy (diff between cons_i and prod_i) 
+                            for all periods i.e 0 to t-1 
+    sum_prod : sum of production for all players for all periods i.e 0 to t-1
+    sum_cons : sum of consumption for all players for all periods i.e 0 to t-1
+    """
+
+    sum_ener_res_plus = 0            # sum of residual energy (diff between prod_i and cons_i) for all periods i.e 0 to t-1 
+    sum_ener_res_minus = 0           # sum of residual energy (diff between cons_i and prod_i) for all periods i.e 0 to t-1 
+    sum_prod = 0                     # sum of production for all players for all periods i.e 0 to t-1
+    sum_cons = 0                     # sum of consumption for all players for all periods i.e 0 to t-1
+    for t_prime in range(0, t):
+        sum_prod_i_tPrime = sum(prod_is_0_t[:, t_prime])
+        sum_cons_i_tPrime = sum(cons_is_0_t[:, t_prime])
+        sum_prod += sum_prod_i_tPrime
+        sum_cons += sum_ener_res_minus
+        sum_ener_res_plus += fct_aux.fct_positive(sum_prod_i_tPrime, 
+                                                  sum_cons_i_tPrime)
+        sum_ener_res_minus += fct_aux.fct_positive(sum_cons_i_tPrime, 
+                                                   sum_prod_i_tPrime)
+        
+    new_pi_0_minus = round( pi_hp_minus*sum_ener_res_minus / sum_cons, 3)
+    new_pi_0_plus = round( pi_hp_plus*sum_ener_res_plus / sum_prod, 3)    
+        
+    return new_pi_0_plus, new_pi_0_minus
 
 def update_player(arr_pls, list_valeurs_by_variable):
     """
@@ -523,7 +551,8 @@ def test_compute_utility_players():
         bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
         
         if bens.shape == (M_PLAYERS,) and csts.shape == (M_PLAYERS,):
-            #print("bens={}, csts={}".format(bens.shape, csts.shape))
+            print("bens={}, csts={}, gamma_is={}".format(
+                    bens.shape, csts.shape, gamma_is.shape))
             OK += 1
     print("test_compute_utility_players: rp={}".format(round(OK/NUM_PERIODS,2)))
 #------------------------------------------------------------------------------
