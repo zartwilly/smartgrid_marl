@@ -221,14 +221,17 @@ def compute_energy_unit_price(pi_0_plus, pi_0_minus,
     
     return b0, c0
 
-def extract_values_to_array(arr_pls_M_T, t, attribut_position=4):
+def extract_values_to_array(arr_pls_M_T, list_t, attribut_position=4):
     """
-    extract list of values for one variable at time t for all players
+    extract list of values for one variable at time t or a list of period 
+    for all players
 
     Parameters
     ----------
     arr_pls_M_T :  array of shape M_PLAYERS*NUM_PERIODS*9
         DESCRIPTION.
+    list_t : list of specified NUM_PERIODS; len(list_t) <= NUM_PERIODS
+        DESCRIPTION
     attribut_position : Integer, optional
         DESCRIPTION. The default is 4. 
         exemple, thes positions of gamma_i, prod_i, cons_i and r_i are 
@@ -236,10 +239,13 @@ def extract_values_to_array(arr_pls_M_T, t, attribut_position=4):
 
     Returns
     -------
-    numpy array of shape=(M_PLAYERS,).
+    numpy array of shape=(M_PLAYERS,) if type of list_t = integer.
+    numpy array of shape=(M_PLAYERS,list_t) if type of list_t = list
 
     """
-    vals = arr_pls_M_T[:, t, attribut_position]
+    vals = arr_pls_M_T[:, list_t, attribut_position] \
+        if type(list_t) is int \
+        else arr_pls_M_T[:, list_t, attribut_position]
     return vals
     
 def compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0):
@@ -305,7 +311,7 @@ def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t,
     sum_ener_res_minus = 0           # sum of residual energy (diff between cons_i and prod_i) for all periods i.e 0 to t-1 
     sum_prod = 0                     # sum of production for all players for all periods i.e 0 to t-1
     sum_cons = 0                     # sum of consumption for all players for all periods i.e 0 to t-1
-    for t_prime in range(0, t):
+    for t_prime in range(0, t+1):
         sum_prod_i_tPrime = sum(prod_is_0_t[:, t_prime])
         sum_cons_i_tPrime = sum(cons_is_0_t[:, t_prime])
         sum_prod += sum_prod_i_tPrime
@@ -385,12 +391,18 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         BENs.append(bens), CSTs.append(csts)
         
         #compute the new prices pi_0_plus and pi_0_minus from a pricing model in the document
-        # a changer par arr_pls_M_T et aussi leur position
-        prod_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=5)
-        cons_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=6)
+        # prod_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=5)
+        # cons_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=6)
+        # pi_0_plus, pi_0_minus = determine_new_pricing_sg(
+        #                             prod_is, cons_is,
+        #                             pi_hp_plus, pi_hp_minus, t)
+        ##--- modification fcts extract_values_to_array et determine_new_pricing_sg --> debut
+        prod_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=5)
+        cons_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=6)
         pi_0_plus, pi_0_minus = determine_new_pricing_sg(
-                                    prod_is, cons_is,
-                                    pi_hp_plus, pi_hp_minus)
+                                    prod_is_0_t, cons_is_0_t,
+                                    pi_hp_plus, pi_hp_minus, t)
+        ##--- modification fcts extract_values_to_array et determine_new_pricing_sg --> fin
         # update CONS_i for a each player
         arr_pls = update_player(arr_pls, [(2,cons_is), (2,prod_is)])
         
@@ -519,17 +531,28 @@ def test_extract_values_to_array():
                     "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
     arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
     
-    OK = 0
+    # t integer
+    OK_int = 0
     for t in range(0,NUM_PERIODS):    
         vals = extract_values_to_array(arr_pls_M_T, t, attribut_position=4)
-        if len(vals) == M_PLAYERS:
-            OK += 1
+        if vals.shape == (M_PLAYERS,):
+            OK_int += 1
             #print("test_extract_values_to_array: OK")
         else:
             pass
             #print("test_extract_values_to_array: NOK")
-    print("shape gamma_is: {}".format(vals.shape))
-    print("test_extract_values_to_array: OK={}".format(round(OK/NUM_PERIODS,2)))
+    print("t:integer ==> shape gamma_is: {}".format(vals.shape))
+    print("test_extract_values_to_array: OK_int={}".format(round(OK_int/NUM_PERIODS,2)))
+    
+    # list_t : list of periods
+    list_t = range(1,2+1)
+    vals = extract_values_to_array(arr_pls_M_T, list_t, attribut_position=4)
+    print("t:list ==> shape gamma_is: {}".format(vals.shape))
+    if vals.shape == (M_PLAYERS, 2):
+        print("test_extract_values_to_array: OK_list")
+    else:
+        print("test_extract_values_to_array: NOK_list")
+    
     
 def test_compute_utility_players():
     S_0, S_1, = 0, 0; case = CASE3
