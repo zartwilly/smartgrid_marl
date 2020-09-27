@@ -100,8 +100,8 @@ def initialize_game_create_agents_t0(sys_inputs):
         Si_max = pl.get_Si_max(); gamma_i = pl.get_gamma_i(); 
         prod_i = pl.get_prod_i(); cons_i = pl.get_cons_i(); 
         r_i = pl.get_r_i(); state_i = pl.get_state_i()
-        a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, prod_i, 
-                        cons_i, r_i, state_i])
+        a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, 
+                        prod_i, cons_i, r_i, state_i])
         
         # for each player, generate the attribut values of players a each time.
         Cis, Pis, Si_maxs, Sis = fct_aux.generate_Cis_Pis_Sis(
@@ -130,8 +130,8 @@ def initialize_game_create_agents_t0(sys_inputs):
             state_i = pl.get_state_i()
             # print("Type: gamma_i={}:{}, cons_i={}:{}, prod_i={}, r_i={}, Pi={}, Ci={}".format(
             #     type(gamma_i), gamma_i, type(cons_i), cons_i, type(prod_i), type(r_i), type(Pi), type(Ci)))
-            a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, prod_i, 
-                            cons_i, r_i, state_i])
+            a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, 
+                            prod_i, cons_i, r_i, state_i])
             
         # TODO a resoudre cela
         # arr_pls_M_T = np.array(a_i_t_s) \
@@ -331,26 +331,68 @@ def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t,
         
     return new_pi_0_plus, new_pi_0_minus
 
-def update_player(arr_pls, list_valeurs_by_variable):
+def update_player(arr_pls, arr_pls_M_T, t, list_valeurs_by_variable):
     """
+    TODO : la mise a jour des players NE SE FAIT PAS.
+    update attributs of players in arr_pls. 
+    Values of attributs come from list_valeurs_by_variable
     
-
     Parameters
     ----------
-    arr_pls : TYPE
+    arr_pls : array of players with a shape (M_PLAYERS,) 
+        DESCRIPTION.
+    arr_pls_M_T: array of shape M_PLAYERS*NUM_PERIODS*9
+        DESCRIPTION.
+    t : a time of NUM_PERIODS
         DESCRIPTION.
     list_valeurs_by_variable : list of tuples
         DESCRIPTION.
         EXEMPLE
+            [(4,new_gamma_i_t_plus_1_s)])
+            4 denotes update gamma_i and it is a position of the list 
+            [Ci, Pi, Si, Si_max, gamma_i, prod_i, cons_i, r_i, state_i, mode_i]
             [(1,new_gamma_i_t_plus_1_s)])
             1 denotes update gamma_i and generate/update prod_i or cons_i from gamma_i
             [(2, state_ais)]
             2 denotes update variable state_ai without generate/update prod_i or cons_i
     Returns
     -------
-    arr_pls.
+    arr_pls, arr_pls_M_T.
 
     """
+    #arr_pls_new = np.array([])
+    for tup_variable in list_valeurs_by_variable:
+        print("tup_variable={}".format(tup_variable))
+        num_attr, vals = tup_variable
+        if num_attr == 4:
+            for num_pl,pl in enumerate(arr_pls):
+                pl.set_gamma_i(vals[num_pl])
+                arr_pls_M_T[num_pl,t,num_attr] = vals[num_pl]
+        if num_attr == 5:
+            for num_pl,pl in enumerate(arr_pls):
+                pl.set_prod_i(vals[num_pl])
+                arr_pls_M_T[num_pl,t,num_attr] = vals[num_pl]
+        if num_attr == 6:
+            for num_pl,pl in enumerate(arr_pls):
+                pl.set_cons_i(vals[num_pl])
+                arr_pls_M_T[num_pl,t,num_attr] = vals[num_pl]
+        if num_attr == 7:
+            for num_pl,pl in enumerate(arr_pls):
+                pl.set_r_i(vals[num_pl])
+                arr_pls_M_T[num_pl,t,num_attr] = vals[num_pl]
+        if num_attr == 8:
+            for num_pl,pl in enumerate(arr_pls):
+                pl.set_state_i(vals[num_pl])
+                # pl.state_i = vals[num_pl]
+                # print("num_pl ={}, new_state={}, pl={}".format(num_pl, pl.get_state_i(),pl))
+                arr_pls_M_T[num_pl,t,num_attr] = vals[num_pl]
+                # arr_pls_new = np.append(arr_pls_new, pl)
+        if num_attr == 9:
+            for num_pl,pl in enumerate(arr_pls):
+                pl.set_mode_i(vals[num_pl])
+                arr_pls_M_T[num_pl,t,num_attr] = vals[num_pl]
+        # arr_pls_new = np.append(arr_pls_new, pl)    
+    return arr_pls, arr_pls_M_T
 
 def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     """
@@ -393,7 +435,7 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         # compute cost and benefit players by energy exchanged.
         gamma_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=4)        
         bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
-        BENs.append(bens), CSTs.append(csts)
+        BENs.append(bens); CSTs.append(csts)
         
         #compute the new prices pi_0_plus and pi_0_minus from a pricing model in the document
         prod_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=5)
@@ -402,8 +444,11 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
                                             prod_is_0_t, cons_is_0_t,
                                             pi_hp_plus, pi_hp_minus, t)
         pi_0_plus, pi_0_minus = new_pi_0_plus, new_pi_0_minus
-        # update CONS_i for a each player
-        arr_pls = update_player(arr_pls, [(2,cons_is), (2,prod_is)])
+        # update cons_i, prod_i for a each player
+        prod_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=5)
+        cons_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=6)
+        arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
+                                             [(5,cons_is), (6,prod_is)])
         
         
         # definition of the new storage politic
@@ -411,10 +456,12 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
                                     arr_pls, state_ais, mode_is, 
                                     Ci_t_plus_1_s[t], Pi_t_plus_1_s[t], 
                                     pi_0_plus, pi_0_minus)
-        arr_pls = update_player(arr_pls, [(1,new_gamma_i_t_plus_1_s)])
+        arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
+                                             [(4,new_gamma_i_t_plus_1_s)])
         # choose a new state, new mode at t+1
-        state_ais, mode_is = select_mode_compute_r_i(arr_pls)
-        arr_pls = update_player(arr_pls, [(2,state_ais), (2,mode_is)])
+        state_ais, mode_is = select_mode_compute_r_i(arr_pls, arr_pls_M_T)
+        arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
+                                             [(8,state_ais), (9,mode_is)])
         
         # update prices of the SG
         pi_sg_plus, pi_sg_minus = pi_0_plus, pi_0_minus
@@ -601,9 +648,82 @@ def test_determine_new_pricing_sg():
     new_pi_0_plus, new_pi_0_minus = determine_new_pricing_sg(
                                     prod_is_0_t, cons_is_0_t,
                                     pi_hp_plus, pi_hp_minus, t)
-    print("OK pi_plus") if new_pi_0_plus != pi_0_plus else print("NOK pi_plus")
-    print("OK pi_minus") if new_pi_0_minus != pi_0_minus else print("NOK pi_minus")
+    print("test_determine_new_pricing_sg: OK pi_plus") \
+        if new_pi_0_plus != pi_0_plus \
+        else print("test_determine_new_pricing_sg: NOK pi_plus")
+    print("test_determine_new_pricing_sg: OK pi_minus") \
+        if new_pi_0_minus != pi_0_minus \
+        else print("test_determine_new_pricing_sg: NOK pi_minus")
 
+def test_update_player():
+    """
+    short case of helping 
+    
+    class Player:
+        cpt_player = 0
+        def __init__(self, state_i):
+        self.name = ("").join(["a",str(self.cpt_player)])
+        self.state_i = state_i
+        Player.cpt_player += 1
+    
+        def get_state_i(self):
+            return self.state_i
+        
+        def set_state_i(self, new_state)
+            self.state_i = new_state
+
+    M = 3
+    arr_players = []
+    states = "A,B,C,D,E,F,G,H,I,J".split(",")
+    for ag in np.concatenate((states)).T
+        pl = Player(*ag)
+        arr_players = np.append(arr_players, pl)
+    for player in arr_players:
+        print("Before update: player state={}".format(player.get_state_i()))
+        
+    def update_state(arr_players):
+        states = "A,B,C,D,E,F,G,H,I,J".lower().split(",")
+        for num, pl in enumerate(arr_players):
+            pl.set_state_i(states[num])
+        return arr_players
+    
+    arr_players = update_state(arr_players)
+    for player in arr_players:
+        print("After update: player state={}".format(player.get_state_i()))
+    
+    Returns
+    -------
+    None.
+
+    """
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    t = np.random.randint(0,NUM_PERIODS)
+    
+    str_vals = "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,X,Z".split(",")
+    num_attr = 8
+    list_valeurs_by_variable = [(num_attr, str_vals)]
+    arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
+                                         list_valeurs_by_variable)
+    OK = 0; OK_pls_M_T = 0
+    for num_pl,pl in enumerate(arr_pls):
+        print("pl.state_i={}".format(pl.get_state_i()))
+        if str(pl.get_state_i()) is str and len(pl.get_state_i()) == 1:
+            OK += 1
+        if arr_pls_M_T[num_pl,t,num_attr] == str_vals[num_pl]:
+            OK_pls_M_T += 1
+    print("test_update_player: rp_OK= {}, rp_OK_pls_M_T={}".format(
+            round(OK/M_PLAYERS,3), round(OK_pls_M_T/M_PLAYERS,3)))
     
 #------------------------------------------------------------------------------
 #           execution
@@ -616,5 +736,6 @@ if __name__ == "__main__":
     test_extract_values_to_array()
     test_compute_utility_players()
     test_determine_new_pricing_sg()
+    test_update_player()
     print("runtime = {}".format(time.time() - ti))    
     
