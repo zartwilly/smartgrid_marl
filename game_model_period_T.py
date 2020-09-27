@@ -60,7 +60,7 @@ def initialize_game_create_agents_t0(sys_inputs):
      arr_pls:  array of players of shape 1*M M*T
      arr_pls_M_T: array of players of shape M_PLAYERS*NUM_PERIODS*9
      pl_m^t contains a list of 
-             Pi, Ci, Si, Si_max, gamma_i, prod_i, cons_i, r_i, state_i
+             Pi, Ci, Si, Si_max, gamma_i, prod_i, cons_i, r_i, state_i, mode_i
      m \in [0,M-1] and t \in [0,T-1] 
     """
     # declaration variables
@@ -100,8 +100,9 @@ def initialize_game_create_agents_t0(sys_inputs):
         Si_max = pl.get_Si_max(); gamma_i = pl.get_gamma_i(); 
         prod_i = pl.get_prod_i(); cons_i = pl.get_cons_i(); 
         r_i = pl.get_r_i(); state_i = pl.get_state_i()
+        mode_i = pl.get_cons_i()
         a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, 
-                        prod_i, cons_i, r_i, state_i])
+                        prod_i, cons_i, r_i, state_i, mode_i])
         
         # for each player, generate the attribut values of players a each time.
         Cis, Pis, Si_maxs, Sis = fct_aux.generate_Cis_Pis_Sis(
@@ -127,11 +128,11 @@ def initialize_game_create_agents_t0(sys_inputs):
             
             gamma_i = pl.get_gamma_i(); prod_i = pl.get_prod_i() 
             cons_i = pl.get_cons_i(); r_i = pl.get_r_i(); 
-            state_i = pl.get_state_i()
+            state_i = pl.get_state_i(); mode_i = pl.get_mode_i()
             # print("Type: gamma_i={}:{}, cons_i={}:{}, prod_i={}, r_i={}, Pi={}, Ci={}".format(
             #     type(gamma_i), gamma_i, type(cons_i), cons_i, type(prod_i), type(r_i), type(Pi), type(Ci)))
             a_i_t_s.append([Ci, Pi, Si, Si_max, gamma_i, 
-                            prod_i, cons_i, r_i, state_i])
+                            prod_i, cons_i, r_i, state_i, mode_i])
             
         # TODO a resoudre cela
         # arr_pls_M_T = np.array(a_i_t_s) \
@@ -271,7 +272,7 @@ def compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0):
     csts: costs of M_PLAYERS, shape (M_PLAYERS,)
     """
     bens = b0 * arr_pls_M_T[:,t,5] + gamma_is * arr_pls_M_T[:,t,7]
-    csts = c0 *  arr_pls_M_T[:,t,6]
+    csts = c0 * arr_pls_M_T[:,t,6]
     return bens, csts
 
 def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t, 
@@ -341,7 +342,7 @@ def update_player(arr_pls, arr_pls_M_T, t, list_valeurs_by_variable):
     ----------
     arr_pls : array of players with a shape (M_PLAYERS,) 
         DESCRIPTION.
-    arr_pls_M_T: array of shape M_PLAYERS*NUM_PERIODS*9
+    arr_pls_M_T: array of shape M_PLAYERS*NUM_PERIODS*10
         DESCRIPTION.
     t : a time of NUM_PERIODS
         DESCRIPTION.
@@ -452,6 +453,8 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         
         
         # definition of the new storage politic
+        state_ais = extract_values_to_array(arr_pls_M_T, t, attribut_position=8)
+        mode_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=9)
         new_gamma_i_t_plus_1_s = select_storage_politic(
                                     arr_pls, state_ais, mode_is, 
                                     Ci_t_plus_1_s[t], Pi_t_plus_1_s[t], 
@@ -510,7 +513,7 @@ def test_initialize_game_create_agents_t0():
     print("shape: arr_pls={}, arr_pls_M_T={}, size={}".format(
             arr_pls.shape, arr_pls_M_T.shape, sys.getsizeof(arr_pls_M_T) ))
     if arr_pls.shape == (M_PLAYERS,) \
-        and arr_pls_M_T.shape == (M_PLAYERS, NUM_PERIODS+1, 9):
+        and arr_pls_M_T.shape == (M_PLAYERS, NUM_PERIODS+1, 10):
             print("test_initialize_game_create_agents_t0: OK")
             print("shape: arr_pls={}, arr_pls_M_T={}".format(
             arr_pls.shape, arr_pls_M_T.shape))
@@ -717,7 +720,7 @@ def test_update_player():
                                          list_valeurs_by_variable)
     OK = 0; OK_pls_M_T = 0
     for num_pl,pl in enumerate(arr_pls):
-        print("pl.state_i={}".format(pl.get_state_i()))
+        # print("pl.state_i={}".format(pl.get_state_i()))
         if str(pl.get_state_i()) is str and len(pl.get_state_i()) == 1:
             OK += 1
         if arr_pls_M_T[num_pl,t,num_attr] == str_vals[num_pl]:
