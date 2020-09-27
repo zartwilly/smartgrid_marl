@@ -363,7 +363,7 @@ def update_player(arr_pls, arr_pls_M_T, t, list_valeurs_by_variable):
     """
     #arr_pls_new = np.array([])
     for tup_variable in list_valeurs_by_variable:
-        print("tup_variable={}".format(tup_variable))
+        # print("tup_variable={}".format(tup_variable))
         num_attr, vals = tup_variable
         if num_attr == 4:
             for num_pl,pl in enumerate(arr_pls):
@@ -395,6 +395,86 @@ def update_player(arr_pls, arr_pls_M_T, t, list_valeurs_by_variable):
         # arr_pls_new = np.append(arr_pls_new, pl)    
     return arr_pls, arr_pls_M_T
 
+def determinate_Ci_Pi_t_plus_1(arr_pls_M_T, t):
+    """
+    determinate the values of Ci and Pi at t+1
+    
+    Parameters
+    ----------
+    arr_pls_M_T : array of shape  M_PLAYERS*NUM_PERIODS*10
+    t: integer
+    
+    Returns
+    -------
+    Ci_t_plus_1_s: array of Ci of shape (M_PLAYERS,) 
+    Pi_t_plus_1_s: array of Pi of shape (M_PLAYERS,)
+    """
+    Ci_t_plus_1_s = np.zeros(shape=(M_PLAYERS,))
+    Pi_t_plus_1_s = np.zeros(shape=(M_PLAYERS,))
+    if t != 0 and t != NUM_PERIODS:
+        Ci_t_plus_1_s = arr_pls_M_T[:,t+1,0]
+        Pi_t_plus_1_s = arr_pls_M_T[:,t+1,1]
+    elif t == NUM_PERIODS:
+        Ci_t_plus_1_s = np.zeros(shape=(M_PLAYERS,))
+        Pi_t_plus_1_s = np.zeros(shape=(M_PLAYERS,))
+    elif t == 0:
+        Ci_t_plus_1_s = np.zeros(shape=(M_PLAYERS,))
+        Pi_t_plus_1_s = arr_pls_M_T[:,t+1,1]
+    return Ci_t_plus_1_s, Pi_t_plus_1_s
+
+def select_storage_politic_players(arr_pls, state_ais, mode_is, 
+                                   Ci_t_plus_1_s, Pi_t_plus_1_s, 
+                                   pi_0_plus, pi_0_minus,
+                                   pi_hp_plus, pi_hp_minus):
+    """
+    choose the storage politic gamma_i of the M_PLAYERS players  
+    following the rules on the smartgrid system model document 
+    (see storage politic).
+
+    Parameters
+    ----------
+    arr_pls : array of shape M_PLAYERS*NUM_PERIODS*10
+        DESCRIPTION.
+    state_ais : states of players with a shape (M_players,)
+        DESCRIPTION.
+    mode_is : modes of players with a shape (M_players,)
+        DESCRIPTION.
+    Ci_t_plus_1_s : consumption of M_players players at t+1 with a shape (M_players,)
+        DESCRIPTION.
+    Pi_t_plus_1_s : production of M_players players at t+1 with a shape (M_players,)
+        DESCRIPTION.
+    pi_0_plus : float, new production price inside SG
+        DESCRIPTION.
+    pi_0_minus : float, new consumption price inside SG 
+        DESCRIPTION.
+    pi_hp_plus : float, price for exporting energy from SG to HP
+        DESCRIPTION.
+    pi_hp_minus : float, price for importing energy from HP to SG 
+        DESCRIPTION.
+
+    Returns
+    -------
+    new_gamma_is: array of shape (M_players,).
+
+    """
+    new_gamma_is = np.array([])
+    for tu in zip(arr_pls, state_ais, mode_is, Ci_t_plus_1_s, Pi_t_plus_1_s):
+        pl = tu[0]; state_i = tu[1]; mode_i = tu[2]; 
+        Ci_t_plus_1 = tu[3]; Pi_t_plus_1 = tu[4]
+        
+        #update pl
+        pl.set_state_i(state_i)
+        pl.set_mode_i(mode_i)
+        # compute gamma_i
+        pl.select_storage_politic(Ci_t_plus_1, Pi_t_plus_1, 
+                               pi_0_plus, pi_0_minus, 
+                               pi_hp_plus, pi_hp_minus)
+        # append new gamma in new_gamma_is
+        new_gamma_i = pl.get_gamma_i()
+        new_gamma_is = np.append(new_gamma_is, new_gamma_i)
+        
+    return new_gamma_is
+    
 def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     """
     create the game model divised in T periods such as players maximize their 
@@ -452,13 +532,17 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
                                              [(5,cons_is), (6,prod_is)])
         
         
+        # determination of Ci_t_plus_1_s, Pi_t_plus_1_s at t+1
+        Ci_t_plus_1_s, Pi_t_plus_1_s = determinate_Ci_Pi_t_plus_1(
+                                        arr_pls_M_T, t)
         # definition of the new storage politic
         state_ais = extract_values_to_array(arr_pls_M_T, t, attribut_position=8)
         mode_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=9)
-        new_gamma_i_t_plus_1_s = select_storage_politic(
+        new_gamma_i_t_plus_1_s = select_storage_politic_players(
                                     arr_pls, state_ais, mode_is, 
-                                    Ci_t_plus_1_s[t], Pi_t_plus_1_s[t], 
-                                    pi_0_plus, pi_0_minus)
+                                    Ci_t_plus_1_s, Pi_t_plus_1_s, 
+                                    pi_0_plus, pi_0_minus,
+                                    pi_hp_plus, pi_hp_minus)
         arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
                                              [(4,new_gamma_i_t_plus_1_s)])
         # choose a new state, new mode at t+1
@@ -728,6 +812,39 @@ def test_update_player():
     print("test_update_player: rp_OK= {}, rp_OK_pls_M_T={}".format(
             round(OK/M_PLAYERS,3), round(OK_pls_M_T/M_PLAYERS,3)))
     
+def test_select_storage_politic_players():
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    t = np.random.randint(0,NUM_PERIODS)
+    
+    Ci_t_plus_1_s, Pi_t_plus_1_s = determinate_Ci_Pi_t_plus_1(
+                                        arr_pls_M_T, t)
+    # definition of the new storage politic
+    state_ais = extract_values_to_array(arr_pls_M_T, t, attribut_position=8)
+    mode_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=9)
+    new_gamma_i_t_plus_1_s = select_storage_politic_players(
+                                    arr_pls, state_ais, mode_is, 
+                                    Ci_t_plus_1_s, Pi_t_plus_1_s, 
+                                    pi_0_plus, pi_0_minus,
+                                    pi_hp_plus, pi_hp_minus)
+    OK = 0
+    for tu in zip(arr_pls, new_gamma_i_t_plus_1_s):
+        pl = tu[0]
+        new_gamma_i = tu[1]
+        if pl.get_gamma_i() != new_gamma_i:
+            OK += 1
+    print("test_select_storage_politic_players: rp_OK={}".format( round(OK/M_PLAYERS,3)))
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -740,5 +857,6 @@ if __name__ == "__main__":
     test_compute_utility_players()
     test_determine_new_pricing_sg()
     test_update_player()
+    test_select_storage_politic_players()
     print("runtime = {}".format(time.time() - ti))    
     
