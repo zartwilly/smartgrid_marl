@@ -275,7 +275,7 @@ def compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0):
     return bens, csts
 
 def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t, 
-                             pi_hp_plus, pi_hp_minus, t):
+                             pi_hp_plus, pi_hp_minus, t, dbg=False):
     """
     determine the new price of energy in the SG from the amounts produced 
     (prod_is), consumpted (cons_is) and the price of one unit of energy 
@@ -300,15 +300,15 @@ def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t,
     """
     """
     sum_ener_res_plus : sum of residual energy (diff between prod_i and cons_i) 
-                        for all periods i.e 0 to t-1 
+                        for all periods i.e 0 to t 
     sum_ener_res_minus : sum of residual energy (diff between cons_i and prod_i) 
-                            for all periods i.e 0 to t-1 
+                            for all periods i.e 0 to t
     sum_prod : sum of production for all players for all periods i.e 0 to t-1
     sum_cons : sum of consumption for all players for all periods i.e 0 to t-1
     """
 
-    sum_ener_res_plus = 0            # sum of residual energy (diff between prod_i and cons_i) for all periods i.e 0 to t-1 
-    sum_ener_res_minus = 0           # sum of residual energy (diff between cons_i and prod_i) for all periods i.e 0 to t-1 
+    sum_ener_res_plus = 0            # sum of residual energy (diff between prod_i and cons_i) for all periods i.e 0 to t 
+    sum_ener_res_minus = 0           # sum of residual energy (diff between cons_i and prod_i) for all periods i.e 0 to t 
     sum_prod = 0                     # sum of production for all players for all periods i.e 0 to t-1
     sum_cons = 0                     # sum of consumption for all players for all periods i.e 0 to t-1
     for t_prime in range(0, t+1):
@@ -321,8 +321,13 @@ def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t,
         sum_ener_res_minus += fct_aux.fct_positive(sum_cons_i_tPrime, 
                                                    sum_prod_i_tPrime)
         
-    new_pi_0_minus = round( pi_hp_minus*sum_ener_res_minus / sum_cons, 3)
-    new_pi_0_plus = round( pi_hp_plus*sum_ener_res_plus / sum_prod, 3)    
+        # print("t_prime={}, sum_prod={}, sum_cons={}, sum_ener_res_plus={}, sum_ener_res_minus={}".format(
+        #     t_prime, sum_prod, sum_cons, sum_ener_res_plus, sum_ener_res_minus))
+        
+    new_pi_0_minus = round( pi_hp_minus*sum_ener_res_minus / sum_cons, 3) \
+                        if sum_cons != 0 else np.nan
+    new_pi_0_plus = round( pi_hp_plus*sum_ener_res_plus / sum_prod, 3) \
+                        if sum_prod != 0 else np.nan
         
     return new_pi_0_plus, new_pi_0_minus
 
@@ -399,6 +404,7 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         ##--- modification fcts extract_values_to_array et determine_new_pricing_sg --> debut
         prod_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=5)
         cons_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=6)
+        # TODO replace pi_0_plus by new_pi_0_plus
         pi_0_plus, pi_0_minus = determine_new_pricing_sg(
                                     prod_is_0_t, cons_is_0_t,
                                     pi_hp_plus, pi_hp_minus, t)
@@ -578,6 +584,34 @@ def test_compute_utility_players():
                     bens.shape, csts.shape, gamma_is.shape))
             OK += 1
     print("test_compute_utility_players: rp={}".format(round(OK/NUM_PERIODS,2)))
+    
+def test_determine_new_pricing_sg():
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    t = np.random.randint(0,NUM_PERIODS)
+    
+    prod_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=5)
+    cons_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=6)
+    print("t = {}, shapes prod_is_0_t:{}, cons_is_0_t={}".format(
+            t, prod_is_0_t.shape, cons_is_0_t.shape))
+    
+    new_pi_0_plus, new_pi_0_minus = determine_new_pricing_sg(
+                                    prod_is_0_t, cons_is_0_t,
+                                    pi_hp_plus, pi_hp_minus, t)
+    print("OK pi_plus") if new_pi_0_plus != pi_0_plus else print("NOK pi_plus")
+    print("OK pi_minus") if new_pi_0_minus != pi_0_minus else print("NOK pi_minus")
+
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -588,5 +622,6 @@ if __name__ == "__main__":
     test_compute_energy_unit_price()
     test_extract_values_to_array()
     test_compute_utility_players()
+    test_determine_new_pricing_sg()
     print("runtime = {}".format(time.time() - ti))    
     
