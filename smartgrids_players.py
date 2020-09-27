@@ -256,6 +256,16 @@ class Player:
         """
         self.state_i = new_state_i 
         
+    def get_mode_i(self):
+        """
+        return the mode of player i
+
+        Returns
+        -------
+        an integer or float.
+
+        """
+        return self.mode_i
     #--------------------------------------------------------------------------
     #           definition of functions of an agent
     #--------------------------------------------------------------------------
