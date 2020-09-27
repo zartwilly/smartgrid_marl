@@ -262,10 +262,21 @@ class Player:
 
         Returns
         -------
-        an integer or float.
+        a string.
 
         """
         return self.mode_i
+    
+    def set_mode_i(self, new_mode_i):
+        """
+        update the mode of player i
+
+        Returns
+        -------
+        None.
+
+        """
+        self.mode_i = new_mode_i
     #--------------------------------------------------------------------------
     #           definition of functions of an agent
     #--------------------------------------------------------------------------
