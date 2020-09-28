@@ -392,7 +392,7 @@ class Player:
                           self.get_Si() + (self.get_Pi() - self.get_Ci()))
         else:
             Si_minus, Si_plus = np.inf, np.inf
-            
+
         X = pi_0_minus; Y = pi_hp_minus
         if fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_minus:
             self.set_gamma_i(X-1)
