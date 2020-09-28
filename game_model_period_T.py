@@ -433,7 +433,7 @@ def select_storage_politic_players(arr_pls, state_ais, mode_is,
 
     Parameters
     ----------
-    arr_pls : array of shape M_PLAYERS*NUM_PERIODS*10
+    arr_pls : array of shape (M_players,)
         DESCRIPTION.
     state_ais : states of players with a shape (M_players,)
         DESCRIPTION.
@@ -459,12 +459,12 @@ def select_storage_politic_players(arr_pls, state_ais, mode_is,
     """
     new_gamma_is = np.array([])
     for tu in zip(arr_pls, state_ais, mode_is, Ci_t_plus_1_s, Pi_t_plus_1_s):
-        pl = tu[0]; state_i = tu[1]; mode_i = tu[2]; 
+        pl = tu[0]; state_i = tu[1]; #mode_i = tu[2]; 
         Ci_t_plus_1 = tu[3]; Pi_t_plus_1 = tu[4]
         
         #update pl
         pl.set_state_i(state_i)
-        pl.set_mode_i(mode_i)
+        # pl.set_mode_i(mode_i) ---> pas besoin
         # compute gamma_i
         pl.select_storage_politic(Ci_t_plus_1, Pi_t_plus_1, 
                                pi_0_plus, pi_0_minus, 
@@ -474,6 +474,59 @@ def select_storage_politic_players(arr_pls, state_ais, mode_is,
         new_gamma_is = np.append(new_gamma_is, new_gamma_i)
         
     return new_gamma_is
+
+def select_mode_compute_r_i(arr_pls, arr_pls_M_T, t):
+    """
+    select a mode_i and compute r_i for a time t+1
+
+    Parameters
+    ----------
+    arr_pls : array of shape (M_players,)
+        DESCRIPTION.
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*10
+        DESCRIPTION.
+    t : integer 
+        DESCRIPTION.
+
+    NB: [Ci, Pi, Si, Si_max, gamma_i, prod_i, cons_i, r_i, state_i, mode_i]
+    Returns
+    -------
+    state_ais, mode_is.
+
+    """
+    state_ais = arr_pls_M_T[:,t,8]
+    mode_is = arr_pls_M_T[:,t,9]
+    
+    Cis = arr_pls_M_T[:,t,0]
+    Pis = arr_pls_M_T[:,t,1]
+    Sis = arr_pls_M_T[:,t,2]
+    Si_maxs = arr_pls_M_T[:,t,3]
+    gamma_is = arr_pls_M_T[:,t,4]
+    prod_is = arr_pls_M_T[:,t,5]
+    cons_is = arr_pls_M_T[:,t,6]
+    
+    if t == NUM_PERIODS-1:
+        return arr_pls, arr_pls_M_T
+    else:
+        for num_pl, pl in enumerate(arr_pls):
+            pl.set_Ci(Cis[num_pl], update=False)
+            pl.set_Pi(Pis[num_pl], update=False)
+            pl.set_Si(Sis[num_pl], update=False)
+            pl.set_Si_max(Si_maxs[num_pl], update=False)
+            pl.set_gamma_i(gamma_is[num_pl])
+            pl.set_prod_i(prod_is[num_pl], update=False)
+            pl.set_cons_i(cons_is[num_pl], update=False)
+            
+            pl.select_mode_i()
+            pl.update_prod_cons_r_i()
+        
+            # update arr_pls_M_T at mode, r_i
+            arr_pls_M_T[num_pl,t+1,7] = pl.get_r_i()
+            arr_pls_M_T[num_pl,t+1,8] = pl.get_state_i()
+            arr_pls_M_T[num_pl,t+1,9] = pl.get_mode_i()
+    
+    return arr_pls, arr_pls_M_T
+            
     
 def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     """
@@ -545,10 +598,8 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
                                     pi_hp_plus, pi_hp_minus)
         arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
                                              [(4,new_gamma_i_t_plus_1_s)])
-        # choose a new state, new mode at t+1
-        state_ais, mode_is = select_mode_compute_r_i(arr_pls, arr_pls_M_T)
-        arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
-                                             [(8,state_ais), (9,mode_is)])
+        # choose a new state, new mode at t+1 and update arr_pls et arr_pls_M_T
+        arr_pls, arr_pls_M_T = select_mode_compute_r_i(arr_pls, arr_pls_M_T, t)
         
         # update prices of the SG
         pi_sg_plus, pi_sg_minus = pi_0_plus, pi_0_minus
@@ -845,6 +896,41 @@ def test_select_storage_politic_players():
             OK += 1
     print("test_select_storage_politic_players: rp_OK={}".format( round(OK/M_PLAYERS,3)))
     
+def test_select_mode_compute_r_i():
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    t = np.random.randint(0,NUM_PERIODS)
+    
+    # replace r_i values by np.nan
+    arr_pls_M_T[:,t,7] = np.nan
+    
+    arr_pls, arr_pls_M_T = select_mode_compute_r_i(arr_pls, arr_pls_M_T, t)
+    
+    if t == NUM_PERIODS-1:
+        print("aucune modification de r_i, mode_i, state_i, t=NUM_PERIODS")
+    else:
+        r_is = arr_pls_M_T[:,t+1,7]
+        arr_nan = np.empty(shape=(M_PLAYERS))
+        arr_nan[:] = None
+        if (arr_nan == r_is).all():
+            print("test_select_mode_compute_r_i: NOK")
+        else:
+            print("test_select_mode_compute_r_i: OK")
+            # print("r_is = {}".format(r_is))
+    
+        
+        
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -858,5 +944,6 @@ if __name__ == "__main__":
     test_determine_new_pricing_sg()
     test_update_player()
     test_select_storage_politic_players()
+    test_select_mode_compute_r_i()
     print("runtime = {}".format(time.time() - ti))    
     
