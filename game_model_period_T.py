@@ -279,6 +279,7 @@ def compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0):
 def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t, 
                              pi_hp_plus, pi_hp_minus, t, dbg=False):
     """
+    # TODO quel valeur je donne a new_pi_0_plus, new_pi_0_minus quand sum_cons = sum_prod = 0
     determine the new price of energy in the SG from the amounts produced 
     (prod_is), consumpted (cons_is) and the price of one unit of energy 
     exchanged with the HP
@@ -330,7 +331,7 @@ def determine_new_pricing_sg(prod_is_0_t, cons_is_0_t,
                         if sum_cons != 0 else np.nan
     new_pi_0_plus = round( pi_hp_plus*sum_ener_res_plus / sum_prod, 3) \
                         if sum_prod != 0 else np.nan
-        
+                            
     return new_pi_0_plus, new_pi_0_minus
 
 def update_player(arr_pls, arr_pls_M_T, t, list_valeurs_by_variable):
@@ -562,7 +563,86 @@ def compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
         C_is =  arr_pls_M_T[:,:,6] * C0s    # array of (M_PLAYERS,)
         RUs = B_is - C_is
     return RUs.sum(axis=1)
+
+##------------------ test game model a t --> debut ----------------------------    
+def game_model_SG_t(arr_pls, arr_pls_M_T, t, 
+                    pi_0_plus, pi_0_minus, 
+                    pi_hp_plus, pi_hp_minus):
+    """
+    create the game model at time t
+
+    parameters:
+    -------
+    arr_pls : array of shape (M_players,)
+        DESCRIPTION.
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*10
+        DESCRIPTION.
+    t : integer 
+        DESCRIPTION.    
+    Returns
+    -------
+    arr_pls, arr_pls_M_T,
+    b0: integer. benefit price for exporting energy from SG to HP
+    c0: integer. cost price for exporting energy from HP to SG
+    bens, csts: (M_PLAYERS,). benefit and cost prices depending of gamma_is
+    new_pi_0_plus, new_pi_0_minus, pi_sg_plus, pi_sg_minus : integer. new price inside SG
+    """
+    # compute In_sg, Out_sg
+    In_sg, Out_sg = compute_prod_cons_SG(arr_pls_M_T, t)
+    # compute price of an energy unit price for cost and benefit players
+    b0, c0 = compute_energy_unit_price(
+                    pi_0_plus, pi_0_minus, 
+                    pi_hp_plus, pi_hp_minus,
+                    In_sg, Out_sg)
+    #B0s.append(b0);
+    #C0s.append(c0);
+    # compute cost and benefit players by energy exchanged.
+    gamma_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=4)        
+    bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
+    #BENs.append(bens); CSTs.append(csts)
     
+    #compute the new prices pi_0_plus and pi_0_minus from a pricing model in the document
+    prod_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=5)
+    cons_is_0_t = extract_values_to_array(arr_pls_M_T, range(0,t+1), attribut_position=6)
+    new_pi_0_plus, new_pi_0_minus = determine_new_pricing_sg(
+                                        prod_is_0_t, cons_is_0_t,
+                                        pi_hp_plus, pi_hp_minus, t)
+    new_pi_0_plus = pi_0_plus if new_pi_0_plus is np.nan else new_pi_0_plus
+    new_pi_0_minus = pi_0_minus if new_pi_0_minus is np.nan else new_pi_0_minus
+    
+    #pi_0_plus, pi_0_minus = new_pi_0_plus, new_pi_0_minus
+    # update cons_i, prod_i for a each player
+    prod_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=5)
+    cons_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=6)
+    arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
+                                         [(5,cons_is), (6,prod_is)])
+    
+    
+    # determination of Ci_t_plus_1_s, Pi_t_plus_1_s at t+1
+    Ci_t_plus_1_s, Pi_t_plus_1_s = determinate_Ci_Pi_t_plus_1(
+                                    arr_pls_M_T, t)
+    # definition of the new storage politic
+    state_ais = extract_values_to_array(arr_pls_M_T, t, attribut_position=8)
+    mode_is = extract_values_to_array(arr_pls_M_T, t, attribut_position=9)
+    new_gamma_i_t_plus_1_s = select_storage_politic_players(
+                                arr_pls, state_ais, mode_is, 
+                                Ci_t_plus_1_s, Pi_t_plus_1_s, 
+                                new_pi_0_plus, new_pi_0_minus,
+                                pi_hp_plus, pi_hp_minus)
+    arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
+                                         [(4,new_gamma_i_t_plus_1_s)])
+    # choose a new state, new mode at t+1 and update arr_pls et arr_pls_M_T
+    arr_pls, arr_pls_M_T = select_mode_compute_r_i(arr_pls, arr_pls_M_T, t)
+    
+    # update prices of the SG
+    new_pi_sg_plus, new_pi_sg_minus = new_pi_0_plus, new_pi_0_minus
+    
+    return arr_pls, arr_pls_M_T, b0, c0, bens, csts, \
+            new_pi_0_plus, new_pi_0_minus, new_pi_sg_plus, new_pi_sg_minus
+    
+##------------------ test game model a t --> fin   ----------------------------    
+
+
 def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     """
     create the game model divised in T periods such as players maximize their 
@@ -593,7 +673,7 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     pi_sg_plus, pi_sg_minus = 0, 0
     for t in range(0, T):
         # compute In_sg, Out_sg
-        In_sg, Out_sg = compute_prod_cons_SG(arr_pls, arr_pls_M_T, t)
+        In_sg, Out_sg = compute_prod_cons_SG(arr_pls_M_T, t)
         # compute price of an energy unit price for cost and benefit players
         b0, c0 = compute_energy_unit_price(
                         pi_0_plus, pi_0_minus, 
@@ -640,7 +720,6 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         pi_sg_plus, pi_sg_minus = pi_0_plus, pi_0_minus
         
     # compute real utility of all players
-    ## transform list of list of numpy: BENs, CSTs, B0s, C0s
     BENs = np.array(BENs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
     CSTs = np.array(CSTs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
     B0s = np.array(B0s, dtype=object)        # array of (NUM_PERIODS,)
@@ -648,7 +727,7 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     RUs = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
                                pi_sg_plus, pi_sg_minus, CHOICE_RU)
     
-    return None
+    return RUs
 
 def game_model_SG():
     """
@@ -995,6 +1074,40 @@ def test_compute_real_utility():
                                pi_sg_plus=0, pi_sg_minus=0, choice=2) 
     print("test_compute_real_utility: RUs_1 shape:{}, sum={}".format(RUs_1.shape, RUs_1))
     print("test_compute_real_utility: RUs_2 shape:{}, sum={}".format(RUs_2.shape, RUs_2))
+
+def test_game_model_SG_t():
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs) 
+
+    t = np.random.randint(0,NUM_PERIODS)
+    #t = 0, NUM_PERIODS # 0: ERROR update gamma_i; NUM_PERIODS: error out of bounds update arr_pls_M_T
+    print("test_game_model_SG_t t={} => debut".format(t))
+        
+    new_arr_pls, new_arr_pls_M_T, \
+    b0, c0, bens, csts, \
+    new_pi_0_plus, new_pi_0_minus, \
+    new_pi_sg_plus, new_pi_sg_minus = game_model_SG_t(arr_pls, arr_pls_M_T, t, 
+                                              pi_0_plus, pi_0_minus, 
+                                              pi_hp_plus, pi_hp_minus)
+    ## add to variable vectors
+    BENs, CSTs = [], []
+    B0s, C0s = [], []
+    B0s.append(b0); C0s.append(c0);
+    BENs.append(bens); CSTs.append(csts)
+    pi_sg_plus, pi_sg_minus = new_pi_sg_plus, new_pi_sg_minus
+    pi_0_plus, pi_0_minus = new_pi_0_plus, new_pi_0_minus
+    ##
+    
+    print("test_game_model_SG_t t={} => Pas d'erreur".format(t))
     
 #------------------------------------------------------------------------------
 #           execution
@@ -1011,5 +1124,6 @@ if __name__ == "__main__":
     test_select_storage_politic_players()
     test_select_mode_compute_r_i()
     test_compute_real_utility()
+    test_game_model_SG_t()
     print("runtime = {}".format(time.time() - ti))    
     
