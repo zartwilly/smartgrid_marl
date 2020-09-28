@@ -640,6 +640,55 @@ def game_model_SG_t(arr_pls, arr_pls_M_T, t,
     return arr_pls, arr_pls_M_T, b0, c0, bens, csts, \
             new_pi_0_plus, new_pi_0_minus, new_pi_sg_plus, new_pi_sg_minus
     
+def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
+    """
+    create a game for one period T = [1..T]
+
+    Returns
+    -------
+    None.
+
+    """
+    S_0, S_1, = 0, 0;
+    # TODO:how to determine Ci_t_plus_1_s, Pi_t_plus_1_s?
+    ## generate random values of Ci_t_plus_1_s, Pi_t_plus_1_s
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    B0s, C0s, BENs, CSTs = [], [], [], []
+    pi_sg_plus_s, pi_sg_minus_s = [], [] 
+    pi_sg_plus, pi_sg_minus = 0, 0
+    
+    for t in range(0, NUM_PERIODS):
+        new_arr_pls, new_arr_pls_M_T, \
+        b0, c0, bens, csts, \
+        new_pi_0_plus, new_pi_0_minus, \
+        new_pi_sg_plus, new_pi_sg_minus = game_model_SG_t(
+                                                arr_pls, arr_pls_M_T, t, 
+                                                pi_0_plus, pi_0_minus, 
+                                                pi_hp_plus, pi_hp_minus)
+        # update new_arr_pls, new_arr_pls_M_T
+        arr_pls, arr_pls_M_T = new_arr_pls, new_arr_pls_M_T
+        # add to variable vectors
+        B0s.append(b0); C0s.append(c0);
+        BENs.append(bens); CSTs.append(csts)
+        pi_sg_plus, pi_sg_minus = new_pi_sg_plus, new_pi_sg_minus
+        pi_sg_plus_s.append(pi_sg_plus); pi_sg_minus_s.append(pi_sg_minus)
+        pi_0_plus, pi_0_minus = new_pi_0_plus, new_pi_0_minus
+        
+    # compute real utility of all players
+    BENs = np.array(BENs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
+    CSTs = np.array(CSTs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
+    B0s = np.array(B0s, dtype=object)        # array of (NUM_PERIODS,)
+    C0s = np.array(C0s, dtype=object)        # array of (NUM_PERIODS,)
+    RUs = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
+                               pi_sg_plus_s, pi_sg_minus_s, CHOICE_RU)
+    
+    return RUs
 ##------------------ test game model a t --> fin   ----------------------------    
 
 
@@ -729,17 +778,6 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     
     return RUs
 
-def game_model_SG():
-    """
-    create a game for one period T = [1..T]
-
-    Returns
-    -------
-    None.
-
-    """
-    return None
-    
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------    
@@ -1109,6 +1147,16 @@ def test_game_model_SG_t():
     
     print("test_game_model_SG_t t={} => Pas d'erreur".format(t))
     
+def test_game_model_SG():
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    
+    RUs = game_model_SG(pi_hp_plus, pi_hp_minus, 
+                        pi_0_plus, pi_0_minus, 
+                        case=CASE3)
+    
+    print("test_game_model_SG: RUs_1 shape:{}, sum={}".format(RUs.shape, RUs))
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -1125,5 +1173,6 @@ if __name__ == "__main__":
     test_select_mode_compute_r_i()
     test_compute_real_utility()
     test_game_model_SG_t()
+    test_game_model_SG()
     print("runtime = {}".format(time.time() - ti))    
     
