@@ -16,6 +16,7 @@ import fonctions_auxiliaires as fct_aux
 #------------------------------------------------------------------------------
 N_INSTANCE = 10
 M_PLAYERS = 10
+CHOICE_RU = 1
 CASE1 = (0.75, 1.5)
 CASE2 = (0.4, 0.75)
 CASE3 = (0, 0.3)
@@ -494,8 +495,6 @@ def select_mode_compute_r_i(arr_pls, arr_pls_M_T, t):
     state_ais, mode_is.
 
     """
-    state_ais = arr_pls_M_T[:,t,8]
-    mode_is = arr_pls_M_T[:,t,9]
     
     Cis = arr_pls_M_T[:,t,0]
     Pis = arr_pls_M_T[:,t,1]
@@ -527,6 +526,42 @@ def select_mode_compute_r_i(arr_pls, arr_pls_M_T, t):
     
     return arr_pls, arr_pls_M_T
             
+def compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
+                         pi_sg_plus, pi_sg_minus, choice=1):
+    """
+    compute the real utility of all players
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*10
+        DESCRIPTION.
+    BENs : array of M_PLAYERS*NUM_PERIODS.
+        list of M_PLAYERS items. each item is a list of NUM_PERIODS benefits .
+    CSTs : array of M_PLAYERS*NUM_PERIODS.
+        list of M_PLAYERS items. each item is a list of NUM_PERIODS costs. 
+    B0s : array of (NUM_PERIODS,). 
+        list of NUM_PERIODS items. each item is a benefit at a period t. 
+    C0s : array of (NUM_PERIODS,).
+        list of NUM_PERIODS items. each item is a benefit at a period t
+    pi_sg_plus_s : list of energy price exported to HP. NUM_PERIODS items
+        DESCRIPTION.
+    pi_sg_minus_s : list of energy price imported from HP. NUM_PERIODS items
+        DESCRIPTION.
+
+    Returns
+    -------
+    RUs : array of M_PLAYERS utilities.
+
+    """
+    
+    RUs = None
+    if choice == 1:
+        RUs = BENs - CSTs
+    else:
+        B_is =  arr_pls_M_T[:,:,5] * B0s    # array of (M_PLAYERS,)
+        C_is =  arr_pls_M_T[:,:,6] * C0s    # array of (M_PLAYERS,)
+        RUs = B_is - C_is
+    return RUs.sum(axis=1)
     
 def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     """
@@ -604,8 +639,14 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         # update prices of the SG
         pi_sg_plus, pi_sg_minus = pi_0_plus, pi_0_minus
         
-    # compute utility of 
-    RUs = compute_real_utility(arr_pls, pi_sg_plus, pi_sg_minus)
+    # compute real utility of all players
+    ## transform list of list of numpy: BENs, CSTs, B0s, C0s
+    BENs = np.array(BENs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
+    CSTs = np.array(CSTs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
+    B0s = np.array(B0s, dtype=object)        # array of (NUM_PERIODS,)
+    C0s = np.array(C0s, dtype=object)        # array of (NUM_PERIODS,)
+    RUs = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
+                               pi_sg_plus, pi_sg_minus, CHOICE_RU)
     
     return None
 
@@ -928,8 +969,32 @@ def test_select_mode_compute_r_i():
             print("test_select_mode_compute_r_i: OK")
             # print("r_is = {}".format(r_is))
     
-        
-        
+def test_compute_real_utility():
+    S_0, S_1, = 0, 0; case = CASE3
+    # generate pi_hp_plus, pi_hp_minus
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs) 
+
+    t = NUM_PERIODS+1 #np.random.randint(0,NUM_PERIODS)
+
+    BENs = np.random.rand(M_PLAYERS,t)
+    CSTs = np.random.rand(M_PLAYERS,t)
+    B0s = np.random.rand(t)
+    C0s = np.random.rand(t)
+
+    RUs_1 = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s, 
+                               pi_sg_plus=0, pi_sg_minus=0, choice=1)
+    RUs_2 = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s, 
+                               pi_sg_plus=0, pi_sg_minus=0, choice=2) 
+    print("test_compute_real_utility: RUs_1 shape:{}, sum={}".format(RUs_1.shape, RUs_1))
+    print("test_compute_real_utility: RUs_2 shape:{}, sum={}".format(RUs_2.shape, RUs_2))
     
 #------------------------------------------------------------------------------
 #           execution
@@ -945,5 +1010,6 @@ if __name__ == "__main__":
     test_update_player()
     test_select_storage_politic_players()
     test_select_mode_compute_r_i()
+    test_compute_real_utility()
     print("runtime = {}".format(time.time() - ti))    
     
