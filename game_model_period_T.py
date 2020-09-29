@@ -565,8 +565,8 @@ def compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
         RUs = B_is - C_is
     return RUs.sum(axis=1)
 
-##------------------ test game model a t --> debut ----------------------------    
-def game_model_SG_t(arr_pls, arr_pls_M_T, t, 
+##------------------ OLD test game model a t --> debut ----------------------------    
+def game_model_SG_t_old(arr_pls, arr_pls_M_T, t, 
                     pi_0_plus, pi_0_minus, 
                     pi_hp_plus, pi_hp_minus):
     """
@@ -641,86 +641,9 @@ def game_model_SG_t(arr_pls, arr_pls_M_T, t,
     return arr_pls, arr_pls_M_T, b0, c0, bens, csts, \
             new_pi_0_plus, new_pi_0_minus, new_pi_sg_plus, new_pi_sg_minus
     
-def game_model_SG_t_new(arr_pls, arr_pls_M_T, t, 
-                        pi_0_plus_t, pi_0_minus_t, 
-                        pi_hp_plus, pi_hp_minus):
-    ## update attributs of players because of modification of gamma_i 
-    ## depending of Pi_t_plus_1 and Ci_t_plus_1
-    # update P_i, C_i, Si_max, Si attributs of a player belonging to arr_pls
-    arr_pls, arr_pls_M_T \
-        = update_player(
-            arr_pls, arr_pls_M_T, t,
-            [(INDEX_ATTRS["Pi"], arr_pls_M_T[:,t,INDEX_ATTRS["Pi"]]),
-             (INDEX_ATTRS["Ci"], arr_pls_M_T[:,t,INDEX_ATTRS["Ci"]]),
-             (INDEX_ATTRS["Si"], arr_pls_M_T[:,t,INDEX_ATTRS["Si"]]),
-             (INDEX_ATTRS["Si_max"], arr_pls_M_T[:,t,INDEX_ATTRS["Si_max"]])
-             ])
-    # calculer P_i^{t+1} et C_i^{t+1}
-    Pi_t_plus_1_s = arr_pls_M_T[:,t,INDEX_ATTRS["Pi"]]
-    Ci_t_plus_1_s = arr_pls_M_T[:,t,INDEX_ATTRS["Ci"]]
+
     
-    new_gamma_is = np.array([])
-    for num_pl, pl in enumerate(arr_pls):
-        # select state_i and mode_i
-        state_i = pl.get_state_i()
-        pl.select_mode_i()
-        # compute gamma_i
-        pl.select_storage_politic(Ci_t_plus_1_s[num_pl], 
-                                  Pi_t_plus_1_s[num_pl], 
-                                  pi_0_plus_t, pi_0_minus_t, 
-                                  pi_hp_plus, pi_hp_minus)
-        # append new gamma in new_gamma_is
-        new_gamma_i = pl.get_gamma_i()
-        new_gamma_is = np.append(new_gamma_is, new_gamma_i)
-        # compute prod_i, cons_i and r_i 
-        pl.update_prod_cons_r_i()
-        # update arr_pls_M_T
-        arr_pls_M_T[num_pl, t, INDEX_ATTRS["state_i"]] = state_i
-        arr_pls_M_T[num_pl, t, INDEX_ATTRS["mode_i"]] = pl.get_mode_i()
-        arr_pls_M_T[num_pl, t, INDEX_ATTRS["prod_i"]] = pl.get_prod_i()
-        arr_pls_M_T[num_pl, t, INDEX_ATTRS["cons_i"]] = pl.get_cons_i()
-        arr_pls_M_T[num_pl, t, INDEX_ATTRS["r_i"]] = pl.get_r_i()
-        
-    ## compute prices inside smart grids
-    # compute In_sg, Out_sg
-    In_sg, Out_sg = compute_prod_cons_SG(arr_pls_M_T, t)
-    # compute prices of an energy unit price for cost and benefit players
-    b0, c0 = compute_energy_unit_price(
-                    pi_0_plus_t, pi_0_minus_t, 
-                    pi_hp_plus, pi_hp_minus,
-                    In_sg, Out_sg)
-    # compute cost and benefit players by energy exchanged.
-    gamma_is = extract_values_to_array(arr_pls_M_T, t, 
-                                       attribut_position=INDEX_ATTRS["gamma_i"])        
-    bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
-    # compute the new prices pi_0_plus_t_plus_1 and pi_0_minus_t_plus_1 from a pricing model in the document
-    diff_energy_cons_t = 0
-    diff_energy_prod_t = 0
-    for k in range(0,t+1):
-        prod_is_k = arr_pls_M_T[:,k,INDEX_ATTRS["prod_i"]]
-        cons_is_k = arr_pls_M_T[:,k,INDEX_ATTRS["cons_i"]]
-        diff_energy_cons_k = fct_aux.fct_positive(sum(cons_is_k), sum(prod_is_k))
-        diff_energy_cons_t += diff_energy_cons_k
-        diff_energy_prod_k = fct_aux.fct_positive(sum(prod_is_k), sum(cons_is_k))
-        diff_energy_prod_t += diff_energy_prod_k
-    sum_cons = sum(sum(arr_pls_M_T[:, :t, INDEX_ATTRS["cons_i"] ]))
-    pi_sg_minus_t = round( pi_hp_minus*diff_energy_cons_t / sum_cons, 3) \
-                        if sum_cons != 0 else np.nan
-    sum_prod = sum(sum(arr_pls_M_T[:, :t, INDEX_ATTRS["prod_i"] ]))
-    pi_sg_plus_t = round( pi_hp_plus*diff_energy_prod_t / sum_prod, 3) \
-                        if sum_prod != 0 else np.nan
-    
-    pi_0_plus_t_plus_1 = pi_0_plus_t if pi_sg_minus_t is np.nan else pi_sg_minus_t
-    pi_0_minus_t_plus_1 = pi_0_minus_t if pi_sg_plus_t is np.nan else pi_sg_plus_t
-                            
-    
-    return arr_pls, arr_pls_M_T, \
-            b0, c0, \
-            bens, csts, \
-            pi_0_minus_t_plus_1, pi_0_plus_t_plus_1
-        
-    
-def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
+def game_model_SG_old(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     """
     create a game for one period T = [1..T]
 
@@ -747,7 +670,7 @@ def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         new_arr_pls, new_arr_pls_M_T, \
         b0, c0, bens, csts, \
         new_pi_0_plus, new_pi_0_minus, \
-        new_pi_sg_plus, new_pi_sg_minus = game_model_SG_t(
+        new_pi_sg_plus, new_pi_sg_minus = game_model_SG_t_old(
                                                 arr_pls, arr_pls_M_T, t, 
                                                 pi_0_plus, pi_0_minus, 
                                                 pi_hp_plus, pi_hp_minus)
@@ -769,60 +692,6 @@ def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
                                pi_sg_plus_s, pi_sg_minus_s, CHOICE_RU)
     
     return RUs
-
-def game_model_SG_new(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
-    # create players and its attribut values for all values.
-    S_0, S_1, = 0, 0;
-    # TODO:how to determine Ci_t_plus_1_s, Pi_t_plus_1_s?
-    ## generate random values of Ci_t_plus_1_s, Pi_t_plus_1_s
-    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
-    
-    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
-                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
-                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
-                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
-    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
-    
-    # initialize arrays containing values for each period t < NUM_PERIODS
-    B0s, C0s, BENs, CSTs = [], [], [], []
-    pi_sg_plus_s, pi_sg_minus_s = [], [] 
-    pi_sg_plus_t, pi_sg_minus_t = 0, 0
-    
-    # run for all NUM_PERIODS
-    for t in range(0,NUM_PERIODS):
-        # determine the value of pi_0_plus_t and pi_0_minus_t
-        pi_0_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
-        pi_0_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t
-        
-        pi_sg_plus_s.append(pi_0_plus_t) 
-        pi_sg_minus_s.append(pi_0_minus_t) 
-        
-        arr_pls, arr_pls_M_T, \
-        b0, c0, \
-        bens, csts, \
-        pi_0_minus_t_plus_1, pi_0_plus_t_plus_1 \
-            = game_model_SG_t_new(arr_pls, arr_pls_M_T, t, 
-                        pi_0_plus_t, pi_0_minus_t, 
-                        pi_hp_plus, pi_hp_minus)
-        pi_sg_plus_t = pi_0_minus_t_plus_1
-        pi_sg_minus_t = pi_0_minus_t_plus_1
-        
-        # update arrays containing values for each period t < NUM_PERIODS
-        B0s.append(b0); C0s.append(c0);
-        BENs.append(bens); CSTs.append(csts)
-        
-    # compute real utility of all players
-    BENs = np.array(BENs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
-    CSTs = np.array(CSTs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
-    B0s = np.array(B0s, dtype=object)        # array of (NUM_PERIODS,)
-    C0s = np.array(C0s, dtype=object)        # array of (NUM_PERIODS,)
-    RUs = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
-                               pi_sg_plus_s, pi_sg_minus_s, CHOICE_RU)
-        
-    return arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs
-    
-##------------------ test game model a t --> fin   ----------------------------    
-
 
 def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
     """
@@ -909,6 +778,174 @@ def game_model_SG_T(T, pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
                                pi_sg_plus, pi_sg_minus, CHOICE_RU)
     
     return RUs
+
+##------------------ OLD test game model a t --> fin   ----------------------------    
+
+
+def game_model_SG_t(arr_pls, arr_pls_M_T, t, 
+                        pi_0_plus_t, pi_0_minus_t, 
+                        pi_hp_plus, pi_hp_minus):
+    """
+    create the game model at time t
+
+    parameters:
+    -------
+    arr_pls : array of shape (M_players,)
+        DESCRIPTION.
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*10
+        DESCRIPTION.
+    t : integer 
+        DESCRIPTION.
+    pi_0_plus_t : integer, exportation price at time t from pl to SG
+        DESCRIPTION.
+    pi_0_minus_t: integer, importation price at time t from SG to pl
+        DESCRIPTION.
+    pi_hp_plus: integer, exportation price at time t from SG to HP
+        DESCRIPTION
+    pi_hp_minus: integer, importation price at time t from HP to SG
+        DESCRIPTION
+    Returns
+    -------
+    arr_pls, arr_pls_M_T,
+    b0: integer. benefit price for exporting energy from SG to HP
+    c0: integer. cost price for exporting energy from HP to SG
+    bens, csts: (M_PLAYERS,). benefit and cost prices depending of gamma_is
+    new_pi_0_plus, new_pi_0_minus, pi_sg_plus, pi_sg_minus : integer. new price inside SG
+    """
+    ## update attributs of players because of modification of gamma_i 
+    ## depending of Pi_t_plus_1 and Ci_t_plus_1
+    # update P_i, C_i, Si_max, Si attributs of a player belonging to arr_pls
+    arr_pls, arr_pls_M_T \
+        = update_player(
+            arr_pls, arr_pls_M_T, t,
+            [(INDEX_ATTRS["Pi"], arr_pls_M_T[:,t,INDEX_ATTRS["Pi"]]),
+             (INDEX_ATTRS["Ci"], arr_pls_M_T[:,t,INDEX_ATTRS["Ci"]]),
+             (INDEX_ATTRS["Si"], arr_pls_M_T[:,t,INDEX_ATTRS["Si"]]),
+             (INDEX_ATTRS["Si_max"], arr_pls_M_T[:,t,INDEX_ATTRS["Si_max"]])
+             ])
+    # calculer P_i^{t+1} et C_i^{t+1}
+    Pi_t_plus_1_s = arr_pls_M_T[:,t,INDEX_ATTRS["Pi"]]
+    Ci_t_plus_1_s = arr_pls_M_T[:,t,INDEX_ATTRS["Ci"]]
+    
+    new_gamma_is = np.array([])
+    for num_pl, pl in enumerate(arr_pls):
+        # select state_i and mode_i
+        state_i = pl.get_state_i()
+        pl.select_mode_i()
+        # compute gamma_i
+        pl.select_storage_politic(Ci_t_plus_1_s[num_pl], 
+                                  Pi_t_plus_1_s[num_pl], 
+                                  pi_0_plus_t, pi_0_minus_t, 
+                                  pi_hp_plus, pi_hp_minus)
+        # append new gamma in new_gamma_is
+        new_gamma_i = pl.get_gamma_i()
+        new_gamma_is = np.append(new_gamma_is, new_gamma_i)
+        # compute prod_i, cons_i and r_i 
+        pl.update_prod_cons_r_i()
+        # update arr_pls_M_T
+        arr_pls_M_T[num_pl, t, INDEX_ATTRS["state_i"]] = state_i
+        arr_pls_M_T[num_pl, t, INDEX_ATTRS["mode_i"]] = pl.get_mode_i()
+        arr_pls_M_T[num_pl, t, INDEX_ATTRS["prod_i"]] = pl.get_prod_i()
+        arr_pls_M_T[num_pl, t, INDEX_ATTRS["cons_i"]] = pl.get_cons_i()
+        arr_pls_M_T[num_pl, t, INDEX_ATTRS["r_i"]] = pl.get_r_i()
+        
+    ## compute prices inside smart grids
+    # compute In_sg, Out_sg
+    In_sg, Out_sg = compute_prod_cons_SG(arr_pls_M_T, t)
+    # compute prices of an energy unit price for cost and benefit players
+    b0, c0 = compute_energy_unit_price(
+                    pi_0_plus_t, pi_0_minus_t, 
+                    pi_hp_plus, pi_hp_minus,
+                    In_sg, Out_sg)
+    # compute cost and benefit players by energy exchanged.
+    gamma_is = extract_values_to_array(arr_pls_M_T, t, 
+                                       attribut_position=INDEX_ATTRS["gamma_i"])        
+    bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
+    # compute the new prices pi_0_plus_t_plus_1 and pi_0_minus_t_plus_1 from a pricing model in the document
+    diff_energy_cons_t = 0
+    diff_energy_prod_t = 0
+    for k in range(0,t+1):
+        prod_is_k = arr_pls_M_T[:,k,INDEX_ATTRS["prod_i"]]
+        cons_is_k = arr_pls_M_T[:,k,INDEX_ATTRS["cons_i"]]
+        diff_energy_cons_k = fct_aux.fct_positive(sum(cons_is_k), sum(prod_is_k))
+        diff_energy_cons_t += diff_energy_cons_k
+        diff_energy_prod_k = fct_aux.fct_positive(sum(prod_is_k), sum(cons_is_k))
+        diff_energy_prod_t += diff_energy_prod_k
+    sum_cons = sum(sum(arr_pls_M_T[:, :t, INDEX_ATTRS["cons_i"] ]))
+    pi_sg_minus_t = round( pi_hp_minus*diff_energy_cons_t / sum_cons, 3) \
+                        if sum_cons != 0 else np.nan
+    sum_prod = sum(sum(arr_pls_M_T[:, :t, INDEX_ATTRS["prod_i"] ]))
+    pi_sg_plus_t = round( pi_hp_plus*diff_energy_prod_t / sum_prod, 3) \
+                        if sum_prod != 0 else np.nan
+    
+    pi_0_plus_t_plus_1 = pi_0_plus_t if pi_sg_minus_t is np.nan else pi_sg_minus_t
+    pi_0_minus_t_plus_1 = pi_0_minus_t if pi_sg_plus_t is np.nan else pi_sg_plus_t
+                            
+    
+    return arr_pls, arr_pls_M_T, \
+            b0, c0, \
+            bens, csts, \
+            pi_0_minus_t_plus_1, pi_0_plus_t_plus_1
+        
+def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
+    """
+    create a game for all periods of time NUM_PERIODS = [1..T]
+
+    Returns
+    -------
+    arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs.
+
+    """
+    # create players and its attribut values for all values.
+    S_0, S_1, = 0, 0;
+    # TODO:how to determine Ci_t_plus_1_s, Pi_t_plus_1_s?
+    ## generate random values of Ci_t_plus_1_s, Pi_t_plus_1_s
+    Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
+    
+    sys_inputs = {"S_0":S_0, "S_1":S_1, "case":case,
+                    "Ci_t_plus_1":Ci_t_plus_1, "Pi_t_plus_1":Pi_t_plus_1,
+                    "pi_hp_plus":pi_hp_plus, "pi_hp_minus":pi_hp_minus, 
+                    "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
+    arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
+    
+    # initialize arrays containing values for each period t < NUM_PERIODS
+    B0s, C0s, BENs, CSTs = [], [], [], []
+    pi_sg_plus_s, pi_sg_minus_s = [], [] 
+    pi_sg_plus_t, pi_sg_minus_t = 0, 0
+    
+    # run for all NUM_PERIODS
+    for t in range(0,NUM_PERIODS):
+        # determine the value of pi_0_plus_t and pi_0_minus_t
+        pi_0_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
+        pi_0_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t
+        
+        pi_sg_plus_s.append(pi_0_plus_t) 
+        pi_sg_minus_s.append(pi_0_minus_t) 
+        
+        arr_pls, arr_pls_M_T, \
+        b0, c0, \
+        bens, csts, \
+        pi_0_minus_t_plus_1, pi_0_plus_t_plus_1 \
+            = game_model_SG_t(arr_pls, arr_pls_M_T, t, 
+                        pi_0_plus_t, pi_0_minus_t, 
+                        pi_hp_plus, pi_hp_minus)
+        pi_sg_plus_t = pi_0_minus_t_plus_1
+        pi_sg_minus_t = pi_0_minus_t_plus_1
+        
+        # update arrays containing values for each period t < NUM_PERIODS
+        B0s.append(b0); C0s.append(c0);
+        BENs.append(bens); CSTs.append(csts)
+        
+    # compute real utility of all players
+    BENs = np.array(BENs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
+    CSTs = np.array(CSTs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
+    B0s = np.array(B0s, dtype=object)        # array of (NUM_PERIODS,)
+    C0s = np.array(C0s, dtype=object)        # array of (NUM_PERIODS,)
+    RUs = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
+                               pi_sg_plus_s, pi_sg_minus_s, CHOICE_RU)
+        
+    return arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs
+
 
 #------------------------------------------------------------------------------
 #           unit test of functions
@@ -1245,7 +1282,7 @@ def test_compute_real_utility():
     print("test_compute_real_utility: RUs_1 shape:{}, sum={}".format(RUs_1.shape, RUs_1))
     print("test_compute_real_utility: RUs_2 shape:{}, sum={}".format(RUs_2.shape, RUs_2))
 
-def test_game_model_SG_t():
+def test_game_model_SG_t_old():
     S_0, S_1, = 0, 0; case = CASE3
     # generate pi_hp_plus, pi_hp_minus
     pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
@@ -1265,7 +1302,7 @@ def test_game_model_SG_t():
     new_arr_pls, new_arr_pls_M_T, \
     b0, c0, bens, csts, \
     new_pi_0_plus, new_pi_0_minus, \
-    new_pi_sg_plus, new_pi_sg_minus = game_model_SG_t(arr_pls, arr_pls_M_T, t, 
+    new_pi_sg_plus, new_pi_sg_minus = game_model_SG_t_old(arr_pls, arr_pls_M_T, t, 
                                               pi_0_plus, pi_0_minus, 
                                               pi_hp_plus, pi_hp_minus)
     ## add to variable vectors
@@ -1279,7 +1316,7 @@ def test_game_model_SG_t():
     
     print("test_game_model_SG_t t={} => Pas d'erreur".format(t))
 
-def test_game_model_SG_t_new(dbg=True):
+def test_game_model_SG_t(dbg=True):
     """
     TODO
     Message a NOK parce que la fonction update_players et 
@@ -1310,7 +1347,7 @@ def test_game_model_SG_t_new(dbg=True):
     new_arr_pls, new_arr_pls_M_T, \
     b0, c0, bens, csts, \
     pi_0_minus_t_plus_1, pi_0_plus_t_plus_1 \
-        = game_model_SG_t_new(arr_pls, arr_pls_M_T, t+1, 
+        = game_model_SG_t(arr_pls, arr_pls_M_T, t+1, 
                                 pi_0_plus_t, pi_0_minus_t, 
                                 pi_hp_plus, pi_hp_minus)
     gamma_is = arr_pls_M_T[:,t,INDEX_ATTRS["gamma_i"]]
@@ -1329,23 +1366,23 @@ def test_game_model_SG_t_new(dbg=True):
     else:
         print("test_game_model_SG_t_new: t={} OK".format(t))
     
-def test_game_model_SG():
+def test_game_model_SG_old():
     pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
     pi_0_plus, pi_0_minus = generate_random_values(zero=1)
     
-    RUs = game_model_SG(pi_hp_plus, pi_hp_minus, 
-                        pi_0_plus, pi_0_minus, 
-                        case=CASE3)
+    RUs = game_model_SG_old(pi_hp_plus, pi_hp_minus, 
+                            pi_0_plus, pi_0_minus, 
+                            case=CASE3)
     
     print("test_game_model_SG: RUs_1 shape:{}, sum={}".format(RUs.shape, RUs))
     
-def test_game_model_SG_new():
+def test_game_model_SG():
     pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
     pi_0_plus, pi_0_minus = generate_random_values(zero=1)
     
     arr_pls_M_T, RUs, \
     B0s, C0s, \
-    BENs, CSTs = game_model_SG_new(pi_hp_plus, pi_hp_minus, 
+    BENs, CSTs = game_model_SG(pi_hp_plus, pi_hp_minus, 
                         pi_0_plus, pi_0_minus, 
                         case=CASE3)
     
@@ -1366,10 +1403,10 @@ if __name__ == "__main__":
     test_select_storage_politic_players()
     test_select_mode_compute_r_i()
     test_compute_real_utility()
+    test_game_model_SG_t_old()
+    test_game_model_SG_old()
+    
     test_game_model_SG_t()
     test_game_model_SG()
-    
-    test_game_model_SG_t_new()
-    test_game_model_SG_new()
     print("runtime = {}".format(time.time() - ti))    
     
