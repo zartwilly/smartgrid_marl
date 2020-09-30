@@ -6,6 +6,8 @@ Created on Fri Sep 18 16:45:38 2020
 """
 import time
 import json
+import string
+import random
 import numpy as np
 
 
@@ -104,6 +106,12 @@ def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
     # Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
     #                 for (low_item,high_item) in inters]).reshape((1,-1))
     return Cis, Pis, Si_maxs, Sis
+
+def get_random_string(length):
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str
+
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------    
