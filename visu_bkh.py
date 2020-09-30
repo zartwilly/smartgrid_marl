@@ -223,6 +223,65 @@ def plot_more_prices(path_to_variable):
     rep_visu = os.path.join(path_to_variable, "visu")
     Path(rep_visu).mkdir(parents=True, exist_ok=True)
     output_file(os.path.join(rep_visu,"pi_sg_dashboard.html"))
+    
+def plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
+                path_to_variable, number_of_players=5):
+    """
+    plot the benefit and the cost for some players over the time as well as 
+    a real utility of the selected players.
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*INDEX_ATTRS
+        DESCRIPTION.
+    RUs : array of (M_PLAYERS,)
+        DESCRIPTION.
+    number_of_players: integer.    
+        DESCRIPTION.
+         it's number of players you will selected to arr_pls_M_T. we obtain 
+         an array called arr_pls_M_T_nop
+    Returns
+    -------
+    None.
+
+    """ 
+    id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players)
+    
+    arr_pls_M_T_nop = arr_pls_M_T[id_pls,:,:]
+    
+    ps_pls = []
+    for num_pl in range(0,arr_pls_M_T_nop.shape[0]):
+        #prod_i = arr_pls_M_T_nop[num_pl,:,gmT.INDEX_ATTRS['prod_i']]
+        ben_is = BENs[num_pl]
+        cst_is = CSTs[num_pl]
+                
+        #_____ plot ben_i, cst_i ______
+        title = "benefit/cost  for a player pl_"+str(num_pl)+" inside SG"
+        xlabel = "periods of time" 
+        ylabel = "price"
+        key_plus = "ben_i"
+        key_minus = "cst_i"
+    
+        args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+              "pi_sg_plus_s": ben_is,"pi_sg_minus_s":cst_is, 
+              "key_plus":key_plus, "key_minus":key_minus}
+        p_ben_cst = plot_pi_X(args)
+        
+        ps_pls.append(p_ben_cst)
+    
+    ps_pls = np.array(ps_pls, dtype=object) #.reshape(-1,1)
+    print("ps_pls = {}".format(ps_pls.shape))
+    # show p_ben_cst for all selected players
+    ps = gridplot([ps_pls], 
+                 toolbar_location='above')
+    
+    ## configuration figure
+    rep_visu = os.path.join(path_to_variable, "visu")
+    Path(rep_visu).mkdir(parents=True, exist_ok=True)
+    output_file(os.path.join(rep_visu,"player_benef_costs_dashboard.html"))
+    
+    show(ps)
+
 #------------------------------------------------------------------------------
 #                   definitions of unit test of defined functions
 #------------------------------------------------------------------------------
@@ -278,6 +337,20 @@ def test_plot_more_prices():
     path_to_variable = os.path.join(name_dir, rep)
     plot_more_prices(path_to_variable)
     
+def test_plot_player():
+    name_dir = "tests"
+    reps = os.listdir(name_dir)
+    rep = reps[np.random.randint(0,len(reps))]
+    path_to_variable = os.path.join(name_dir, rep)
+    
+    arr_pls_M_T, RUs, \
+    B0s, C0s, \
+    BENs, CSTs, \
+    pi_sg_plus_s, pi_sg_minus_s = \
+        get_local_storage_variables(path_to_variable)
+        
+    plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
+                path_to_variable, 5)
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
@@ -285,7 +358,8 @@ if __name__ == "__main__":
     ti = time.time()
     test_get_local_storage_variables()
     test_plot_pi_sg()
-    test_plot_more_prices()
+    #test_plot_more_prices()
+    test_plot_player()
     print("runtime {}".format(time.time()-ti))
     
 
