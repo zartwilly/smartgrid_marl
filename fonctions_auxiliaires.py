@@ -5,6 +5,7 @@ Created on Fri Sep 18 16:45:38 2020
 @author: jwehounou
 """
 import time
+import json
 import numpy as np
 
 
@@ -12,6 +13,15 @@ STATE1_STRATS = ("CONS+", "CONS-")                                             #
 STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
 STATE3_STRATS = ("DIS", "PROD")
 
+#------------------------------------------------------------------------------
+#           definitions of class
+#------------------------------------------------------------------------------
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+    
 #------------------------------------------------------------------------------
 #           definitions of functions
 #------------------------------------------------------------------------------
