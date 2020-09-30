@@ -538,7 +538,7 @@ def compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
 
     Returns
     -------
-    RUs : array of M_PLAYERS utilities.
+    RUs : array of M_PLAYERS utilities, shape=(M_PLAYERS,).
 
     """
     
@@ -947,14 +947,17 @@ def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         BENs.append(bens); CSTs.append(csts)
         
     # compute real utility of all players
-    BENs = np.array(BENs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
-    CSTs = np.array(CSTs, dtype=object)      # array of M_PLAYERS*NUM_PERIODS
+    BENs = np.array(BENs, dtype=object).T      # array of M_PLAYERS*NUM_PERIODS
+    CSTs = np.array(CSTs, dtype=object).T      # array of M_PLAYERS*NUM_PERIODS
     B0s = np.array(B0s, dtype=object)        # array of (NUM_PERIODS,)
     C0s = np.array(C0s, dtype=object)        # array of (NUM_PERIODS,)
+    pi_sg_plus_s = np.array(pi_sg_plus_s, dtype=object)     # array of (NUM_PERIODS,)
+    pi_sg_minus_s = np.array(pi_sg_minus_s, dtype=object)   # array of (NUM_PERIODS,)
+    print("pi_sg_plus_s={},pi_sg_minus_s={},".format(pi_sg_plus_s.shape,pi_sg_minus_s.shape))
     RUs = compute_real_utility(arr_pls_M_T, BENs, CSTs, B0s, C0s,
                                pi_sg_plus_s, pi_sg_minus_s, CHOICE_RU)
         
-    return arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs
+    return arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs, pi_sg_plus_s, pi_sg_minus_s
 
 
 #------------------------------------------------------------------------------
@@ -1407,7 +1410,9 @@ def test_game_model_SG(dbg=True):
     
     arr_pls_M_T, RUs, \
     B0s, C0s, \
-    BENs, CSTs = game_model_SG(pi_hp_plus, pi_hp_minus, 
+    BENs, CSTs, \
+    pi_sg_plus_s, pi_sg_minus_s \
+        = game_model_SG(pi_hp_plus, pi_hp_minus, 
                         pi_0_plus, pi_0_minus, 
                         case=CASE3)
     
