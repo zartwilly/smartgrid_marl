@@ -21,14 +21,14 @@ from pathlib import Path
 #                       definition of constantes
 #------------------------------------------------------------------------------
 N_INSTANCE = 10
-M_PLAYERS = 10#10
+M_PLAYERS = 10
 CHOICE_RU = 1
 CASE1 = (0.75, 1.5)
 CASE2 = (0.4, 0.75)
 CASE3 = (0, 0.3)
 LOW_VAL_Ci = 1 
 HIGH_VAL_Ci = 30
-NUM_PERIODS = 5 #5
+NUM_PERIODS = 5
 INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9}
 #------------------------------------------------------------------------------
@@ -1265,7 +1265,8 @@ def test_update_player():
     
     t = np.random.randint(0,NUM_PERIODS)
     
-    str_vals = "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,X,Z".split(",")
+    #str_vals = "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,X,Z".split(",")
+    str_vals = [item for item in fct_aux.get_random_string(M_PLAYERS)]
     num_attr = 8
     list_valeurs_by_variable = [(num_attr, str_vals)]
     arr_pls, arr_pls_M_T = update_player(arr_pls, arr_pls_M_T, t,
