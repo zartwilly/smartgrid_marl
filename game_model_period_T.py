@@ -4,25 +4,31 @@ Created on Wed Sep 23 18:33:06 2020
 
 @author: jwehounou
 """
+import os
 import sys
 import time
 import math
+import json
 import numpy as np
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
+
+from datetime import datetime
+from pathlib import Path
+
 
 #------------------------------------------------------------------------------
 #                       definition of constantes
 #------------------------------------------------------------------------------
 N_INSTANCE = 10
-M_PLAYERS = 10
+M_PLAYERS = 10#10
 CHOICE_RU = 1
 CASE1 = (0.75, 1.5)
 CASE2 = (0.4, 0.75)
 CASE3 = (0, 0.3)
 LOW_VAL_Ci = 1 
 HIGH_VAL_Ci = 30
-NUM_PERIODS = 5
+NUM_PERIODS = 5 #5
 INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9}
 #------------------------------------------------------------------------------
@@ -959,7 +965,70 @@ def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
         
     return arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs, pi_sg_plus_s, pi_sg_minus_s
 
+def run_game_model_SG(pi_hp_plus, pi_hp_minus, 
+                      pi_0_plus, pi_0_minus, 
+                      case, path_to_save):
+    """
+    execute the game of SG model with some parameters
 
+    Parameters
+    ----------
+    pi_hp_plus : integer
+        DESCRIPTION.
+    pi_hp_minus : integer
+        DESCRIPTION.
+    pi_0_plus : integer
+        DESCRIPTION.
+    pi_0_minus : integer
+        DESCRIPTION.
+    case : tuple
+        DESCRIPTION.
+    path_to_save : string, path to save json variables.
+        DESCRIPTION
+
+    Returns
+    -------
+    None.
+
+    """
+    # pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    # pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    
+    arr_pls_M_T, RUs, \
+    B0s, C0s, \
+    BENs, CSTs, \
+    pi_sg_plus_s, pi_sg_minus_s \
+        = game_model_SG(pi_hp_plus, pi_hp_minus, 
+                        pi_0_plus, pi_0_minus, 
+                        case=case)
+    # # save arrays to json
+    # json_arr_pls_M_T = json.dumps(arr_pls_M_T, cls=fct_aux.NumpyEncoder)
+    # json_RUs = json.dumps(RUs, cls=fct_aux.NumpyEncoder)
+    # json_B0s = json.dumps(B0s, cls=fct_aux.NumpyEncoder)
+    # json_C0s = json.dumps(C0s, cls=fct_aux.NumpyEncoder)
+    # json_BENs = json.dumps(BENs, cls=fct_aux.NumpyEncoder)
+    # json_CSTs = json.dumps(CSTs, cls=fct_aux.NumpyEncoder)
+    # # save locally
+    # with open(os.path.join(path_to_save, "arr_pls_M_T.json"),'w') as f:
+    #     f.dump(json_arr_pls_M_T)
+    # with open(os.path.join(path_to_save, "RUs.json"),'w') as f:
+    #     f.dump(json_RUs)
+    # with open(os.path.join(path_to_save, "B0s.json"),'w') as f:
+    #     f.dump(json_B0s)
+    # with open(os.path.join(path_to_save, "C0s"),'w') as f:
+    #     f.dump(json_C0s)
+    # with open(os.path.join(path_to_save, "BENs.json"),'w') as f:
+    #     f.dump(json_BENs)
+    # with open(os.path.join(path_to_save, "CSTs.json"),'w') as f:
+    #     f.dump(json_CSTs)
+    # save locally
+    np.save(os.path.join(path_to_save, "arr_pls_M_T.npy"), arr_pls_M_T)
+    np.save(os.path.join(path_to_save, "RUs.npy"), RUs)
+    np.save(os.path.join(path_to_save, "B0s.npy"), B0s)
+    np.save(os.path.join(path_to_save, "C0s.npy"), C0s)
+    np.save(os.path.join(path_to_save, "BENs.npy"), BENs)
+    np.save(os.path.join(path_to_save, "CSTs.npy"), CSTs)
+    
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------    
@@ -1416,10 +1485,26 @@ def test_game_model_SG(dbg=True):
                         pi_0_plus, pi_0_minus, 
                         case=CASE3)
     
+
     print("test_game_model_SG: RUs_1 shape:{}".format(RUs.shape))
     if dbg:
         print(" RUs_1 sum={}".format(RUs))
           
+        
+def test_run_game_model_SG():
+    # create test directory tests and put file in the directory simu_date_hhmm
+    name_dir = "tests"; date_hhmm = datetime.now().strftime("%d%m_%H%M")
+    path_to_save = os.path.join(name_dir, "simu_"+date_hhmm)
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    
+    case = CASE3
+    pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
+    pi_0_plus, pi_0_minus = generate_random_values(zero=1)
+    
+    run_game_model_SG(pi_hp_plus, pi_hp_minus, 
+                      pi_0_plus, pi_0_minus, 
+                      case, path_to_save)
+    
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -1440,5 +1525,7 @@ if __name__ == "__main__":
     
     test_game_model_SG_t(False)
     test_game_model_SG(False)
+    
+    test_run_game_model_SG()
     print("runtime = {}".format(time.time() - ti))    
     
