@@ -808,7 +808,7 @@ def game_model_SG_t(arr_pls, arr_pls_M_T, t,
     -------
     arr_pls : array of shape (M_players,)
         DESCRIPTION.
-    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*10
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*INDEX_ATTRS
         DESCRIPTION.
     t : integer 
         DESCRIPTION.
@@ -909,7 +909,15 @@ def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
 
     Returns
     -------
-    arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs.
+    arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs, pi_sg_plus_s, pi_sg_minus_s.
+    
+    arr_pls_M_T: array of players with a shape M_PLAYERS*NUM_PERIODS*INDEX_ATTRS
+    BENs: array of M_PLAYERS*NUM_PERIODS
+    CSTs: array of M_PLAYERS*NUM_PERIODS
+    B0s: array of (NUM_PERIODS,)
+    C0s: array of (NUM_PERIODS,)
+    pi_sg_plus_s: array of (NUM_PERIODS,)
+    pi_sg_minus_s: array of (NUM_PERIODS,)
 
     """
     # create players and its attribut values for all values.
@@ -1028,6 +1036,8 @@ def run_game_model_SG(pi_hp_plus, pi_hp_minus,
     np.save(os.path.join(path_to_save, "C0s.npy"), C0s)
     np.save(os.path.join(path_to_save, "BENs.npy"), BENs)
     np.save(os.path.join(path_to_save, "CSTs.npy"), CSTs)
+    np.save(os.path.join(path_to_save, "pi_sg_minus_s.npy"), pi_sg_minus_s)
+    np.save(os.path.join(path_to_save, "pi_sg_plus_s.npy"), pi_sg_plus_s)
     
 #------------------------------------------------------------------------------
 #           unit test of functions
