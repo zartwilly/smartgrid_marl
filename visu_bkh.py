@@ -193,7 +193,7 @@ def plot_pi_X(args):
     
     return p_X
 
-def plot_more_prices(path_to_variable):
+def plot_more_prices(path_to_variable, dbg=True):
     # get datas
     arr_pls_M_T, RUs, \
     B0s, C0s, \
@@ -227,15 +227,20 @@ def plot_more_prices(path_to_variable):
     
     p_B0_C0s = plot_pi_X(args)
     
-    # show p_sg and p_B0_C0s on the same html
-    p = gridplot([p_sg, p_B0_C0s], ncols = 2,
-                 toolbar_location='above')
-    show(p)
-    
-    # configuration figure
-    rep_visu = os.path.join(path_to_variable, "visu")
-    Path(rep_visu).mkdir(parents=True, exist_ok=True)
-    output_file(os.path.join(rep_visu,"pi_sg_dashboard.html"))
+    if dbg:
+        # # show p_sg and p_B0_C0s on the same html
+        p = gridplot([p_sg, p_B0_C0s], ncols = 2,
+                      toolbar_location='above')
+        
+        # configuration figure
+        rep_visu = os.path.join(path_to_variable, "visu")
+        Path(rep_visu).mkdir(parents=True, exist_ok=True)
+        output_file(os.path.join(rep_visu,"pi_sg_dashboard.html"))
+        
+        show(p)
+        return None, None
+    else:
+        return p_sg, p_B0_C0s
     
 def plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
                 path_to_variable, number_of_players=5, dbg=True):
@@ -282,20 +287,44 @@ def plot_player(arr_pls_M_T, RUs, BENs, CSTs,
         
         ps_pls.append(p_ben_cst)
     
-    #ps_pls = np.array(ps_pls, dtype=object)#.reshape(-1,1)
+    if dbg:
     
-    print("ps_pls = {}".format(ps_pls)) if dbg else None
-    # show p_ben_cst for all selected players
-    ps = gridplot(ps_pls, ncols = 2,
-                 toolbar_location='above')
+        print("ps_pls = {}".format(ps_pls)) if dbg else None
+        # show p_ben_cst for all selected players
+        ps = gridplot(ps_pls, ncols = 2,
+                      toolbar_location='above')
+        
+        ## configuration figure
+        rep_visu = os.path.join(path_to_variable, "visu")
+        Path(rep_visu).mkdir(parents=True, exist_ok=True)
+        output_file(os.path.join(rep_visu,"player_benef_costs_dashboard.html"))
+        show(ps)
+        return None
+    else: 
+        return ps_pls
     
-    ## configuration figure
+def plot_variables_onehtml(list_of_plt, path_to_variable):
+    """
+    plot the variables in one html
+
+    Parameters
+    ----------
+    list_of_plt : list of Figure()
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    gp = gridplot(list_of_plt, ncols = 2, toolbar_location='above')
+    # configuration figure
     rep_visu = os.path.join(path_to_variable, "visu")
     Path(rep_visu).mkdir(parents=True, exist_ok=True)
-    output_file(os.path.join(rep_visu,"player_benef_costs_dashboard.html"))
+    output_file(os.path.join(rep_visu,
+                             "prices_sg_player_attributs_dashboard.html"))
     
-    show(ps)
-
+    show(gp)
 #------------------------------------------------------------------------------
 #                   definitions of unit test of defined functions
 #------------------------------------------------------------------------------
@@ -349,7 +378,7 @@ def test_plot_more_prices():
     reps = os.listdir(name_dir)
     rep = reps[np.random.randint(0,len(reps))]
     path_to_variable = os.path.join(name_dir, rep)
-    plot_more_prices(path_to_variable)
+    p_sg, p_B0_C0s = plot_more_prices(path_to_variable)
     
 def test_plot_player():
     name_dir = "tests"
@@ -363,17 +392,42 @@ def test_plot_player():
     pi_sg_plus_s, pi_sg_minus_s = \
         get_local_storage_variables(path_to_variable)
         
-    plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
-                path_to_variable, 5)
+    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
+                         path_to_variable, 5)
+    
+def test_plot_variables_onehtml():
+    name_dir = "tests"
+    reps = os.listdir(name_dir)
+    rep = reps[np.random.randint(0,len(reps))]
+    path_to_variable = os.path.join(name_dir, rep)
+    
+    arr_pls_M_T, RUs, \
+    B0s, C0s, \
+    BENs, CSTs, \
+    pi_sg_plus_s, pi_sg_minus_s = \
+        get_local_storage_variables(path_to_variable)
+    
+    p_sg, p_B0_C0s = plot_more_prices(path_to_variable, dbg=False)
+    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
+                         path_to_variable, 5, dbg=False)
+    
+    flat_list = [item for sublist in [[p_sg],[p_B0_C0s],ps_pls] for item in sublist]
+    
+    plot_variables_onehtml(list_of_plt=flat_list, 
+                           path_to_variable=path_to_variable)
+    
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
     test_get_local_storage_variables()
-    test_plot_pi_sg()
+    #test_plot_pi_sg()
     #test_plot_more_prices()
-    test_plot_player()
+    #test_plot_player()
+    
+    test_plot_variables_onehtml()
+    
     print("runtime {}".format(time.time()-ti))
     
 
