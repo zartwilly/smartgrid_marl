@@ -22,7 +22,8 @@ from bokeh.models import ColumnDataSource, FactorRange;
 from bokeh.plotting import figure, output_file, show, gridplot;
 from bokeh.core.properties import value
 from bokeh.palettes import Spectral5
-from bokeh.models.tools import HoverTool
+from bokeh.models.tools import HoverTool, PanTool, BoxZoomTool, WheelZoomTool, UndoTool
+from bokeh.models.tools import RedoTool, ResetTool, SaveTool
 from bokeh.models.tickers import FixedTicker
 from bokeh.models import FuncTickFormatter
 
@@ -40,7 +41,19 @@ MARKERS = ["o", "v", "^", "<", ">", "1", "2", "3", "4", "8", "s", "p",
 COLORS = ["red", "yellow", "blue", "green", "rosybrown", 
               "darkorange", "fuchsia", "grey"]
 
-TOOLS = "pan,wheel_zoom,box_zoom,reset,save,box_select,lasso_select"
+TOOLS = [
+            PanTool(),
+            BoxZoomTool(),
+            WheelZoomTool(),
+            UndoTool(),
+            RedoTool(),
+            ResetTool(),
+            SaveTool(),
+            HoverTool(tooltips=[
+                ("Price", "$y"),
+                ("Time", "$x")
+                ])
+            ]
 #------------------------------------------------------------------------------
 #                   definitions of functions
 #------------------------------------------------------------------------------
@@ -215,7 +228,7 @@ def plot_more_prices(path_to_variable):
     p_B0_C0s = plot_pi_X(args)
     
     # show p_sg and p_B0_C0s on the same html
-    p = gridplot([[p_sg, p_B0_C0s]], 
+    p = gridplot([p_sg, p_B0_C0s], ncols = 2,
                  toolbar_location='above')
     show(p)
     
@@ -225,7 +238,7 @@ def plot_more_prices(path_to_variable):
     output_file(os.path.join(rep_visu,"pi_sg_dashboard.html"))
     
 def plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
-                path_to_variable, number_of_players=5):
+                path_to_variable, number_of_players=5, dbg=True):
     """
     plot the benefit and the cost for some players over the time as well as 
     a real utility of the selected players.
@@ -269,10 +282,11 @@ def plot_player(arr_pls_M_T, RUs, BENs, CSTs,
         
         ps_pls.append(p_ben_cst)
     
-    ps_pls = np.array(ps_pls, dtype=object) #.reshape(-1,1)
-    print("ps_pls = {}".format(ps_pls.shape))
+    #ps_pls = np.array(ps_pls, dtype=object)#.reshape(-1,1)
+    
+    print("ps_pls = {}".format(ps_pls)) if dbg else None
     # show p_ben_cst for all selected players
-    ps = gridplot([ps_pls], 
+    ps = gridplot(ps_pls, ncols = 2,
                  toolbar_location='above')
     
     ## configuration figure
