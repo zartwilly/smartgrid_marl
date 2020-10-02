@@ -304,6 +304,55 @@ def plot_player(arr_pls_M_T, RUs, BENs, CSTs, id_pls,
     else: 
         return ps_pls
     
+def plot_prod_cons_player(arr_pls_M_T, id_pls, path_to_variable, dbg=True):
+    """
+    plot production and consumption for "number_of_players" players.
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*INDEX_ATTRS
+        DESCRIPTION.
+    path_to_variable : TYPE
+        DESCRIPTION.
+    id_pls : number_of_players items
+        index of selected players
+        DESCRIPTION. 
+        it's the numbers of players you will selected to arr_pls_M_T. We obtain 
+         an array called arr_pls_M_T_nop
+    dbg : Boolean, optional
+        DESCRIPTION. The default is True.
+
+    Returns
+    -------
+    None.
+
+    """
+    arr_pls_M_T_nop = arr_pls_M_T[id_pls,:,:]
+    
+    ps_pls = []
+    for num_pl in range(0,arr_pls_M_T_nop.shape[0]):
+        prod_is = arr_pls_M_T_nop[num_pl,:, gmT.INDEX_ATTRS["prod_i"]]
+        cons_is = arr_pls_M_T_nop[num_pl,:, gmT.INDEX_ATTRS["cons_i"]]
+        Pis = arr_pls_M_T_nop[num_pl,:, gmT.INDEX_ATTRS["Pi"]]
+        Cis = arr_pls_M_T_nop[num_pl,:, gmT.INDEX_ATTRS["Ci"]]
+        
+        #_____ plot prod_i, cons_i ______
+        title = "production/consumption of a player pl_"+str(id_pls[num_pl])\
+                +" exchanged with SG"
+        xlabel = "periods of time" 
+        ylabel = "quantity(kwh)"
+        key_plus = "prod_i"
+        key_minus = "cons_i"
+    
+        args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+              "pi_sg_plus_s": prod_is,"pi_sg_minus_s":cons_is, 
+              "key_plus":key_plus, "key_minus":key_minus}
+        p_prod_cons = plot_pi_X(args)
+        
+        ps_pls.append(p_prod_cons)
+        
+    return ps_pls
+        
 def plot_variables_onehtml(list_of_plt, path_to_variable):
     """
     plot the variables in one html
@@ -428,8 +477,12 @@ def test_plot_variables_onehtml(number_of_players=5):
     p_sg, p_B0_C0s = plot_more_prices(path_to_variable, dbg=False)
     ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, id_pls,
                          path_to_variable, dbg=False)
+    ps_pls_prod_conso = plot_prod_cons_player(arr_pls_M_T, id_pls, 
+                          path_to_variable, dbg=True)
     
-    flat_list = [item for sublist in [[p_sg],[p_B0_C0s],ps_pls] for item in sublist]
+    flat_list = [item 
+                 for sublist in [[p_sg],[p_B0_C0s],ps_pls, ps_pls_prod_conso] 
+                 for item in sublist]
     
     plot_variables_onehtml(list_of_plt=flat_list, 
                            path_to_variable=path_to_variable)
