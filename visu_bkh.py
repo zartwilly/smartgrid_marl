@@ -139,7 +139,7 @@ def plot_pi_sg(pi_sg_plus_s, pi_sg_minus_s, path_to_variable):
     Path(rep_visu).mkdir(parents=True, exist_ok=True)
     output_file(os.path.join(rep_visu,"pi_sg_dashboard.html"))
     
-def plot_pi_X(args, p_X=None):
+def plot_pi_X(args, p_X=None, styles={"line":"solid"}):
     """
     plot data depending only on time like 
     pi_sg_plus_s, pi_sg_minus_s, B0s and C0s 
@@ -188,10 +188,10 @@ def plot_pi_X(args, p_X=None):
     
     p_X.line(x="t", y=args["key_plus"], source=src, 
               legend_label= args["key_plus"],
-              line_width=2, color=COLORS[0])
+              line_width=2, color=COLORS[0], line_dash=styles["line"])
     p_X.line(x="t", y=args["key_minus"], source=src, 
               legend_label= args["key_minus"],
-              line_width=2, color=COLORS[1])
+              line_width=2, color=COLORS[1], line_dash=styles["line"])
     
     p_X.legend.location = "top_right"
     
@@ -361,7 +361,8 @@ def plot_prod_cons_player(arr_pls_M_T, id_pls, path_to_variable, dbg=True):
         args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
               "pi_sg_plus_s": Pis,"pi_sg_minus_s": Cis, 
               "key_plus":key_plus, "key_minus":key_minus}
-        p_prod_cons_Pi_Ci = plot_pi_X(args, p_X=p_prod_cons)
+        p_prod_cons_Pi_Ci = plot_pi_X(args, p_X=p_prod_cons, 
+                                      styles={"line":"dashed"})
         
         ps_pls.append(p_prod_cons_Pi_Ci)
     return ps_pls
