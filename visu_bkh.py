@@ -139,7 +139,7 @@ def plot_pi_sg(pi_sg_plus_s, pi_sg_minus_s, path_to_variable):
     Path(rep_visu).mkdir(parents=True, exist_ok=True)
     output_file(os.path.join(rep_visu,"pi_sg_dashboard.html"))
     
-def plot_pi_X(args):
+def plot_pi_X(args, p_X=None):
     """
     plot data depending only on time like 
     pi_sg_plus_s, pi_sg_minus_s, B0s and C0s 
@@ -158,6 +158,9 @@ def plot_pi_X(args):
          pi_sg_plus_s is the first data we want to show.
              exple : "pi_sg_plus_s" = pi_sg_plus_s
         idem for pi_sg_minus_s
+    p_X : Figure
+        DESCRIPTION.
+        contain a chart of variable(s)
     Returns
     -------
     p_X : TYPE
@@ -174,13 +177,14 @@ def plot_pi_X(args):
     
     df_pi_X = pd.DataFrame(dico_pi_X)
     src = ColumnDataSource(df_pi_X)
-    p_X = figure(plot_height = HEIGHT, 
-                     plot_width = WIDTH, 
-                     title = title,
-                     x_axis_label = xlabel, 
-                     y_axis_label = ylabel, 
-                     x_axis_type = "linear",
-                     tools = TOOLS)
+    if p_X is None:
+        p_X = figure(plot_height = HEIGHT, 
+                         plot_width = WIDTH, 
+                         title = title,
+                         x_axis_label = xlabel, 
+                         y_axis_label = ylabel, 
+                         x_axis_type = "linear",
+                         tools = TOOLS)
     
     p_X.line(x="t", y=args["key_plus"], source=src, 
               legend_label= args["key_plus"],
@@ -284,7 +288,7 @@ def plot_player(arr_pls_M_T, RUs, BENs, CSTs, id_pls,
         args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
               "pi_sg_plus_s": ben_is,"pi_sg_minus_s":cst_is, 
               "key_plus":key_plus, "key_minus":key_minus}
-        p_ben_cst = plot_pi_X(args)
+        p_ben_cst = plot_pi_X(args, p_X=None)
         
         ps_pls.append(p_ben_cst)
     
@@ -347,10 +351,19 @@ def plot_prod_cons_player(arr_pls_M_T, id_pls, path_to_variable, dbg=True):
         args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
               "pi_sg_plus_s": prod_is,"pi_sg_minus_s":cons_is, 
               "key_plus":key_plus, "key_minus":key_minus}
-        p_prod_cons = plot_pi_X(args)
+        p_prod_cons = plot_pi_X(args, p_X=None)
         
-        ps_pls.append(p_prod_cons)
         
+        #_____ plot Pi, Ci on the same figure than prod_i, cons_i
+        key_plus = "Pi"
+        key_minus = "Ci"
+    
+        args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+              "pi_sg_plus_s": Pis,"pi_sg_minus_s": Cis, 
+              "key_plus":key_plus, "key_minus":key_minus}
+        p_prod_cons_Pi_Ci = plot_pi_X(args, p_X=p_prod_cons)
+        
+        ps_pls.append(p_prod_cons_Pi_Ci)
     return ps_pls
         
 def plot_variables_onehtml(list_of_plt, path_to_variable):
