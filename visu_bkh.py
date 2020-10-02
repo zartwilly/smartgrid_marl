@@ -189,9 +189,11 @@ def plot_pi_X(args, p_X=None, styles={"line":"solid"}):
     p_X.line(x="t", y=args["key_plus"], source=src, 
               legend_label= args["key_plus"],
               line_width=2, color=COLORS[0], line_dash=styles["line"])
+    p_X.circle(x="t", y=args["key_plus"], source=src, size=4)
     p_X.line(x="t", y=args["key_minus"], source=src, 
               legend_label= args["key_minus"],
               line_width=2, color=COLORS[1], line_dash=styles["line"])
+    p_X.circle(x="t", y=args["key_minus"], source=src, size=4)
     
     p_X.legend.location = "top_right"
     
