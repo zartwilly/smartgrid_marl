@@ -242,8 +242,56 @@ def plot_more_prices(path_to_variable, dbg=True):
     else:
         return p_sg, p_B0_C0s
     
-def plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
-                path_to_variable, number_of_players=5, dbg=True):
+def plot_prod_cons_player(arr_pls_M_T, id_pls, path_to_variable, dbg=True):
+    """
+    plot production and consumption for "number_of_players" players.
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*INDEX_ATTRS
+        DESCRIPTION.
+    path_to_variable : TYPE
+        DESCRIPTION.
+    id_pls : number_of_players items
+        index of selected players
+        DESCRIPTION. 
+        it's the numbers of players you will selected to arr_pls_M_T. we obtain 
+         an array called arr_pls_M_T_nop
+    dbg : Boolean, optional
+        DESCRIPTION. The default is True.
+
+    Returns
+    -------
+    None.
+
+    """
+    # id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
+    #                           replace=False)
+    arr_pls_M_T_nop = arr_pls_M_T[id_pls,:,:]
+    
+    ps_pls = []
+    for num_pl in range(0,arr_pls_M_T_nop.shape[0]):
+        prod_is = arr_pls_M_T_nop[num_pl,:, gmT.INDEX_ATTRS["prod_i"]]
+        cons_is = arr_pls_M_T_nop[num_pl,:, gmT.INDEX_ATTRS["cons_i"]]
+        
+        #_____ plot ben_i, cst_i ______
+        title = "production/consumption of a player pl_"+str(id_pls[num_pl])+" inside SG"
+        xlabel = "periods of time" 
+        ylabel = "quantity(kwh)"
+        key_plus = "prod_i"
+        key_minus = "cons_i"
+    
+        args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+              "pi_sg_plus_s": prod_is,"pi_sg_minus_s":cons_is, 
+              "key_plus":key_plus, "key_minus":key_minus}
+        p_prod_cons = plot_pi_X(args)
+        
+        ps_pls.append(p_prod_cons)
+    
+    return ps_pls
+
+def plot_player(arr_pls_M_T, id_pls, RUs, BENs, CSTs, 
+                path_to_variable, dbg=True):
     """
     plot the benefit and the cost for some players over the time as well as 
     a real utility of the selected players.
@@ -254,16 +302,18 @@ def plot_player(arr_pls_M_T, RUs, BENs, CSTs,
         DESCRIPTION.
     RUs : array of (M_PLAYERS,)
         DESCRIPTION.
-    number_of_players: integer.    
+    id_pls : number_of_players items
+        index of selected players
         DESCRIPTION.
-         it's number of players you will selected to arr_pls_M_T. we obtain 
+         it's the numbers of players you will selected to arr_pls_M_T. we obtain 
          an array called arr_pls_M_T_nop
     Returns
     -------
     None.
 
     """ 
-    id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players)
+    # id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
+    #                           replace=False)
     
     arr_pls_M_T_nop = arr_pls_M_T[id_pls,:,:]
     
@@ -274,7 +324,7 @@ def plot_player(arr_pls_M_T, RUs, BENs, CSTs,
         cst_is = CSTs[num_pl]
                 
         #_____ plot ben_i, cst_i ______
-        title = "benefit/cost  for a player pl_"+str(num_pl)+" inside SG"
+        title = "benefit/cost  for a player pl_"+str(id_pls[num_pl])+" inside SG"
         xlabel = "periods of time" 
         ylabel = "price"
         key_plus = "ben_i"
@@ -380,7 +430,21 @@ def test_plot_more_prices():
     path_to_variable = os.path.join(name_dir, rep)
     p_sg, p_B0_C0s = plot_more_prices(path_to_variable)
     
-def test_plot_player():
+def test_plot_player(number_of_players=5):
+    """
+
+    Parameters
+    ----------
+    number_of_players : integer, optinal   
+        DESCRIPTION.
+         it's number of players you will selected to arr_pls_M_T. we obtain 
+         an array called arr_pls_M_T_nop
+
+    Returns
+    -------
+    None.
+
+    """
     name_dir = "tests"
     reps = os.listdir(name_dir)
     rep = reps[np.random.randint(0,len(reps))]
@@ -392,10 +456,27 @@ def test_plot_player():
     pi_sg_plus_s, pi_sg_minus_s = \
         get_local_storage_variables(path_to_variable)
         
-    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
-                         path_to_variable, 5)
+    id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
+                              replace=False)
+        
+    ps_pls = plot_player(arr_pls_M_T, id_pls, RUs, BENs, CSTs, 
+                         path_to_variable)
     
-def test_plot_variables_onehtml():
+def test_plot_variables_onehtml(number_of_players=5):
+    """
+
+    Parameters
+    ----------
+    number_of_players : integer, optinal   
+        DESCRIPTION.
+         it's number of players you will selected to arr_pls_M_T. we obtain 
+         an array called arr_pls_M_T_nop
+
+    Returns
+    -------
+    None.
+
+    """
     name_dir = "tests"
     reps = os.listdir(name_dir)
     rep = reps[np.random.randint(0,len(reps))]
@@ -406,12 +487,20 @@ def test_plot_variables_onehtml():
     BENs, CSTs, \
     pi_sg_plus_s, pi_sg_minus_s = \
         get_local_storage_variables(path_to_variable)
+        
+    id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
+                              replace=False)
     
     p_sg, p_B0_C0s = plot_more_prices(path_to_variable, dbg=False)
-    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
-                         path_to_variable, 5, dbg=False)
+    ps_pls_ru_ben_cst = plot_player(arr_pls_M_T, id_pls, RUs, BENs, CSTs, 
+                         path_to_variable, dbg=False)
     
-    flat_list = [item for sublist in [[p_sg],[p_B0_C0s],ps_pls] for item in sublist]
+    ps_pls_prod_conso = plot_prod_cons_player(arr_pls_M_T, id_pls, 
+                          path_to_variable, dbg=True)
+    
+    flat_list = [item for sublist in \
+                 [[p_sg],[p_B0_C0s],ps_pls_ru_ben_cst,ps_pls_prod_conso] \
+                 for item in sublist]
     
     plot_variables_onehtml(list_of_plt=flat_list, 
                            path_to_variable=path_to_variable)
@@ -421,12 +510,13 @@ def test_plot_variables_onehtml():
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
+    number_of_players = 5
     test_get_local_storage_variables()
     #test_plot_pi_sg()
     #test_plot_more_prices()
     #test_plot_player()
     
-    test_plot_variables_onehtml()
+    test_plot_variables_onehtml(number_of_players)
     
     print("runtime {}".format(time.time()-ti))
     
