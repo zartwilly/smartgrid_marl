@@ -147,7 +147,7 @@ def find_path_to_variables(name_dir, ext=".npy", threshold= 0.89, n_depth=2):
         dirs.append(rep)
         #print("dirs = {}, rep={}".format(dirs, os.path.join(*dirs) ))
         files = os.listdir(os.path.join(*dirs))
-        located_files = [fn for fn in files if fn.endswith(".npy")]
+        located_files = [fn for fn in files if fn.endswith(ext)]
         if round(len(located_files)/len(files)) >= threshold \
             or depth == n_depth:
             boolean = False
