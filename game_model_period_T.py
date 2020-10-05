@@ -1515,12 +1515,14 @@ def test_game_model_SG(dbg=True):
           
         
 def test_run_game_model_SG():
+    case = CASE3
+    str_case = str(case[0]) +"_"+ str(case[1])
     # create test directory tests and put file in the directory simu_date_hhmm
     name_dir = "tests"; date_hhmm = datetime.now().strftime("%d%m_%H%M")
-    path_to_save = os.path.join(name_dir, "simu_"+date_hhmm)
+    path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, str_case)
     Path(path_to_save).mkdir(parents=True, exist_ok=True)
     
-    case = CASE3
+    
     pi_hp_plus, pi_hp_minus = generate_random_values(zero=1)
     pi_0_plus, pi_0_minus = generate_random_values(zero=1)
     
