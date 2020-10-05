@@ -398,8 +398,12 @@ def plot_variables_onehtml(list_of_plt, path_to_variable):
 def test_get_local_storage_variables():
     name_dir = "tests"
     reps = os.listdir(name_dir)
-    rep = reps[np.random.randint(0,len(reps))]
-    path_to_variable = os.path.join(name_dir, rep)
+    rep1 = reps[np.random.randint(0,len(reps))]
+    rep1 = os.path.join(name_dir, rep1)
+    reps = os.listdir(rep1)
+    rep2 = reps[np.random.randint(0,len(reps))]
+    path_to_variable = os.path.join(rep1, rep2)
+    
     arr_pls_M_T, RUs, \
     B0s, C0s, \
     BENs, CSTs, \
@@ -432,8 +436,11 @@ def test_get_local_storage_variables():
 def test_plot_pi_sg():
     name_dir = "tests"
     reps = os.listdir(name_dir)
-    rep = reps[np.random.randint(0,len(reps))]
-    path_to_variable = os.path.join(name_dir, rep)
+    rep1 = reps[np.random.randint(0,len(reps))]
+    rep1 = os.path.join(name_dir, rep1)
+    reps = os.listdir(rep1)
+    rep2 = reps[np.random.randint(0,len(reps))]
+    path_to_variable = os.path.join(rep1, rep2)
     arr_pls_M_T, RUs, \
     B0s, C0s, \
     BENs, CSTs, \
@@ -445,15 +452,21 @@ def test_plot_pi_sg():
 def test_plot_more_prices():
     name_dir = "tests"
     reps = os.listdir(name_dir)
-    rep = reps[np.random.randint(0,len(reps))]
-    path_to_variable = os.path.join(name_dir, rep)
+    rep1 = reps[np.random.randint(0,len(reps))]
+    rep1 = os.path.join(name_dir, rep1)
+    reps = os.listdir(rep1)
+    rep2 = reps[np.random.randint(0,len(reps))]
+    path_to_variable = os.path.join(rep1, rep2)
     p_sg, p_B0_C0s = plot_more_prices(path_to_variable)
     
-def test_plot_player():
+def test_plot_player():    
     name_dir = "tests"
     reps = os.listdir(name_dir)
-    rep = reps[np.random.randint(0,len(reps))]
-    path_to_variable = os.path.join(name_dir, rep)
+    rep1 = reps[np.random.randint(0,len(reps))]
+    rep1 = os.path.join(name_dir, rep1)
+    reps = os.listdir(rep1)
+    rep2 = reps[np.random.randint(0,len(reps))]
+    path_to_variable = os.path.join(rep1, rep2)
     
     arr_pls_M_T, RUs, \
     B0s, C0s, \
@@ -481,8 +494,11 @@ def test_plot_variables_onehtml(number_of_players=5):
     """
     name_dir = "tests"
     reps = os.listdir(name_dir)
-    rep = reps[np.random.randint(0,len(reps))]
-    path_to_variable = os.path.join(name_dir, rep)
+    rep1 = reps[np.random.randint(0,len(reps))]
+    rep1 = os.path.join(name_dir, rep1)
+    reps = os.listdir(rep1)
+    rep2 = reps[np.random.randint(0,len(reps))]
+    path_to_variable = os.path.join(rep1, rep2)
     
     arr_pls_M_T, RUs, \
     B0s, C0s, \
