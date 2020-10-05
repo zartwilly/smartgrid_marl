@@ -29,15 +29,15 @@ CHOICE_RU = 1
 CASE1 = (0.75, 1.5)
 CASE2 = (0.4, 0.75)
 CASE3 = (0, 0.3)
-LOW_VAL_Ci = 1 
-HIGH_VAL_Ci = 30
+LOW_VAL_Ci = 100 
+HIGH_VAL_Ci = 300
 
-NUM_PERIODS = 5
+NUM_PERIODS = 50
 
 #------------------------------------------------------------------------------
 #                   definitions of functions
 #------------------------------------------------------------------------------
-def execution_game(case=CASE3):
+def execute_game_onecase(case=CASE3):
     """
     execution of the game with initialisation of constances and variables.
 
@@ -66,7 +66,6 @@ def execution_game(case=CASE3):
     path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, str_case)
     Path(path_to_save).mkdir(parents=True, exist_ok=True)
     
-    case = CASE3
     pi_hp_plus, pi_hp_minus = gmpT.generate_random_values(zero=1)
     pi_0_plus, pi_0_minus = gmpT.generate_random_values(zero=1)
     
@@ -75,16 +74,48 @@ def execution_game(case=CASE3):
                            case, path_to_save)
     
 
+def execute_game_allcases(cases):
+    """
+    run game for all listed cases 
+
+    Parameters
+    ----------
+    cases : list of tuples
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    name_dir = "tests"; date_hhmm = datetime.now().strftime("%d%m_%H%M")
+    for case in cases:
+        str_case = str(case[0]) +"_"+ str(case[1])
+        path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, str_case)
+        Path(path_to_save).mkdir(parents=True, exist_ok=True)
+        
+        pi_hp_plus, pi_hp_minus = gmpT.generate_random_values(zero=1)
+        pi_0_plus, pi_0_minus = gmpT.generate_random_values(zero=1)
+        
+        gmpT.run_game_model_SG(pi_hp_plus, pi_hp_minus, 
+                               pi_0_plus, pi_0_minus, 
+                               case, path_to_save)
+        
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------ 
-def test_execution_game(case):
-    execution_game(case=case)
+def test_execute_game_onecase(case):
+    execute_game_onecase(case=case)
+    
+def test_execute_game_allcase():
+    cases = [CASE1, CASE2, CASE3]
+    execute_game_allcases(cases)
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    test_execution_game(CASE2)
+    test_execute_game_onecase(CASE2)
+    test_execute_game_allcase()
     print("runtime = {}".format(time.time() - ti))  
     
