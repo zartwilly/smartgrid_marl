@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import fonctions_auxiliaires as fct_aux
 import game_model_period_T as gmT
+import execution_game as exec_game
 
 from pathlib import Path
 
@@ -408,22 +409,24 @@ def test_get_local_storage_variables():
     print("____test_get_local_storage_variables____")
     print("arr_pls_M_T: {},RUs={},B0s={},pi_sg_plus_s={}".format(arr_pls_M_T.shape,RUs.shape,B0s.shape,pi_sg_plus_s.shape)) 
     print("arr_pls_M_T: OK") \
-        if arr_pls_M_T.shape == (gmT.M_PLAYERS,gmT.NUM_PERIODS+1,len(gmT.INDEX_ATTRS)) \
+        if arr_pls_M_T.shape == (exec_game.M_PLAYERS,
+                                 exec_game.NUM_PERIODS+1,
+                                 len(gmT.INDEX_ATTRS)) \
         else print("arr_pls_M_T: NOK")
     print("RUs: OK") \
-        if RUs.shape == (gmT.M_PLAYERS,) \
+        if RUs.shape == (exec_game.M_PLAYERS,) \
         else print("RUs: NOK")
     print("B0s: OK") \
-        if B0s.shape == (gmT.NUM_PERIODS,) \
+        if B0s.shape == (exec_game.NUM_PERIODS,) \
         else print("B0s: NOK")
     print("C0s: OK") \
-        if C0s.shape == (gmT.NUM_PERIODS,) \
+        if C0s.shape == (exec_game.NUM_PERIODS,) \
         else print("C0s: NOK")
     print("pi_sg_plus_s: OK") \
-        if pi_sg_plus_s.shape == (gmT.NUM_PERIODS,) \
+        if pi_sg_plus_s.shape == (exec_game.NUM_PERIODS,) \
         else print("pi_sg_plus_s: NOK")
     print("pi_sg_minus_s: OK") \
-        if pi_sg_minus_s.shape == (gmT.NUM_PERIODS,) \
+        if pi_sg_minus_s.shape == (exec_game.NUM_PERIODS,) \
         else print("pi_sg_minus_s: NOK")
     
 def test_plot_pi_sg():
