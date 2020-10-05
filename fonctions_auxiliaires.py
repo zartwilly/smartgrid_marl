@@ -121,13 +121,13 @@ def find_path_to_variables(name_dir, ext=".npy", threshold= 0.89, n_depth=2):
     ----------
     name_dir : TYPE
         DESCRIPTION.
-    ext : String
+    ext : String, Optional
         DESCRIPTION.
         extension of variables
-    threshold: float
+    threshold: float, Optional
         DESCRIPTION.
         percent of specified files in a directory 
-    depth: integer
+    depth: integer, Optional
         DESCRIPTION.
         number of subdirectories we have to open
         
