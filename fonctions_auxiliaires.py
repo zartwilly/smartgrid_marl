@@ -4,6 +4,7 @@ Created on Fri Sep 18 16:45:38 2020
 
 @author: jwehounou
 """
+import os
 import time
 import json
 import string
@@ -112,6 +113,51 @@ def get_random_string(length):
     result_str = ''.join(random.choice(letters) for i in range(length))
     return result_str
 
+def find_path_to_variables(name_dir, ext=".npy", threshold= 0.89, n_depth=2):
+    """
+    create the complet path to variables of extensions .npy
+
+    Parameters
+    ----------
+    name_dir : TYPE
+        DESCRIPTION.
+    ext : String
+        DESCRIPTION.
+        extension of variables
+    threshold: float
+        DESCRIPTION.
+        percent of specified files in a directory 
+    depth: integer
+        DESCRIPTION.
+        number of subdirectories we have to open
+        
+    Returns
+    -------
+    path_to_variables: String.
+
+    """
+    dirs = []
+    dirs.append(name_dir)
+    boolean = True
+    depth = 0
+    while boolean:
+        depth += 1
+        reps = os.listdir(name_dir)
+        rep = reps[np.random.randint(0,len(reps))]
+        dirs.append(rep)
+        #print("dirs = {}, rep={}".format(dirs, os.path.join(*dirs) ))
+        files = os.listdir(os.path.join(*dirs))
+        located_files = [fn for fn in files if fn.endswith(".npy")]
+        if round(len(located_files)/len(files)) >= threshold \
+            or depth == n_depth:
+            boolean = False
+        else:
+            name_dir = os.path.join(*dirs)
+            
+    path_to_variables = os.path.join(*dirs)
+    #print('dirs = {}, path_to_variables={}, type={}'.format(dirs, path_to_variables, type( path_to_variables)))
+    
+    return path_to_variables
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------    
@@ -156,6 +202,11 @@ def test_generate_energy_unit_price_SG():
     else:
         print("generate_energy_unit_price_SG: NOK")
     
+def test_find_path_to_variables():
+    name_dir = "tests"
+    depth = 2
+    ext = "npy"
+    find_path_to_variables(name_dir, ext, depth)
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------    
@@ -163,4 +214,7 @@ if __name__ == "__main__":
     ti = time.time()
     test_fct_positive()
     test_generate_energy_unit_price_SG()
+    
+    path_file = test_find_path_to_variables()
+    
     print("runtime = {}".format(time.time() - ti))
