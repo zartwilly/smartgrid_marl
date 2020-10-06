@@ -600,7 +600,78 @@ def test_plot_variables_onecase(rep,case):
     plot_variables_onehtml(list_of_plt=flat_list, 
                            path_to_variable=path_to_variable)
     
+def test_plot_variables_oneplayer(rep, case):
+    """
+    plot variable figures for one random player 
+    """      
+    name_dir = "tests"
+    if not os.path.isdir(os.path.join(name_dir, rep)):
+        reps = os.listdir(name_dir)
+        rep = reps[np.random.randint(0, len(reps))]
+    str_case = str(case[0]) +"_"+ str(case[1])
+    if not os.path.isdir(os.path.join(name_dir, rep, str_case)):
+        reps = os.listdir(rep)
+        str_case = reps[np.random.randint(0, len(reps))]
+    path_to_variable = os.path.join(name_dir, rep, str_case)
+    
+    # import arr_pls_M_T
+    arr_pls_M_T, RUs, \
+    B0s, C0s, \
+    BENs, CSTs, \
+    pi_sg_plus_s, pi_sg_minus_s = \
+        get_local_storage_variables(path_to_variable)
         
+    # selected player
+    id_pl = np.random.choice(arr_pls_M_T.shape[0], size=1, replace=False)
+    
+    # select values for all time
+    arr_pls_i_T_nop = arr_pls_M_T[id_pl,:,:]
+    ben_i_T = BENs[id_pl].T.reshape(-1)
+    cst_i_T = CSTs[id_pl].T.reshape(-1)
+    gamma_i_T = arr_pls_M_T[id_pl,:,gmT.INDEX_ATTRS["gamma_i"]].T.reshape(-1)
+    r_i_T = arr_pls_M_T[id_pl,:,gmT.INDEX_ATTRS["r_i"]].T.reshape(-1)
+    state_i_T = arr_pls_M_T[id_pl,:,gmT.INDEX_ATTRS["state_i"]].T.reshape(-1)
+    mode_i_T = arr_pls_M_T[id_pl,:,gmT.INDEX_ATTRS["mode_i"]].T.reshape(-1)
+               
+    #_____ plot ben_i, cst_i ______
+    title = "benefit/cost for a player pl_"+str(id_pl)+" inside SG"
+    xlabel = "periods of time" 
+    ylabel = "price"
+    key_plus = "ben_i"
+    key_minus = "cst_i"
+    
+    args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+          "pi_sg_plus_s": ben_i_T,"pi_sg_minus_s": cst_i_T, 
+          "key_plus": key_plus, "key_minus": key_minus}
+    p_ben_cst = plot_pi_X(args, p_X=None)
+     
+    #_____ plot prod_i, cst_i _____
+    ps_pls_prod_conso = plot_prod_cons_player(arr_pls_M_T, id_pl, 
+                          path_to_variable, dbg=True)
+    
+    #_____ plot gamma_i, r_i    ______
+    title = "storage decision and free place for a player pl_"+str(id_pl)+" inside SG"
+    xlabel = "periods of time" 
+    ylabel = "quantity"
+    key_plus = "gamma_i"
+    key_minus = "r_i"
+
+    args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+          "pi_sg_plus_s": gamma_i_T,"pi_sg_minus_s": r_i_T, 
+          "key_plus": key_plus, "key_minus": key_minus}
+    p_gamma_r = plot_pi_X(args, p_X=None)
+    
+    #_____ plot state_i, mode_i ______
+    
+    #_____ plot gridplot _____
+    list_of_plt = [[p_ben_cst], ps_pls_prod_conso, [p_gamma_r]]
+    flat_list = [item 
+                 for sublist in list_of_plt
+                 for item in sublist]
+    #gp = gridplot(flat_list, ncols = 2, toolbar_location='above')
+    plot_variables_onehtml(list_of_plt=flat_list, 
+                           path_to_variable=path_to_variable)
+    # show(gp)
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
@@ -614,7 +685,8 @@ if __name__ == "__main__":
     
     #test_plot_variables_onehtml(number_of_players)
     #test_plot_variables_onehtml_allcases(number_of_players=5)
-    test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE3)
+    #test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE3)
+    test_plot_variables_oneplayer(rep="simu_0510_1817",case=exec_game.CASE3)
     print("runtime {}".format(time.time()-ti))
     
 
