@@ -27,7 +27,8 @@ from bokeh.models.tools import HoverTool, PanTool, BoxZoomTool, WheelZoomTool, U
 from bokeh.models.tools import RedoTool, ResetTool, SaveTool
 from bokeh.models.tickers import FixedTicker
 from bokeh.models import FuncTickFormatter
-
+from bokeh.io import curdoc
+from bokeh.plotting import reset_output
 
 #------------------------------------------------------------------------------
 #                   definitions of constants
@@ -190,11 +191,13 @@ def plot_pi_X(args, p_X=None, styles={"line":"solid"}):
     p_X.line(x="t", y=args["key_plus"], source=src, 
               legend_label= args["key_plus"],
               line_width=2, color=COLORS[0], line_dash=styles["line"])
-    p_X.circle(x="t", y=args["key_plus"], source=src, size=4)
+    p_X.circle(x="t", y=args["key_plus"], source=src, 
+               size=4, fill_color='white')
     p_X.line(x="t", y=args["key_minus"], source=src, 
               legend_label= args["key_minus"],
               line_width=2, color=COLORS[1], line_dash=styles["line"])
-    p_X.circle(x="t", y=args["key_minus"], source=src, size=4)
+    p_X.circle(x="t", y=args["key_minus"], source=src, 
+               size=4, fill_color='white')
     
     p_X.legend.location = "top_right"
     
@@ -387,7 +390,7 @@ def plot_variables_onehtml(list_of_plt, path_to_variable):
     gp = gridplot(list_of_plt, ncols = 2, toolbar_location='above')
     # configuration figure
     rep_visu = os.path.join(path_to_variable, "visu")
-    Path(rep_visu).mkdir(parents=True, exist_ok=True)
+    Path(rep_visu).mkdir(parents=True, exist_ok=True)   
     output_file(os.path.join(rep_visu,
                              "prices_sg_player_attributs_dashboard.html"))
     
@@ -519,6 +522,52 @@ def test_plot_variables_onehtml(number_of_players=5):
     plot_variables_onehtml(list_of_plt=flat_list, 
                            path_to_variable=path_to_variable)
     
+def test_plot_variables_onehtml_allcases(number_of_players=5):
+    """
+    TODO : RETURN THE ERROR MESSAGE 
+    RuntimeError: Models must be owned by only a single document, BoxAnnotation(id='220268', ...) is already in a doc
+    
+    Parameters
+    ----------
+    number_of_players : integer, optinal   
+        DESCRIPTION.
+         it's number of players you will selected to arr_pls_M_T. we obtain 
+         an array called arr_pls_M_T_nop
+
+    Returns
+    -------
+    None.
+
+    """
+    name_dir = "tests"
+    reps = os.listdir(name_dir)
+    rep = reps[np.random.randint(0, len(reps))]
+    cases = [exec_game.CASE3, exec_game.CASE2, exec_game.CASE1]
+    for case in cases:
+        str_case = str(case[0]) +"_"+ str(case[1])
+        path_to_variable = os.path.join(name_dir, rep, str_case)
+        
+        arr_pls_M_T, RUs, \
+        B0s, C0s, \
+        BENs, CSTs, \
+        pi_sg_plus_s, pi_sg_minus_s = \
+            get_local_storage_variables(path_to_variable)
+            
+        id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
+                                  replace=False)
+        
+        p_sg, p_B0_C0s = plot_more_prices(path_to_variable, dbg=False)
+        ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, id_pls,
+                             path_to_variable, dbg=False)
+        ps_pls_prod_conso = plot_prod_cons_player(arr_pls_M_T, id_pls, 
+                              path_to_variable, dbg=True)
+        
+        flat_list = [item 
+                     for sublist in [[p_sg],[p_B0_C0s],ps_pls, ps_pls_prod_conso] 
+                     for item in sublist]
+        plot_variables_onehtml(list_of_plt=flat_list, 
+                               path_to_variable=path_to_variable)
+        
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
@@ -531,7 +580,7 @@ if __name__ == "__main__":
     #test_plot_player()
     
     test_plot_variables_onehtml(number_of_players)
-    
+    #test_plot_variables_onehtml_allcases(number_of_players=5)
     print("runtime {}".format(time.time()-ti))
     
 
