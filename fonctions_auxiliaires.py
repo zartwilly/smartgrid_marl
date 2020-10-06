@@ -158,6 +158,57 @@ def find_path_to_variables(name_dir, ext=".npy", threshold= 0.89, n_depth=2):
     #print('dirs = {}, path_to_variables={}, type={}'.format(dirs, path_to_variables, type( path_to_variables)))
     
     return path_to_variables
+
+def one_hot_string_without_set_classe(array):
+    """
+    convert an array of string assuming that all items in array are 
+    inside the set classe
+
+    Parameters
+    ----------
+    array : (n_items,)
+        DESCRIPTION.
+
+    Returns
+    -------
+    onehot : array of (array.shape[0], set(array))
+        DESCRIPTION.
+
+    """
+    unique, inverse = np.unique(array, return_inverse=True)
+    onehot = np.eye(unique.shape[0])[inverse]
+    return onehot
+
+def one_hot_string_with_set_classe(array, classes):
+    """
+    convert an array of string assuming that all items in array are not
+    inside the set classe
+
+    Parameters
+    ----------
+    array : (n_items,)
+        DESCRIPTION.
+
+    Returns
+    -------
+    onehot : array of (array.shape[0], set(classes))
+        DESCRIPTION.
+
+    """
+    # define a mapping of chars to integers
+    string_to_int = dict((c, i) for i, c in enumerate(classes))
+    int_to_string = dict((i, c) for i, c in enumerate(classes))
+    # integer encode input data
+    integer_encoded = [string_to_int[string_] for string_ in array]
+    # one hot encode
+    onehot_encoded = list()
+    for value in integer_encoded:
+        string_ = [0 for _ in range(len(classes))]
+        string_[value] = 1
+        onehot_encoded.append(string_)
+    
+    return onehot_encoded
+
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------    
