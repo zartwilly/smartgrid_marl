@@ -568,6 +568,39 @@ def test_plot_variables_onehtml_allcases(number_of_players=5):
         plot_variables_onehtml(list_of_plt=flat_list, 
                                path_to_variable=path_to_variable)
         
+def test_plot_variables_onecase(rep,case):
+    name_dir = "tests"
+    if not os.path.isdir(os.path.join(name_dir, rep)):
+        reps = os.listdir(name_dir)
+        rep = reps[np.random.randint(0, len(reps))]
+    str_case = str(case[0]) +"_"+ str(case[1])
+    if not os.path.isdir(os.path.join(name_dir, rep, str_case)):
+        reps = os.listdir(rep)
+        str_case = reps[np.random.randint(0, len(reps))]
+    path_to_variable = os.path.join(name_dir, rep, str_case)
+    
+    arr_pls_M_T, RUs, \
+    B0s, C0s, \
+    BENs, CSTs, \
+    pi_sg_plus_s, pi_sg_minus_s = \
+        get_local_storage_variables(path_to_variable)
+        
+    id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
+                              replace=False)
+    
+    p_sg, p_B0_C0s = plot_more_prices(path_to_variable, dbg=False)
+    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, id_pls,
+                         path_to_variable, dbg=False)
+    ps_pls_prod_conso = plot_prod_cons_player(arr_pls_M_T, id_pls, 
+                          path_to_variable, dbg=True)
+    
+    flat_list = [item 
+                 for sublist in [[p_sg],[p_B0_C0s],ps_pls, ps_pls_prod_conso] 
+                 for item in sublist]
+    plot_variables_onehtml(list_of_plt=flat_list, 
+                           path_to_variable=path_to_variable)
+    
+        
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
@@ -579,8 +612,9 @@ if __name__ == "__main__":
     #test_plot_more_prices()
     #test_plot_player()
     
-    test_plot_variables_onehtml(number_of_players)
+    #test_plot_variables_onehtml(number_of_players)
     #test_plot_variables_onehtml_allcases(number_of_players=5)
+    test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE3)
     print("runtime {}".format(time.time()-ti))
     
 
