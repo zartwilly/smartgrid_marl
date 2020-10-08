@@ -32,7 +32,7 @@ from bokeh.io import curdoc
 from bokeh.plotting import reset_output
 #Importing a pallette
 from bokeh.palettes import Spectral5, Viridis256, Colorblind, Magma256, Turbo256
-
+from bokeh.palettes import Category20
 #------------------------------------------------------------------------------
 #                   definitions of constants
 #------------------------------------------------------------------------------
@@ -478,7 +478,7 @@ def plot_state_mode(state_i_s, mode_i_s):
 
 ####################           plot -----> fin
 
-def plot_variables_onehtml(list_of_plt, path_to_variable, 
+def plot_variables_onehtml(list_of_plt, path_to_variable, ncols = 2, 
                 name_file_html="prices_sg_player_attributs_dashboard.html"):
     """
     plot the variables in one html
@@ -493,7 +493,7 @@ def plot_variables_onehtml(list_of_plt, path_to_variable,
     None.
 
     """
-    gp = gridplot(list_of_plt, ncols = 2, toolbar_location='above')
+    gp = gridplot(list_of_plt, ncols = ncols, toolbar_location='above')
     # configuration figure
     rep_visu = os.path.join(path_to_variable, "visu")
     Path(rep_visu).mkdir(parents=True, exist_ok=True)   
@@ -502,7 +502,113 @@ def plot_variables_onehtml(list_of_plt, path_to_variable,
     show(gp)
     
     
-#def plot_variables_players_game()
+def plot_variables_players_game(arr_pls_M_T, RUs, pi_sg_plus_s, pi_sg_minus_s):
+    """
+    representation of players' variables and game variables (pi_sg)
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*INDEX_ATTRS
+        DESCRIPTION.
+    RUs : TYPE
+        DESCRIPTION.
+    pi_sg_plus_s : TYPE
+        DESCRIPTION.
+    pi_sg_minus_s : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    list of figures
+
+    """
+    ps = []
+    # ______ plot pi_sg_plus, pi_sg_minus _______
+    title = "prices pi_sg_plus, pi_sg_minus" #"price of exported/imported energy inside SG"
+    xlabel = "periods of time" 
+    ylabel = "price SG"
+    key_plus = "pi_sg_plus"
+    key_minus = "pi_sg_minus"
+    
+    args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+          "pi_sg_plus_s": pi_sg_plus_s,"pi_sg_minus_s":pi_sg_minus_s, 
+          "key_plus":key_plus, "key_minus":key_minus}
+    
+    p_pi_sg = plot_pi_X(args)
+    ps.append(p_pi_sg)
+    
+    
+    # ______ plot B0s, C0s, RU _______
+    title = ""
+    
+    # ______ plot players' variables _______
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("quantity", "$y"),
+                            ("Time", "$x")
+                            ]
+                        ) 
+    ylabel = "energy quantity"
+    ts = list(map(str,range(0, exec_game.NUM_PERIODS+1)))
+    for num_pl in range(0, arr_pls_M_T.shape[0]):
+        title = "attributs of player pl_"+str(num_pl)
+        Pi_s = arr_pls_M_T[num_pl, :, gmT.INDEX_ATTRS["Pi"]]
+        Ci_s = arr_pls_M_T[num_pl, :, gmT.INDEX_ATTRS["Ci"]]
+        diff_Pi_Ci_s = Pi_s - Ci_s 
+        Si_max_s = arr_pls_M_T[num_pl, :, gmT.INDEX_ATTRS["Si_max"]]
+        Si_s = arr_pls_M_T[num_pl, :, gmT.INDEX_ATTRS["Si"]]
+        Ri_s = Si_max_s - Si_s
+        r_i_s = arr_pls_M_T[num_pl, :, gmT.INDEX_ATTRS["r_i"]]
+        prod_i_s = arr_pls_M_T[num_pl, :, gmT.INDEX_ATTRS["prod_i"]]
+        cons_i_s = arr_pls_M_T[num_pl, :, gmT.INDEX_ATTRS["cons_i"]]
+        
+        data_vars_pl = {"t":ts, "diff_Pi_Ci": diff_Pi_Ci_s, 
+                        "Ri":Ri_s, "r_i":r_i_s, "prod_i":prod_i_s, 
+                        "cons_i":cons_i_s}
+        source = ColumnDataSource(data=data_vars_pl)
+        
+        p_pl = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    
+        # diff_Pi_Ci
+        p_pl.line(x="t", y="diff_Pi_Ci", source=source, 
+                  legend_label="diff_Pi_Ci",
+                  line_width=2, color=Category20[20][0], line_dash=[1,1])
+        p_pl.circle(x="t", y="diff_Pi_Ci", source=source, 
+                    size=4, fill_color='white')
+        
+        # prod_i_s
+        p_pl.line(x="t", y="prod_i", source=source, 
+                  legend_label="prod_i",
+                  line_width=2, color=Category20[20][2], line_dash=[1,1])
+        p_pl.circle(x="t", y="prod_i", source=source, 
+                    size=4, fill_color='white')
+        # cons_i_s
+        p_pl.line(x="t", y="cons_i", source=source, 
+                  legend_label="cons_i",
+                  line_width=2, color=Category20[20][4], line_dash=[1,1])
+        p_pl.circle(x="t", y="cons_i", source=source, 
+                    size=4, fill_color='white')
+        # Ri_s
+        p_pl.line(x="t", y="Ri", source=source, 
+                  legend_label="Ri",
+                  line_width=2, color=Category20[20][6], line_dash=[1,1])
+        p_pl.circle(x="t", y="Ri", source=source, 
+                    size=4, fill_color='white')
+        # r_i_s
+        p_pl.line(x="t", y="r_i", source=source, 
+                  legend_label="r_i",
+                  line_width=2, color=Category20[20][8], line_dash=[1,1])
+        p_pl.circle(x="t", y="r_i", source=source, 
+                    size=4, fill_color='white')
+        
+        ps.append(p_pl)
+        
+    return ps
 #------------------------------------------------------------------------------
 #                   definitions of unit test of defined functions
 #------------------------------------------------------------------------------
@@ -783,6 +889,34 @@ def test_plot_variables_oneplayer(rep, case):
     plot_variables_onehtml(list_of_plt=flat_list, 
                            path_to_variable=path_to_variable,
                            name_file_html="representation_attributs_oneplayer_onecase.html")
+    
+def test_plot_variables_allplayers(rep, case):
+    """
+    plot variable figures for one random player 
+    """      
+    name_dir = "tests"
+    if not os.path.isdir(os.path.join(name_dir, rep)):
+        reps = os.listdir(name_dir)
+        rep = reps[np.random.randint(0, len(reps))]
+    str_case = str(case[0]) +"_"+ str(case[1])
+    if not os.path.isdir(os.path.join(name_dir, rep, str_case)):
+        reps = os.listdir(rep)
+        str_case = reps[np.random.randint(0, len(reps))]
+    path_to_variable = os.path.join(name_dir, rep, str_case)
+    
+    # import arr_pls_M_T
+    arr_pls_M_T, RUs, \
+    B0s, C0s, \
+    BENs, CSTs, \
+    pi_sg_plus_s, pi_sg_minus_s = \
+        get_local_storage_variables(path_to_variable)
+        
+    ps = plot_variables_players_game(arr_pls_M_T, RUs, 
+                                     pi_sg_plus_s, pi_sg_minus_s)
+    
+    plot_variables_onehtml(ps, path_to_variable, ncols = 1, 
+                name_file_html="player_attributs_game_variables_dashboard.html")
+    
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
@@ -796,8 +930,10 @@ if __name__ == "__main__":
     
     #test_plot_variables_onehtml(number_of_players)
     #test_plot_variables_onehtml_allcases(number_of_players=5)
-    test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE1)
+    # test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE1)
     #test_plot_variables_oneplayer(rep="simu_0510_1817",case=exec_game.CASE3)
+    
+    test_plot_variables_allplayers(rep="simu_0510_1817",case=exec_game.CASE1)
     print("runtime {}".format(time.time()-ti))
     
 
