@@ -10,6 +10,7 @@ import json
 import string
 import random
 import numpy as np
+import itertools as it
 
 
 STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
@@ -108,6 +109,39 @@ def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
     #                 for (low_item,high_item) in inters]).reshape((1,-1))
     return Cis, Pis, Si_maxs, Sis
 
+def compute_real_money_SG(arr_pls_M_T, pi_sg_plus_s, pi_sg_minus_s, 
+                          INDEX_ATTRS):
+    """
+    compute real cost (CC)/benefit (BB) and real money (RU) inside the SG
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of players with a shape M_PLAYERS*NUM_PERIODS*len(INDEX_ATTRS)
+        DESCRIPTION.
+    pi_sg_plus_s : list of energy price exported to HP. NUM_PERIODS items
+        DESCRIPTION.
+    pi_sg_minus_s : list of energy price imported from HP. NUM_PERIODS items
+        DESCRIPTION.
+
+    Returns
+    -------
+    BB_i: real benefits' array of M_PLAYERS, 
+    CC_i: real costs' array of M_PLAYERS, 
+    RU_i: real money's array of M_PLAYERS.
+
+    """
+    BB, CC, RU = [], [], []
+    for num_pl in range(0, arr_pls_M_T.shape[0]):
+        CONS_pl = arr_pls_M_T[num_pl, :, INDEX_ATTRS["cons_i"]]
+        PROD_pl = arr_pls_M_T[num_pl, :, INDEX_ATTRS["prod_i"]]
+        BB_pl = pi_sg_plus_s[-1] * sum(PROD_pl)
+        CC_pl = pi_sg_minus_s[-1] * sum(CONS_pl)
+        ru_pl = BB_pl - CC_pl
+        
+        BB.append(BB_pl); CC.append(CC_pl);RU.append(ru_pl)
+        
+    return BB, CC, RU
+    
 def get_random_string(length):
     letters = string.ascii_lowercase
     result_str = ''.join(random.choice(letters) for i in range(length))
@@ -253,6 +287,30 @@ def test_generate_energy_unit_price_SG():
     else:
         print("generate_energy_unit_price_SG: NOK")
     
+def test_compute_real_money_SG():  
+    m_players = 5
+    num_periods = 5
+    INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+                   "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9}
+    arr_pls_M_T = [] #np.ones(shape=(m_players, num_periods), dtype=object)
+    for (num_pl, t) in it.product(range(m_players), range(num_periods)):
+        arr_pls_M_T.append([t]*10)
+    arr_pls_M_T = [arr_pls_M_T[i:i+num_periods] for i in range(0, len(arr_pls_M_T), num_periods)]
+    arr_pls_M_T = np.array(arr_pls_M_T, dtype=object)
+    #print("arr_pls_M_T = {} \n {}".format(arr_pls_M_T.shape, arr_pls_M_T))
+    pi_sg_minus_s = [2]*num_periods
+    pi_sg_plus_s = [3]*num_periods
+    BB, CC, RU = compute_real_money_SG(arr_pls_M_T, 
+                                       pi_sg_plus_s, pi_sg_minus_s, 
+                                       INDEX_ATTRS)
+    print("BB={},CC={},RU={}".format(BB, CC, RU))
+    if sum(BB)/m_players == BB[0] \
+        and sum(CC)/m_players == CC[0] \
+        and sum(RU)/m_players == RU[0]:
+        print("True")
+    else:
+        print("False")
+    
 def test_find_path_to_variables():
     name_dir = "tests"
     depth = 2
@@ -267,5 +325,7 @@ if __name__ == "__main__":
     test_generate_energy_unit_price_SG()
     
     path_file = test_find_path_to_variables()
+    
+    test_compute_real_money_SG()
     
     print("runtime = {}".format(time.time() - ti))
