@@ -635,7 +635,8 @@ def plot_state_mode_old_old(state_i_s, mode_i_s):
     return p
 ####################           plot -----> fin
 
-def plot_variables_onehtml(list_of_plt, path_to_variable):
+def plot_variables_onehtml(list_of_plt, path_to_variable, 
+                name_file_html="prices_sg_player_attributs_dashboard.html"):
     """
     plot the variables in one html
 
@@ -653,8 +654,7 @@ def plot_variables_onehtml(list_of_plt, path_to_variable):
     # configuration figure
     rep_visu = os.path.join(path_to_variable, "visu")
     Path(rep_visu).mkdir(parents=True, exist_ok=True)   
-    output_file(os.path.join(rep_visu,
-                             "prices_sg_player_attributs_dashboard.html"))
+    output_file(os.path.join(rep_visu, name_file_html))
     
     show(gp)
 #------------------------------------------------------------------------------
@@ -828,7 +828,8 @@ def test_plot_variables_onehtml_allcases(number_of_players=5):
                      for sublist in [[p_sg],[p_B0_C0s],ps_pls, ps_pls_prod_conso] 
                      for item in sublist]
         plot_variables_onehtml(list_of_plt=flat_list, 
-                               path_to_variable=path_to_variable)
+                               path_to_variable=path_to_variable,
+                               name_file_html="representation_attributs_players_allcases.html")
         
 def test_plot_variables_onecase(rep,case):
     name_dir = "tests"
@@ -860,7 +861,8 @@ def test_plot_variables_onecase(rep,case):
                  for sublist in [[p_sg],[p_B0_C0s],ps_pls, ps_pls_prod_conso] 
                  for item in sublist]
     plot_variables_onehtml(list_of_plt=flat_list, 
-                           path_to_variable=path_to_variable)
+                           path_to_variable=path_to_variable,
+                           name_file_html="representation_attributs_player_onecase.html")
     
 def test_plot_variables_oneplayer(rep, case):
     """
@@ -933,7 +935,8 @@ def test_plot_variables_oneplayer(rep, case):
                  for sublist in list_of_plt
                  for item in sublist]
     plot_variables_onehtml(list_of_plt=flat_list, 
-                           path_to_variable=path_to_variable)
+                           path_to_variable=path_to_variable,
+                           name_file_html="representation_attributs_oneplayer_onecase.html")
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
@@ -947,8 +950,8 @@ if __name__ == "__main__":
     
     #test_plot_variables_onehtml(number_of_players)
     #test_plot_variables_onehtml_allcases(number_of_players=5)
-    #test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE3)
-    test_plot_variables_oneplayer(rep="simu_0510_1817",case=exec_game.CASE1)
+    test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE1)
+    #test_plot_variables_oneplayer(rep="simu_0510_1817",case=exec_game.CASE3)
     print("runtime {}".format(time.time()-ti))
     
 
