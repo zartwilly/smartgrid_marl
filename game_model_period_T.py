@@ -53,7 +53,7 @@ def generate_random_values(zero=0):
         P_T_plus_1 = np.random.random_sample()
     return  C_T_plus_1, P_T_plus_1
 
-def initialize_game_create_agents_t0(sys_inputs):    
+def initialize_game_create_agents_t0_old(sys_inputs):    
     """
     initialize a game by create M_PLAYERS agents called players and affect 
     random values (see the case 1, 2, 3) for all players and for all period 
@@ -153,6 +153,72 @@ def initialize_game_create_agents_t0(sys_inputs):
         arr_pls_M_T.append(a_i_t_s)
         
     arr_pls_M_T = np.array(arr_pls_M_T, dtype=object)
+    return arr_pls, arr_pls_M_T
+
+def initialize_game_create_agents_t0(sys_inputs):
+    
+    # ___ variables' declarations ___
+    arr_pls = []
+    arr_pls_M_T = []
+    Ci_t_plus_1, Pi_t_plus_1 = sys_inputs["Ci_t_plus_1"], sys_inputs["Pi_t_plus_1"] 
+    pi_0_plus, pi_0_minus = sys_inputs["pi_0_plus"], sys_inputs["pi_0_minus"] 
+    pi_hp_plus, pi_hp_minus = sys_inputs["pi_hp_plus"], sys_inputs["pi_hp_minus"]
+    
+    gamma_i, r_i = 0, 0
+    prod_i, cons_i = 0, 0
+    state_i = None
+    
+    # ___ create Ci, Pi, Si_max, Si for all players all time
+    arr_pl_M_T_Ci_Pi_Si_profs = fct_aux.generate_Cis_Pis_Sis_allplayer_alltime(
+                                    m_players = fct_aux.M_PLAYERS, 
+                                    num_periods = fct_aux.NUM_PERIODS, 
+                                    low_Ci = fct_aux.LOW_VAL_Ci, 
+                                    high_Ci = fct_aux.HIGH_VAL_Ci
+                                ) 
+    for num_pl in range(0, fct_aux.M_PLAYERS):
+        pl_i_T_s = []; boolean_pl = True
+        for t in range(0, fct_aux.NUM_PERIODS+1):
+            Ci = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t, 
+                                           fct_aux.INDEX_ATTRS["Ci"]]
+            Pi = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t, 
+                                           fct_aux.INDEX_ATTRS["Pi"]]
+            Si_max = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t, 
+                                               fct_aux.INDEX_ATTRS["Si_max"]]
+            Si = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t, 
+                                           fct_aux.INDEX_ATTRS["Si"]]
+            ag = (Ci, Pi, Si_max, Si, gamma_i, prod_i, cons_i, r_i, state_i)
+            pl = players.Player(*ag)
+            
+            arr_pls.append(pl) if boolean_pl == True else None
+            boolean_pl = False
+            
+            # update pl attributs
+            pl.set_Ci(Ci, update=False)
+            pl.set_Pi(Pi, update=False)
+            pl.set_Si(Si, update=False)
+            pl.set_Si_max(Si_max, update=False)
+            pl.get_state_i()
+            pl.select_mode_i()
+            pl.update_prod_cons_r_i()
+            
+            # get values from pl
+            gamma_i = pl.get_gamma_i(); prod_i = pl.get_prod_i() 
+            cons_i = pl.get_cons_i(); r_i = pl.get_r_i(); 
+            state_i = pl.get_state_i(); mode_i = pl.get_mode_i()
+            profili = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t, 
+                                                fct_aux.INDEX_ATTRS["Profili"]]; 
+            casei = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t,
+                                              fct_aux.INDEX_ATTRS["Casei"]];
+            
+            pl_i_T_s.append([Ci, Pi, Si, Si_max, gamma_i, 
+                            prod_i, cons_i, r_i, state_i, mode_i,
+                            profili, casei])
+            
+        arr_pls_M_T.append(pl_i_T_s)
+        
+    arr_pls = np.array(arr_pls, dtype=object)
+    arr_pls_M_T = np.array(arr_pls_M_T, dtype=object)
+    
     return arr_pls, arr_pls_M_T
 
 def compute_prod_cons_SG(arr_pls_M_T, t):
@@ -1067,12 +1133,13 @@ def test_initialize_game_create_agents_t0():
                     "pi_0_plus":pi_0_plus, "pi_0_minus":pi_0_minus}
     arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs)
     
-    print("shape: arr_pls={}, arr_pls_M_T={}, size={}".format(
+    print("shape: arr_pls={}, arr_pls_M_T={}, size={} Octets".format(
             arr_pls.shape, arr_pls_M_T.shape, sys.getsizeof(arr_pls_M_T) ))
-    if arr_pls.shape == (exec_game.M_PLAYERS,) \
-        and arr_pls_M_T.shape == (exec_game.M_PLAYERS, 
-                                  exec_game.NUM_PERIODS+1, 
-                                  len(INDEX_ATTRS)):
+
+    if arr_pls.shape == (fct_aux.M_PLAYERS,) \
+        and arr_pls_M_T.shape == (fct_aux.M_PLAYERS, 
+                                  fct_aux.NUM_PERIODS+1, 
+                                  len(fct_aux.INDEX_ATTRS)):
             print("test_initialize_game_create_agents_t0: OK")
             print("shape: arr_pls={}, arr_pls_M_T={}".format(
             arr_pls.shape, arr_pls_M_T.shape))
