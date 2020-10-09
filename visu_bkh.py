@@ -20,7 +20,7 @@ from pathlib import Path
 
 from bokeh.plotting import *
 from bokeh.layouts import grid, column;
-from bokeh.models import ColumnDataSource, FactorRange;
+from bokeh.models import ColumnDataSource, FactorRange, Range1d;
 from bokeh.plotting import figure, output_file, show, gridplot;
 from bokeh.core.properties import value
 from bokeh.palettes import Spectral5
@@ -539,7 +539,37 @@ def plot_variables_players_game(arr_pls_M_T, RUs, pi_sg_plus_s, pi_sg_minus_s):
     
     
     # ______ plot B0s, C0s, RU _______
-    title = ""
+    title = "real utility of players"
+    ylabel = "price"
+    BB_i, CC_i, RU_i = fct_aux.compute_real_money_SG(
+                            arr_pls_M_T, 
+                            pi_sg_plus_s, 
+                            pi_sg_minus_s, gmT.INDEX_ATTRS)
+    pls = range(0, arr_pls_M_T.shape[0])
+    data_pl_ru_bb_cc = {"pl":pls, "RU":RU_i, "BB":BB_i, "CC":CC_i}
+    source = ColumnDataSource(data=data_pl_ru_bb_cc)
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("price", "$y"),
+                            ("player", "$x")
+                            ]
+                        ) 
+    p_ru = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    p_ru.line(x="pl", y="RU", source=source, legend_label="RU",
+              line_width=2, color=Category20[20][0], line_dash=[1,1])
+    p_ru.line(x="pl", y="BB", source=source, legend_label="BB",
+              line_width=2, color=Category20[20][2], line_dash=[1,1])
+    p_ru.line(x="pl", y="CC", source=source, legend_label="CC",
+              line_width=2, color=Category20[20][4], line_dash=[1,1])
+    p_ru.circle(x="pl", y="RU", source=source, size=4, fill_color='white')
+    p_ru.circle(x="pl", y="BB", source=source, size=4, fill_color='white')
+    p_ru.circle(x="pl", y="CC", source=source, size=4, fill_color='white')
+    ps.append(p_ru)
     
     # ______ plot players' variables _______
     TOOLS[7] = HoverTool(tooltips=[
@@ -565,15 +595,18 @@ def plot_variables_players_game(arr_pls_M_T, RUs, pi_sg_plus_s, pi_sg_minus_s):
                         "Ri":Ri_s, "r_i":r_i_s, "prod_i":prod_i_s, 
                         "cons_i":cons_i_s}
         source = ColumnDataSource(data=data_vars_pl)
-        
+        arr_reshape = np.concatenate((diff_Pi_Ci_s, Ri_s, r_i_s, prod_i_s, cons_i_s))
+        min_val = arr_reshape.min()
+        max_val = arr_reshape.max()
         p_pl = figure(plot_height = int(HEIGHT*1.0), 
                         plot_width = int(WIDTH*1.5), 
                         title = title,
                         x_axis_label = xlabel, 
                         y_axis_label = ylabel, 
                         x_axis_type = "linear",
+                        y_range = Range1d(int(min_val), int(max_val)),
                         tools = TOOLS)
-    
+        p_pl.y_range = Range1d(int(min_val), int(max_val))
         # diff_Pi_Ci
         p_pl.line(x="t", y="diff_Pi_Ci", source=source, 
                   legend_label="diff_Pi_Ci",
