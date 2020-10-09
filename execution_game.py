@@ -20,24 +20,12 @@ from datetime import datetime
 from pathlib import Path
 
 
-#------------------------------------------------------------------------------
-#                       definition of constantes
-#------------------------------------------------------------------------------
-N_INSTANCE = 10
-M_PLAYERS = 10
-CHOICE_RU = 1
-CASE1 = (0.75, 1.5)
-CASE2 = (0.4, 0.75)
-CASE3 = (0, 0.3)
-LOW_VAL_Ci = 100 
-HIGH_VAL_Ci = 300
 
-NUM_PERIODS = 50
 
 #------------------------------------------------------------------------------
 #                   definitions of functions
 #------------------------------------------------------------------------------
-def execute_game_onecase(case=CASE3):
+def execute_game_onecase(case=fct_aux.CASE3):
     """
     execution of the game with initialisation of constances and variables.
 
@@ -108,14 +96,17 @@ def test_execute_game_onecase(case):
     execute_game_onecase(case=case)
     
 def test_execute_game_allcase():
-    cases = [CASE1, CASE2, CASE3]
+    cases = [fct_aux.CASE1, fct_aux.CASE2, fct_aux.CASE3]
     execute_game_allcases(cases)
+    
+
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    test_execute_game_onecase(CASE2)
+    #test_execute_game_onecase(fct_aux.CASE2)
     test_execute_game_allcase()
+    
     print("runtime = {}".format(time.time() - ti))  
     
