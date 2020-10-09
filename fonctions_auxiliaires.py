@@ -5,6 +5,7 @@ Created on Fri Sep 18 16:45:38 2020
 @author: jwehounou
 """
 import os
+import sys
 import time
 import json
 import string
@@ -12,10 +13,32 @@ import random
 import numpy as np
 import itertools as it
 
+#------------------------------------------------------------------------------
+#                       definition of constantes
+#------------------------------------------------------------------------------
+M_PLAYERS = 10
+NUM_PERIODS = 50
+
+CHOICE_RU = 1
+
+LOW_VAL_Ci = 100 
+HIGH_VAL_Ci = 300
 
 STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
 STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
 STATE3_STRATS = ("DIS", "PROD")
+
+CASE1 = (0.75, 1.5)
+CASE2 = (0.4, 0.75)
+CASE3 = (0, 0.3)
+
+PROFIL_H = (0.6, 0.2, 0.2)
+PROFIL_M = (0.2, 0.6, 0.2)
+PROFIL_L = (0.2, 0.2, 0.6)
+
+INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+               "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
+               "Profili":10, "Casei":11}
 
 #------------------------------------------------------------------------------
 #           definitions of class
@@ -108,6 +131,121 @@ def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
     # Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
     #                 for (low_item,high_item) in inters]).reshape((1,-1))
     return Cis, Pis, Si_maxs, Sis
+
+def generate_Cis_Pis_Sis_oneplayer_alltime(num_player, num_periods, 
+                                           low_Ci, high_Ci):
+    """
+    create initial values for a player attributs
+
+    Parameters
+    ----------
+    num_player : integer
+        DESCRIPTION.
+        number of player
+    n_periods : integer
+        DESCRIPTION.
+        number of periods in the time
+    low_Ci : integer
+        DESCRIPTION.
+        low value of Ci, Ci constante all the periods
+    high_Ci : integer
+        DESCRIPTION.
+        high value of Ci, Ci constante all the periods
+        
+    Returns
+    -------
+
+    arr_pl_i_T : list of (num_periods+1, len(init_values_i_t))
+        DESCRIPTION.
+        avec 
+        init_values_i_t = [Ci_t, Pi_t, Si_t, Si_max_t, str_profil_t, str_case_t]
+        
+        avec forall t, Ci_t=Ci_t+1, Si_max_t = Si_max_t+1
+    """
+    arr_pl_i_T = []
+    
+    Ci = np.random.uniform(low=low_Ci, high=high_Ci, size=1)
+    prob = np.random.uniform(0,1)
+    Si_max = Ci * 0.8 if prob <= 0.3 else Ci * 0.5
+    for t in range(0, num_periods+1):
+        profil_t= None
+        if prob <= 0.3:
+            profil_t = np.random.default_rng().choice(
+                            p=[0.5, 0.5],
+                            a=[PROFIL_L, PROFIL_H])
+        else:
+            profil_t = np.random.default_rng().choice(
+                            p=[0.5, 0.5],
+                            a=[PROFIL_L, PROFIL_M])
+        
+        profil_case_t = None
+        prob_case_t = np.random.uniform(0,1)
+        if prob_case_t <= profil_t[0]:
+            profil_case_t = CASE1
+        elif prob_case_t > profil_t[0] \
+            and prob_case_t <= profil_t[0]+profil_t[1]:
+            profil_case_t = CASE2
+        else:
+            profil_case_t = CASE3
+        
+        min_val_profil = profil_case_t[0]*Ci 
+        max_val_profil = profil_case_t[1]*Ci
+        Pi_t = np.random.uniform(low=min_val_profil, high=max_val_profil) 
+                            
+        Si_t = 0 if t == 0 else np.random.uniform(0,1) * Si_max
+        
+        str_profil_t = "_".join(map(str, profil_t))
+        str_case_t = "_".join(map(str, profil_case_t))
+        
+        init_values_i_t = [Ci, Pi_t, Si_t, Si_max,
+                           0, 0, 0, 0, 0, 0, 
+                           str_profil_t, str_case_t]
+        
+        arr_pl_i_T.append(init_values_i_t)
+        
+    return arr_pl_i_T
+        
+def generate_Cis_Pis_Sis_allplayer_alltime(m_players, num_periods, 
+                                           low_Ci, high_Ci):
+    """
+    create initial values for all player attributs all the time
+
+
+    Parameters
+    ----------
+    m_players : integer
+        DESCRIPTION.
+        number of players in the game
+    n_periods : integer
+        DESCRIPTION.
+        number of periods in the time
+    low_Ci : integer
+        DESCRIPTION.
+        low value of Ci, Ci constante all the periods
+    high_Ci : integer
+        DESCRIPTION.
+        high value of Ci, Ci constante all the periods
+
+    Returns
+    -------
+    arr_pl_M_T : array of (num_players, num_periods+1, len(init_values_i_t))
+        DESCRIPTION.
+        avec 
+        init_values_i_t = [Ci_t, Pi_t, Si_t, Si_max_t, str_profil_t, str_case_t]
+        
+        avec forall t, Ci_t = Ci_t+1, Si_max_t = Si_max_t+1
+    """
+    
+    arr_pl_M_T = []
+    for num_player in range(0, m_players):
+        arr_pl_i_T = generate_Cis_Pis_Sis_oneplayer_alltime(
+                        num_player, num_periods, 
+                        low_Ci, high_Ci)
+        arr_pl_M_T.append(arr_pl_i_T)
+    
+    arr_pl_M_T = np.array( arr_pl_M_T, dtype=object)
+    return arr_pl_M_T
+
 
 def compute_real_money_SG(arr_pls_M_T, pi_sg_plus_s, pi_sg_minus_s, 
                           INDEX_ATTRS):
@@ -316,6 +454,41 @@ def test_find_path_to_variables():
     depth = 2
     ext = "npy"
     find_path_to_variables(name_dir, ext, depth)
+    
+def test_generate_Cis_Pis_Sis_oneplayer_alltime():
+    num_player = 1; 
+    num_periods = 5;
+    low_Ci, high_Ci = 1, 30
+    init_values_i_t = ["Ci","Pi_t","Si_max","Si_t",
+                       0, 0, 0, 0, 0, 0, 
+                       "str_profil_t","str_case_t"]
+    arr_pl_i_T = generate_Cis_Pis_Sis_oneplayer_alltime(
+                    num_player, num_periods, low_Ci, high_Ci)
+    arr_pl_i_T = np.array(arr_pl_i_T, dtype=object)
+    if arr_pl_i_T.shape == (num_periods+1, len(init_values_i_t)):
+        print("test_generate_Cis_Pis_Sis_oneplayer_alltime OK")
+    else:
+        print("test_generate_Cis_Pis_Sis_oneplayer_alltime NOK")
+    print("arr_pl_i_T shape: {}".format( arr_pl_i_T.shape ))
+    
+def test_generate_Cis_Pis_Sis_allplayer_alltime():
+    m_players = 500; 
+    num_periods = 500;
+    low_Ci, high_Ci = 1, 30
+    init_values_i_t = ["Ci","Pi_t","Si_t","Si_max", 0, 0, 0, 0, 0, 0,
+                       "str_profil_t","str_case_t"]
+    
+    arr_pl_M_T = generate_Cis_Pis_Sis_allplayer_alltime(
+                    m_players, num_periods, 
+                    low_Ci, high_Ci)
+    
+    if arr_pl_M_T.shape == (m_players, num_periods+1, len(init_values_i_t)):
+        print("test_generate_Cis_Pis_Sis_allplayer_alltime OK")
+    else: 
+        print("test_generate_Cis_Pis_Sis_allplayer_alltime NOK")
+    print("arr_pl_M_T shape={}, size={} Mo".format(arr_pl_M_T.shape, 
+            round(sys.getsizeof(arr_pl_M_T)/(1024*1024),3)))
+
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------    
@@ -327,5 +500,8 @@ if __name__ == "__main__":
     path_file = test_find_path_to_variables()
     
     test_compute_real_money_SG()
+    
+    test_generate_Cis_Pis_Sis_oneplayer_alltime()
+    test_generate_Cis_Pis_Sis_allplayer_alltime()
     
     print("runtime = {}".format(time.time() - ti))
