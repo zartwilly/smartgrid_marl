@@ -36,7 +36,7 @@ class Player:
         # variables depend on a decision of the instance
         self.prod_i = prod_i
         self.cons_i = cons_i
-        #self.R_i = self.Si_max - self.Si
+        self.R_i_old = 0
         self.r_i = r_i
         self.state_i = state_i
         self.mode_i = ""
@@ -105,6 +105,38 @@ class Player:
         """
         self.Si_max = (update==False)*new_Si_max \
                         + (update==True)*(self.Si_max + new_Si_max)
+                        
+    def get_R_i_old(self):
+        """
+        return the reserv amount before updating Si
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        return self.R_i_old
+    
+    def set_R_i_old(self, new_R_i_old, update=False):
+        """
+        turn the old reserv amount into new_R_i_old if update=False else add 
+        new_R_i_old  to the last value
+
+        Parameters
+        ----------
+        new_R_i_old : float
+            DESCRIPTION.
+        update : booelan, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        float.
+
+        """
+        self.R_i_old = (update==False)*new_R_i_old \
+                        + (update==True)*(self.R_i_old + new_R_i_old)
                         
     def get_gamma_i(self):
         """
@@ -222,6 +254,17 @@ class Player:
                         
     def get_state_i(self):
         """
+        return the state of the player
+
+        Returns
+        -------
+        None.
+
+        """
+        return self.state_i
+    
+    def find_out_state_i(self):
+        """
         return the state of the player depending on the operation conditions 
 
         Returns
@@ -290,6 +333,7 @@ class Player:
         string value if state_i != None or None if state_i == None
 
         """
+        mode_i = None
         rd_num =  np.random.choice([0,1])
         if self.state_i == None:
             mode_i = None
@@ -313,7 +357,7 @@ class Player:
         """
         if self.state_i ==  "state1":
             self.prod_i = 0
-            self.cons_i = (self.mode_i == "CONS+")*(self.Ci - (self.Pi - self.Si)) \
+            self.cons_i = (self.mode_i == "CONS+")*(self.Ci - (self.Pi + self.Si)) \
                             + (self.mode_i == "CONS-")*(self.Ci - self.Pi)
             self.Si = (self.mode_i == "CONS+")*0 \
                         + (self.mode_i == "CONS-")*self.Si
@@ -328,8 +372,9 @@ class Player:
             #TODO demander si le r_i est mis avant ou apres la mise a jour de S_i
             self.r_i = self.Si - (self.Ci - self.Pi) \
                         if self.mode_i == "DIS" else 0
-            self.Si = (self.mode_i == "DIS")*(self.Si - (self.Ci - self.Pi)) \
-                        + (self.mode_i == "CONS-")*0 
+            self.Si = (self.mode_i == "DIS")*(
+                        max(0,self.Si - (self.Ci - self.Pi))) \
+                        + (self.mode_i == "CONS-")*self.Si
     
         elif self.state_i ==  "state3":
             self.cons_i = 0
@@ -476,7 +521,7 @@ def test_class_player():
         pl.set_r_i(oldr_i, False)
         #state_i
         OK_state = 0; OK_state_none = 0
-        state_i = pl.get_state_i()
+        state_i = pl.find_out_state_i()
         if state_i == "state1" and pl.get_Pi() + pl.get_Si() <= pl.get_Ci():
             OK_state += 1
         elif state_i == "state2" and pl.get_Pi() + pl.get_Si() > pl.get_Ci() \
