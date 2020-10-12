@@ -12,9 +12,11 @@ import time
 import math
 import json
 import numpy as np
+import pandas as pd
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 import game_model_period_T as gmpT
+import visu_bkh as bkh
 
 from datetime import datetime
 from pathlib import Path
@@ -89,6 +91,7 @@ def execute_game_allcases(cases):
                                pi_0_plus, pi_0_minus, 
                                case, path_to_save)
         
+
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------ 
@@ -99,14 +102,140 @@ def test_execute_game_allcase():
     cases = [fct_aux.CASE1, fct_aux.CASE2, fct_aux.CASE3]
     execute_game_allcases(cases)
     
+def test_balanced_player_all_time(thres=0.01):
+    """
+    add operation of diff  and value of diff in the dict dico
+    """
+    name_dir = "tests"
+    # choose the last directory
+    reps = os.listdir(name_dir)
+    rep = reps[-1]
+    print("_____ repertoire choisi : {} ______".format(rep))
+    # verify the balancing player for all cases
+    dico_cases = dict()
+    rep_cases = os.listdir(os.path.join(name_dir, rep))
+    for rep_case in rep_cases:
+        path_to_variable = os.path.join(name_dir, rep, rep_case)
+        arr_pls_M_T, RUs, \
+        B0s, C0s, \
+        BENs, CSTs, \
+        pi_sg_plus_s, pi_sg_minus_s = \
+            bkh.get_local_storage_variables(path_to_variable)
+            
+        df_bol = pd.DataFrame(index=range(0, arr_pls_M_T.shape[0]), 
+                              columns=range(0, arr_pls_M_T.shape[1]))
+        dico_numT = dict()
+        for num_period in range(0, arr_pls_M_T.shape[1]):
+            dico_pls = dict()
+            for num_pl in range(0, arr_pls_M_T.shape[0]):
+                state_i = arr_pls_M_T[num_pl, 
+                                      num_period, 
+                                      fct_aux.INDEX_ATTRS["state_i"]]
+                mode_i = arr_pls_M_T[num_pl, 
+                                      num_period, 
+                                      fct_aux.INDEX_ATTRS["mode_i"]]
+                Pi = arr_pls_M_T[num_pl, 
+                                 num_period, 
+                                 fct_aux.INDEX_ATTRS["Pi"]]
+                Ci = arr_pls_M_T[num_pl, 
+                                 num_period, 
+                                 fct_aux.INDEX_ATTRS["Pi"]]
+                Si = arr_pls_M_T[num_pl, 
+                                 num_period, 
+                                 fct_aux.INDEX_ATTRS["Si"]]
+                Si_max = arr_pls_M_T[num_pl, 
+                                 num_period, 
+                                 fct_aux.INDEX_ATTRS["Si_max"]]
+                Ri = Si_max - Si
+                cons_i = arr_pls_M_T[num_pl, 
+                                 num_period, 
+                                 fct_aux.INDEX_ATTRS["cons_i"]]
+                prod_i = arr_pls_M_T[num_pl, 
+                                 num_period, 
+                                 fct_aux.INDEX_ATTRS["prod_i"]]
+                Pi = Pi[0] if type(Pi) is not int else Pi
+                Ci = Ci[0] if type(Ci) is not int else Ci
+                Si = Si[0] if type(Si) is not int else Si
+                Si_max = Si_max[0] if type(Si_max) is not int else Si_max
+                cons_i = cons_i[0] if type(cons_i) is not int else cons_i
+                prod_i = prod_i[0] if type(prod_i) is not int else prod_i
 
+                
+                boolean = None; dico = dict()
+                if state_i == "state1" and mode_i == "CONS+":
+                    boolean = True if np.abs(Pi+Si+cons_i - Ci)<thres else False
+                    formule = "Pi+Si+cons_i - Ci"
+                    res = Pi+Si+cons_i - Ci
+                    dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                            "state_i": state_i, "mode_i": mode_i, 
+                            "formule": formule, "res": res, "case":rep_case}
+                elif state_i == "state1" and mode_i == "CONS-":
+                    boolean = True if np.abs(Pi+cons_i - Ci)<thres else False
+                    formule = "Pi+cons_i - Ci"
+                    res = Pi+cons_i - Ci
+                    dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                            "state_i": state_i, "mode_i": mode_i, 
+                            "formule": formule, "res": res, "case":rep_case}
+                elif state_i == "state2" and mode_i == "DIS":
+                    boolean = True if np.abs(Pi+Si+cons_i - Ci)<thres else False
+                    formule = "Pi+Si+cons_i - Ci"
+                    res = Pi+Si+cons_i - Ci
+                    dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                            "state_i": state_i, "mode_i": mode_i, 
+                            "formule": formule, "res": res, "case":rep_case}
+                elif state_i == "state2" and mode_i == "CONS-":
+                    boolean = True if np.abs(Pi+Si+cons_i - Ci)<thres else False
+                    formule = "Pi+Si+cons_i - Ci"
+                    res = Pi+Si+cons_i - Ci
+                    dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                            "state_i": state_i, "mode_i": mode_i, 
+                            "formule": formule, "res": res, "case":rep_case}
+                elif state_i == "state3" and mode_i == "PROD":
+                    boolean = True if np.abs(Pi - Ci-Si-prod_i)<thres else False
+                    formule = "Pi - Ci-Si-prod_i"
+                    res = Pi - Ci-Si-prod_i
+                    dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            "prod_i": np.round(prod_i,2), 
+                            'cons_i': np.round(cons_i,2), 
+                            'Ci': np.round(Ci,2), "state_i": state_i, 
+                            "mode_i": mode_i, "formule": formule, 
+                            "res": res, "case":rep_case}
+                elif state_i == "state3" and mode_i == "DIS":
+                    boolean = True if np.abs(Pi - Ci-Si-prod_i)<thres else False
+                    formule = "Pi - Ci-Si-prod_i"
+                    res = Pi - Ci-Si-prod_i
+                    dico = {'Pi': np.round(Pi,2), 'Si': np.round(Si,2), 
+                            "prod_i": np.round(prod_i,2), 
+                            'cons_i': np.round(cons_i,2), 
+                            'Ci': np.round(Ci,2), "state_i": state_i, 
+                            "mode_i": mode_i, "formule": formule, 
+                            "res": res, "case":rep_case}
+                
+                df_bol.loc[num_pl, num_period] = boolean
+                dico_pls[num_pl] = dico
+            dico_numT[num_period] = dico_pls
+        dico_cases[rep_case] = dico_numT
+    df_res = pd.concat({"t_"+str(k): pd.DataFrame(v).T for k, v in dico_numT.items()}, 
+                        axis=0)
+    # df_res = pd.concat({"t_"+str(k_): pd.DataFrame(v_).T 
+    #                     for k, dico_v in dico_cases.items() 
+    #                     for k_, v_ in dico_v.items()}, 
+    #                    axis=0)
+    # convert dataframe to json
+    # TODO
+    return df_bol, df_res, dico_cases #dico_numT #df_dico
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
     #test_execute_game_onecase(fct_aux.CASE2)
-    test_execute_game_allcase()
-    
+    #test_execute_game_allcase()
+    #df_bol, dico = test_balanced_player_all_time()
+    df_bol, df_res, dico_cases = test_balanced_player_all_time()
     print("runtime = {}".format(time.time() - ti))  
     
