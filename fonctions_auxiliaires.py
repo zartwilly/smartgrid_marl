@@ -164,7 +164,7 @@ def generate_Cis_Pis_Sis_oneplayer_alltime(num_player, num_periods,
     """
     arr_pl_i_T = []
     
-    Ci = np.random.uniform(low=low_Ci, high=high_Ci, size=1)
+    Ci = np.random.uniform(low=low_Ci, high=high_Ci)
     prob = np.random.uniform(0,1)
     Si_max = Ci * 0.8 if prob <= 0.3 else Ci * 0.5
     for t in range(0, num_periods+1):
