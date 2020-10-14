@@ -38,7 +38,7 @@ PROFIL_L = (0.2, 0.2, 0.6)
 
 INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
-               "Profili":10, "Casei":11}
+               "Profili":10, "Casei":11, "R_i_old":12}
 
 #------------------------------------------------------------------------------
 #           definitions of class
@@ -164,20 +164,28 @@ def generate_Cis_Pis_Sis_oneplayer_alltime(num_player, num_periods,
     """
     arr_pl_i_T = []
     
-    Ci = np.random.uniform(low=low_Ci, high=high_Ci)
-    prob = np.random.uniform(0,1)
-    Si_max = Ci * 0.8 if prob <= 0.3 else Ci * 0.5
+    # Ci = np.random.uniform(low=low_Ci, high=high_Ci)
+    # prob = np.random.uniform(0,1)
+    # Si_max = Ci * 0.8 if prob <= 0.3 else Ci * 0.5
+    
+    
     for t in range(0, num_periods+1):
         profil_t= None
+        Ci = 0; Si_max = 0
+        prob = np.random.uniform(0,1)
         if prob <= 0.3:
             profil_t = np.random.default_rng().choice(
                             p=[0.5, 0.5],
                             a=[PROFIL_L, PROFIL_H])
+            Ci = 10
+            Si_max = Ci * 0.8
         else:
             profil_t = np.random.default_rng().choice(
                             p=[0.5, 0.5],
                             a=[PROFIL_L, PROFIL_M])
-        
+            Ci = 60
+            Si_max = Ci * 0.5
+            
         profil_case_t = None
         prob_case_t = np.random.uniform(0,1)
         if prob_case_t <= profil_t[0]:
@@ -198,8 +206,8 @@ def generate_Cis_Pis_Sis_oneplayer_alltime(num_player, num_periods,
         str_case_t = "_".join(map(str, profil_case_t))
         
         init_values_i_t = [Ci, Pi_t, Si_t, Si_max,
-                           0, 0, 0, 0, 0, 0, 
-                           str_profil_t, str_case_t]
+                           0, 0, 0, 0, "", "", 
+                           str_profil_t, str_case_t, Si_max - Si_t]
         
         arr_pl_i_T.append(init_values_i_t)
         
@@ -245,6 +253,93 @@ def generate_Cis_Pis_Sis_allplayer_alltime(m_players, num_periods,
     
     arr_pl_M_T = np.array( arr_pl_M_T, dtype=object)
     return arr_pl_M_T
+
+
+def balanced_player(pl_i, thres=0.1, dbg=False):
+    """
+    verify if pl_i is whether balanced or unbalanced
+
+    Parameters
+    ----------
+    pl_i : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    Pi = pl_i.get_Pi(); Ci = pl_i.get_Ci(); Si = pl_i.get_Si(); 
+    Si_max = pl_i.get_Si_max(); R_i_old = pl_i.get_R_i_old()
+    state_i = pl_i.get_state_i(); 
+    mode_i = pl_i.get_mode_i()
+    cons_i = pl_i.get_cons_i(); prod_i = pl_i.get_prod_i()
+    
+    if dbg:
+        print("_____ balanced_player Pi={}, Ci={}, Si={}, Si_max={}, state_i={}, mode_i={}"\
+              .format(pl_i.get_Pi(), pl_i.get_Ci(), pl_i.get_Si(), 
+                      pl_i.get_Si_max(), pl_i.get_state_i(), 
+                      pl_i.get_mode_i())) 
+    boolean = None
+    if state_i == "state1" and mode_i == "CONS+":
+        boolean = True if np.abs(Pi+(Si_max-R_i_old)+cons_i - Ci)<thres else False
+        formule = "Pi+(Si_max-R_i_old)+cons_i - Ci"
+        res = Pi+(Si_max-R_i_old)+cons_i - Ci
+        dico = {'Pi':np.round(Pi,2), 'Ci':np.round(Ci,2),
+                'Si':np.round(Si,2), 'Si_max':np.round(Si_max,2), 
+                'cons_i':np.round(cons_i,2), 'R_i_old': np.round(R_i_old,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state1" and mode_i == "CONS-":
+        boolean = True if np.abs(Pi+cons_i - Ci)<thres else False
+        formule = "Pi+cons_i - Ci"
+        res = Pi+cons_i - Ci
+        dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state2" and mode_i == "DIS":
+        boolean = True if np.abs(Pi+(Si_max-R_i_old-Si) - Ci)<thres else False
+        formule = "Pi+(Si_max-R_i_old-Si) - Ci"
+        res = Pi+(Si_max-R_i_old-Si) - Ci
+        dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state2" and mode_i == "CONS-":
+        boolean = True if np.abs(Pi+cons_i - Ci)<thres else False
+        formule = "Pi+cons_i - Ci"
+        res = Pi+cons_i - Ci
+        dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state3" and mode_i == "PROD":
+        boolean = True if np.abs(Pi - Ci-prod_i)<thres else False
+        formule = "Pi - Ci-Si-prod_i"
+        res = Pi - Ci-prod_i
+        dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                "prod_i": np.round(prod_i,2), 
+                'cons_i': np.round(cons_i,2), 
+                'Ci': np.round(Ci,2), "state_i": state_i, 
+                "mode_i": mode_i, "formule": formule, 
+                "res": res}
+    elif state_i == "state3" and mode_i == "DIS":
+        boolean = True if np.abs(Pi - Ci-(Si_max-Si)-prod_i)<thres else False
+        formule = "Pi - Ci-(Si_max-Si)-prod_i"
+        res = Pi - Ci-(Si_max-Si)-prod_i
+        dico = {'Pi': np.round(Pi,2), 'Si': np.round(Si,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                "prod_i": np.round(prod_i,2), 
+                'cons_i': np.round(cons_i,2), 
+                'Ci': np.round(Ci,2), "state_i": state_i, 
+                "mode_i": mode_i, "formule": formule, 
+                    "res": res, }
+    return boolean
 
 
 def compute_real_money_SG(arr_pls_M_T, pi_sg_plus_s, pi_sg_minus_s, 
@@ -472,8 +567,8 @@ def test_generate_Cis_Pis_Sis_oneplayer_alltime():
     print("arr_pl_i_T shape: {}".format( arr_pl_i_T.shape ))
     
 def test_generate_Cis_Pis_Sis_allplayer_alltime():
-    m_players = 500; 
-    num_periods = 500;
+    m_players = 50; 
+    num_periods = 50;
     low_Ci, high_Ci = 1, 30
     init_values_i_t = ["Ci","Pi_t","Si_t","Si_max", 0, 0, 0, 0, 0, 0,
                        "str_profil_t","str_case_t"]
