@@ -79,25 +79,47 @@ def get_local_storage_variables(path_to_variable):
     pi_sg_plus_s: array of (NUM_PERIODS,)
     pi_sg_minus_s: array of (NUM_PERIODS,)
 
+    pi_hp_plus_s: array of (NUM_PERIODS,)
+    pi_hp_minus_s: array of (NUM_PERIODS,)
     """
-    arr_pls_M_T = np.load(os.path.join(path_to_variable, "arr_pls_M_T.npy"),
+    arr_pl_M_T = np.load(os.path.join(path_to_variable, "arr_pls_M_T.npy"),
                           allow_pickle=True)
-    RUs = np.load(os.path.join(path_to_variable, "RUs.npy"),
+    arr_pl_M_T_old = np.load(os.path.join(path_to_variable, "arr_pls_M_T_old.npy"),
                           allow_pickle=True)
-    B0s = np.load(os.path.join(path_to_variable, "B0s.npy"),
+    RU_is = np.load(os.path.join(path_to_variable, "RU_is.npy"),
                           allow_pickle=True)
-    C0s = np.load(os.path.join(path_to_variable, "C0s.npy"),
+    b0_s = np.load(os.path.join(path_to_variable, "b0_s.npy"),
+                          allow_pickle=True)
+    c0_s = np.load(os.path.join(path_to_variable, "c0_s.npy"),
+                          allow_pickle=True)
+    B_is = np.load(os.path.join(path_to_variable, "B_is.npy"),
+                          allow_pickle=True)
+    C_is = np.load(os.path.join(path_to_variable, "C_is.npy"),
                           allow_pickle=True)
     BENs = np.load(os.path.join(path_to_variable, "BENs.npy"),
                           allow_pickle=True)
     CSTs = np.load(os.path.join(path_to_variable, "CSTs.npy"),
                           allow_pickle=True)
+    BB_is = np.load(os.path.join(path_to_variable, "BB_is.npy"),
+                          allow_pickle=True)
+    CC_is = np.load(os.path.join(path_to_variable, "CC_is.npy"),
+                          allow_pickle=True)
     pi_sg_plus_s = np.load(os.path.join(path_to_variable, "pi_sg_plus_s.npy"),
                           allow_pickle=True)
     pi_sg_minus_s = np.load(os.path.join(path_to_variable, "pi_sg_minus_s.npy"),
                           allow_pickle=True)
+    pi_hp_plus_s = np.load(os.path.join(path_to_variable, "pi_hp_plus_s.npy"),
+                          allow_pickle=True)
+    pi_hp_minus_s = np.load(os.path.join(path_to_variable, "pi_hp_minus_s.npy"),
+                          allow_pickle=True)
     
-    return arr_pls_M_T, RUs, B0s, C0s, BENs, CSTs, pi_sg_plus_s, pi_sg_minus_s
+    return arr_pl_M_T_old, arr_pl_M_T, \
+            b0_s, c0_s, \
+            B_is, C_is, \
+            BENs, CSTs, \
+            BB_is, CC_is, RU_is, \
+            pi_sg_plus_s, pi_sg_minus_s, \
+            pi_hp_plus_s, pi_hp_minus_s
 
 def plot_pi_sg(pi_sg_plus_s, pi_sg_minus_s, path_to_variable):
     """
@@ -193,12 +215,12 @@ def plot_pi_X(args, p_X=None, styles={"line":"solid"}):
     
     p_X.line(x="t", y=args["key_plus"], source=src, 
               legend_label= args["key_plus"],
-              line_width=2, color=COLORS[0], line_dash=styles["line"])
+              line_width=2, color=Category20[20][6], line_dash=styles["line"])
     p_X.circle(x="t", y=args["key_plus"], source=src, 
                size=4, fill_color='white')
     p_X.line(x="t", y=args["key_minus"], source=src, 
               legend_label= args["key_minus"],
-              line_width=2, color=COLORS[1], line_dash=styles["line"])
+              line_width=2, color=Category20[20][8], line_dash=styles["line"])
     p_X.circle(x="t", y=args["key_minus"], source=src, 
                size=4, fill_color='white')
     
@@ -502,8 +524,9 @@ def plot_variables_onehtml(list_of_plt, path_to_variable, ncols = 2,
     show(gp)
     
     
-def plot_variables_players_game(arr_pls_M_T, RUs, pi_sg_plus_s, pi_sg_minus_s):
+def plot_variables_players_game_old(arr_pls_M_T, RUs, pi_sg_plus_s, pi_sg_minus_s):
     """
+    A EFFACER
     representation of players' variables and game variables (pi_sg)
 
     Parameters
@@ -642,6 +665,196 @@ def plot_variables_players_game(arr_pls_M_T, RUs, pi_sg_plus_s, pi_sg_minus_s):
         ps.append(p_pl)
         
     return ps
+
+def plot_variables_players_game(arr_pl_M_T, 
+                                b0_s, c0_s, 
+                                B_is, C_is, 
+                                BENs, CSTs, 
+                                BB_is, CC_is, RU_is, 
+                                pi_sg_plus_s, pi_sg_minus_s, 
+                                pi_hp_plus_s, pi_hp_minus_s):
+    """
+    representation of players' variables and game variables
+
+    Parameters
+    ----------
+    arr_pl_M_T : array of shape (M_PLAYERS, NUM_PERIODS+1, len(INDEX_ATTRIBUTS))
+        DESCRIPTION.
+    b0_s : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        benefit price of one energy unit.
+    c0_s : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        cost price of one energy unit.
+    B_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        Global benefit of each player
+    C_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        Global cost of each player
+    BENs : array of shape (M_PLAYERS, NUM_PERIODS)
+        DESCRIPTION.
+        the benefit of each player at time
+    CSTs : array of shape (M_PLAYERS, NUM_PERIODS)
+        DESCRIPTION.
+        the cost of each player at time
+    BB_is : array of shape (M_PLAYERS, ) 
+        DESCRIPTION.
+        real benefit money of each player inside SG
+    CC_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        real cost money of each player inside SG
+    RU_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        the real utility of a player 
+    pi_sg_plus_s : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        the price pf exchanged energy inside SG (selling from player to SG)
+    pi_sg_minus_s : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        the price pf exchanged energy inside SG (purchasing from SG to player)
+    Returns
+    -------
+    ps: list of figures
+
+    """
+    
+    ps = []
+    # ______ plot pi_sg_plus, pi_sg_minus _______
+    title = "prices pi_sg_plus, pi_sg_minus" #"price of exported/imported energy inside SG"
+    xlabel = "periods of time" 
+    ylabel = "price SG"
+    key_plus = "pi_sg_plus"
+    key_minus = "pi_sg_minus"
+    
+    args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+          "pi_sg_plus_s": pi_sg_plus_s,"pi_sg_minus_s":pi_sg_minus_s, 
+          "key_plus":key_plus, "key_minus":key_minus}
+    
+    p_pi_sg_hp = plot_pi_X(args)
+    
+    key_plus = "pi_hp_plus"
+    key_minus = "pi_hp_minus"
+    
+    args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+          "pi_sg_plus_s": pi_hp_plus_s,"pi_sg_minus_s":pi_hp_minus_s, 
+          "key_plus":key_plus, "key_minus":key_minus}
+    p_pi_sg_hp = plot_pi_X(args, p_X=p_pi_sg_hp, styles={"line":"dotted"})
+    ps.append(p_pi_sg_hp)
+    
+    # ______ plot b0_s, c0_s _______
+    
+    # ______ plot BB_is, CC_is, RU _______
+    title = "real utility of players"
+    xlabel = "player" 
+    ylabel = "price"
+    pls = range(0, arr_pl_M_T.shape[0])
+    data_pl_ru_bb_cc = {"pl":pls, "RU_i":RU_is, "BB_i":BB_is, "CC_i":CC_is}
+    source = ColumnDataSource(data=data_pl_ru_bb_cc)
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("price", "$y"),
+                            ("player", "$x")
+                            ]
+                        ) 
+    p_ru = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    p_ru.line(x="pl", y="RU_i", source=source, legend_label="RU_i",
+              line_width=2, color=Category20[20][0], line_dash=[1,1])
+    p_ru.line(x="pl", y="BB_i", source=source, legend_label="BB_i",
+              line_width=2, color=Category20[20][2], line_dash=[1,1])
+    p_ru.line(x="pl", y="CC_i", source=source, legend_label="CC_i",
+              line_width=2, color=Category20[20][4], line_dash=[1,1])
+    p_ru.circle(x="pl", y="RU_i", source=source, size=4, fill_color='white')
+    p_ru.circle(x="pl", y="BB_i", source=source, size=4, fill_color='white')
+    p_ru.circle(x="pl", y="CC_i", source=source, size=4, fill_color='white')
+    ps.append(p_ru)
+    
+    # ______ plot players' variables _______
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("quantity", "$y"),
+                            ("Time", "$x")
+                            ]
+                        ) 
+    ylabel = "energy quantity"
+    xlabel = "time" 
+    ts = list(map(str,range(0, arr_pl_M_T.shape[1])))
+    for num_pl in range(0, arr_pl_M_T.shape[0]):
+        title = "attributs of player pl_"+str(num_pl)
+        Pi_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Pi"]]
+        Ci_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Ci"]]
+        diff_Pi_Ci_s = Pi_s - Ci_s 
+        Si_max_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Si_max"]]
+        Si_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Si"]]
+        Ri_s = Si_max_s - Si_s
+        R_i_old = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["R_i_old"]]
+        r_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["r_i"]]
+        prod_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["prod_i"]]
+        cons_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["cons_i"]]
+    
+        data_vars_pl = {"t":ts, "diff_Pi_Ci": diff_Pi_Ci_s, 
+                        "Ri":Ri_s, "r_i":r_i_s, "prod_i":prod_i_s, 
+                        "cons_i":cons_i_s, "R_i_old": R_i_old}
+        source = ColumnDataSource(data=data_vars_pl)
+        arr_reshape = np.concatenate((diff_Pi_Ci_s, Ri_s, r_i_s, prod_i_s, cons_i_s))
+        min_val = arr_reshape.min()
+        max_val = arr_reshape.max()
+        p_pl = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        y_range = Range1d(int(min_val), int(max_val)),
+                        tools = TOOLS)
+        p_pl.y_range = Range1d(int(min_val), int(max_val))
+        # diff_Pi_Ci
+        p_pl.line(x="t", y="diff_Pi_Ci", source=source, 
+                  legend_label="diff_Pi_Ci",
+                  line_width=2, color=Category20[20][0], line_dash=[1,1])
+        p_pl.circle(x="t", y="diff_Pi_Ci", source=source, 
+                    size=4, fill_color='white')
+        
+        # prod_i_s
+        p_pl.line(x="t", y="prod_i", source=source, 
+                  legend_label="prod_i",
+                  line_width=2, color=Category20[20][2], line_dash=[1,1])
+        p_pl.circle(x="t", y="prod_i", source=source, 
+                    size=4, fill_color='white')
+        # cons_i_s
+        p_pl.line(x="t", y="cons_i", source=source, 
+                  legend_label="cons_i",
+                  line_width=2, color=Category20[20][4], line_dash=[1,1])
+        p_pl.circle(x="t", y="cons_i", source=source, 
+                    size=4, fill_color='white')
+        # Ri_s
+        p_pl.line(x="t", y="Ri", source=source, 
+                  legend_label="Ri",
+                  line_width=2, color=Category20[20][6], line_dash=[1,1])
+        p_pl.circle(x="t", y="Ri", source=source, 
+                    size=4, fill_color='white')
+        # r_i_s
+        p_pl.line(x="t", y="r_i", source=source, 
+                  legend_label="r_i",
+                  line_width=2, color=Category20[20][8], line_dash=[1,1])
+        p_pl.circle(x="t", y="r_i", source=source, 
+                    size=4, fill_color='white')
+        # R_i_old
+        p_pl.line(x="t", y="R_i_old", source=source, 
+                  legend_label="R_i_old",
+                  line_width=2, color=Category20[20][10], line_dash=[1,1])
+        p_pl.circle(x="t", y="R_i_old", source=source, 
+                    size=4, fill_color='white')
+        
+        ps.append(p_pl)
+        
+    return ps
+    
+    
 #------------------------------------------------------------------------------
 #                   definitions of unit test of defined functions
 #------------------------------------------------------------------------------
@@ -653,9 +866,11 @@ def test_get_local_storage_variables():
                             threshold=0.89,
                             n_depth=2)
     
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pl_M_T_old, arr_pl_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
+    BB_is, CC_is, RU_is, \
     pi_sg_plus_s, pi_sg_minus_s = \
         get_local_storage_variables(path_to_variable)
         
@@ -923,8 +1138,9 @@ def test_plot_variables_oneplayer(rep, case):
                            path_to_variable=path_to_variable,
                            name_file_html="representation_attributs_oneplayer_onecase.html")
     
-def test_plot_variables_allplayers(rep, case):
+def test_plot_variables_allplayers_old(rep, case):
     """
+    IL NEXISTE PLUS DE REPERTOIRES "CASE"  
     plot variable figures for one random player 
     """      
     name_dir = "tests"
@@ -950,13 +1166,53 @@ def test_plot_variables_allplayers(rep, case):
     plot_variables_onehtml(ps, path_to_variable, ncols = 1, 
                 name_file_html="player_attributs_game_variables_dashboard.html")
     
+def test_plot_variables_allplayers(rep="debug"):
+    """
+    Plot the variables of games and also the attributs of players
+
+    Parameters
+    ----------
+    rep : name of simulation directory
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    name_dir = "tests"
+    if not os.path.isdir(os.path.join(name_dir, rep)):
+        reps = os.listdir(name_dir)
+        rep = reps[-1]
+    path_to_variable = os.path.join(name_dir, rep)
+    
+    # import variables for file
+    arr_pl_M_T_old, arr_pl_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
+    BENs, CSTs, \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s= \
+        get_local_storage_variables(path_to_variable)
+    
+    ps = plot_variables_players_game(arr_pl_M_T, 
+                                    b0_s, c0_s, 
+                                    B_is, C_is, 
+                                    BENs, CSTs, 
+                                    BB_is, CC_is, RU_is, 
+                                    pi_sg_plus_s, pi_sg_minus_s,
+                                    pi_hp_plus_s, pi_hp_minus_s)
+    plot_variables_onehtml(ps, path_to_variable, ncols = 1, 
+                name_file_html="player_attributs_game_variables_dashboard.html")
+    
 #------------------------------------------------------------------------------
 #                   execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
     number_of_players = 5
-    test_get_local_storage_variables()
+    #test_get_local_storage_variables()
     #test_plot_pi_sg()
     #test_plot_more_prices()
     #test_plot_player()
@@ -966,7 +1222,11 @@ if __name__ == "__main__":
     # test_plot_variables_onecase(rep="simu_0510_1817",case=exec_game.CASE1)
     #test_plot_variables_oneplayer(rep="simu_0510_1817",case=exec_game.CASE3)
     
-    test_plot_variables_allplayers(rep="simu_0510_1817",case=exec_game.CASE1)
+    #test_plot_variables_allplayers(rep="simu_0510_1817",case=exec_game.CASE1)
+    
+    #test_plot_variables_allplayers(rep="simu_1410_0859")
+    #test_plot_variables_allplayers(rep="simu_1410_0931")
+    test_plot_variables_allplayers()
     print("runtime {}".format(time.time()-ti))
     
 
