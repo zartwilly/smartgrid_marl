@@ -128,7 +128,7 @@ def initialize_game_create_agents_t0_old(sys_inputs):
             pl.set_Pi(Pi, update=False)
             pl.set_Si(Si, update=False)
             pl.set_Si_max(Si_max, update=False)
-            pl.get_state_i()
+            pl.find_out_state_i()
             pl.select_mode_i()
             pl.update_prod_cons_r_i()
             # TODO IMPORTANT
@@ -151,7 +151,27 @@ def initialize_game_create_agents_t0_old(sys_inputs):
     return arr_pls, arr_pls_M_T
 
 def initialize_game_create_agents_t0(sys_inputs):
-    
+    """
+    initialize a game by create M_PLAYERS agents called players and affect 
+    random values (see the case 1, 2, 3) for all players and for all period 
+    time (NUM_PERIODS)
+
+    Parameters
+    ----------
+    sys_inputs : dict
+        contain variables like hp prices, sg prices, storage capacity 
+        at t=0 and t=1, the future production and consumption, 
+        the case of the game (more production, more consumption,).
+
+    Returns
+    -------
+     arr_pls:  array of players of shape 1*M M*T
+     arr_pls_M_T: array of players of shape M_PLAYERS*NUM_PERIODS+1*len(fct_aux.INDEX_ATTRS)
+     pl_m^t contains a list of 
+             Ci, Pi, Si, Si_max, gamma_i, prod_i, cons_i, r_i, 
+             state_i, mode_i, Profili, Casei
+     m \in [0,M-1] and t \in [0,T] 
+    """
     # ___ variables' declarations ___
     arr_pls = []
     arr_pls_M_T = []
@@ -192,7 +212,8 @@ def initialize_game_create_agents_t0(sys_inputs):
             pl.set_Pi(Pi, update=False)
             pl.set_Si(Si, update=False)
             pl.set_Si_max(Si_max, update=False)
-            pl.get_state_i()
+            pl.set_R_i_old(Si_max-Si, update=False)
+            pl.find_out_state_i()
             pl.select_mode_i()
             pl.update_prod_cons_r_i()
             
@@ -200,6 +221,7 @@ def initialize_game_create_agents_t0(sys_inputs):
             gamma_i = pl.get_gamma_i(); prod_i = pl.get_prod_i() 
             cons_i = pl.get_cons_i(); r_i = pl.get_r_i(); 
             state_i = pl.get_state_i(); mode_i = pl.get_mode_i()
+            R_i_old = pl.get_R_i_old()
             profili = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t, 
                                                 fct_aux.INDEX_ATTRS["Profili"]]; 
             casei = arr_pl_M_T_Ci_Pi_Si_profs[num_pl, t,
@@ -207,7 +229,7 @@ def initialize_game_create_agents_t0(sys_inputs):
             
             pl_i_T_s.append([Ci, Pi, Si, Si_max, gamma_i, 
                             prod_i, cons_i, r_i, state_i, mode_i,
-                            profili, casei])
+                            profili, casei, R_i_old])
             
         arr_pls_M_T.append(pl_i_T_s)
         
@@ -533,6 +555,7 @@ def select_storage_politic_players(arr_pls, state_ais, mode_is,
 
 def select_mode_compute_r_i(arr_pls, arr_pls_M_T, t):
     """
+    TODO  A EFFACER NEST PLUS UTILISER
     select a mode_i and compute r_i for a time t+1
 
     Parameters
@@ -913,17 +936,20 @@ def game_model_SG_t(arr_pls, arr_pls_M_T, t,
                 (fct_aux.INDEX_ATTRS["Si"], 
                  arr_pls_M_T[:, t, fct_aux.INDEX_ATTRS["Si"]]),
                 (fct_aux.INDEX_ATTRS["Si_max"], 
-                 arr_pls_M_T[:, t, fct_aux.INDEX_ATTRS["Si_max"]])
+                 arr_pls_M_T[:, t, fct_aux.INDEX_ATTRS["Si_max"]]),
+                (fct_aux.INDEX_ATTRS["R_i_old"], 
+                 arr_pls_M_T[:, t, fct_aux.INDEX_ATTRS["R_i_old"]])
              ])
     # calculer P_i^{t+1} et C_i^{t+1}
-    Pi_t_plus_1_s = arr_pls_M_T[:, t, fct_aux.INDEX_ATTRS["Pi"]]
-    Ci_t_plus_1_s = arr_pls_M_T[:, t, fct_aux.INDEX_ATTRS["Ci"]]
+    Pi_t_plus_1_s = arr_pls_M_T[:, t+1, fct_aux.INDEX_ATTRS["Pi"]]
+    Ci_t_plus_1_s = arr_pls_M_T[:, t+1, fct_aux.INDEX_ATTRS["Ci"]]
     
     new_gamma_is = np.array([])
     for num_pl, pl in enumerate(arr_pls):
         # select state_i and mode_i
-        state_i = pl.get_state_i()
+        state_i = pl.find_out_state_i()
         pl.select_mode_i()
+        #### pl.set_R_i_old(Si_max-Si)
         # compute gamma_i
         pl.select_storage_politic(Ci_t_plus_1_s[num_pl], 
                                   Pi_t_plus_1_s[num_pl], 
@@ -940,6 +966,7 @@ def game_model_SG_t(arr_pls, arr_pls_M_T, t,
         arr_pls_M_T[num_pl, t, fct_aux.INDEX_ATTRS["prod_i"]] = pl.get_prod_i()
         arr_pls_M_T[num_pl, t, fct_aux.INDEX_ATTRS["cons_i"]] = pl.get_cons_i()
         arr_pls_M_T[num_pl, t, fct_aux.INDEX_ATTRS["r_i"]] = pl.get_r_i()
+        arr_pls_M_T[num_pl, t, fct_aux.INDEX_ATTRS["Si"]] = pl.get_Si()
         
     ## compute prices inside smart grids
     # compute In_sg, Out_sg
@@ -998,7 +1025,7 @@ def game_model_SG(pi_hp_plus, pi_hp_minus, pi_0_plus, pi_0_minus, case):
 
     """
     # create players and its attribut values for all values.
-    S_0, S_1, = 0, 0;
+    S_0, S_1 = 0, 0;
     # TODO:how to determine Ci_t_plus_1_s, Pi_t_plus_1_s?
     ## generate random values of Ci_t_plus_1_s, Pi_t_plus_1_s
     Ci_t_plus_1, Pi_t_plus_1 = generate_random_values(zero=0)
@@ -1526,7 +1553,7 @@ def test_game_model_SG_t(dbg=True):
                     "pi_0_plus":pi_0_plus_t, "pi_0_minus":pi_0_minus_t}
     arr_pls, arr_pls_M_T = initialize_game_create_agents_t0(sys_inputs) 
 
-    t = np.random.randint(0, fct_aux.NUM_PERIODS)
+    t = np.random.randint(0, fct_aux.NUM_PERIODS-2)
     # modification Ci, Pi de arr_pls_M_T
     arr_pls_M_T[:,t,fct_aux.INDEX_ATTRS["Pi"]] = np.ones(shape=(fct_aux.M_PLAYERS,))
     arr_pls_M_T[:,t,fct_aux.INDEX_ATTRS["Ci"]] = np.ones(shape=(fct_aux.M_PLAYERS,))
@@ -1617,7 +1644,8 @@ if __name__ == "__main__":
     test_game_model_SG_t_old()
     test_game_model_SG_old(False)
     
-    test_game_model_SG_t(False)
+    # test_game_model_SG_t(False)
+    test_game_model_SG_t(True)
     test_game_model_SG(False)
     
     test_run_game_model_SG()
