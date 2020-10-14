@@ -103,9 +103,6 @@ def test_execute_game_allcase():
     execute_game_allcases(cases)
     
 def test_balanced_player_all_time(thres=0.01):
-    """
-    add operation of diff  and value of diff in the dict dico
-    """
     name_dir = "tests"
     # choose the last directory
     reps = os.listdir(name_dir)
@@ -147,27 +144,26 @@ def test_balanced_player_all_time(thres=0.01):
                                  num_period, 
                                  fct_aux.INDEX_ATTRS["Si_max"]]
                 Ri = Si_max - Si
+                R_i_old = arr_pls_M_T[num_pl, 
+                                 num_period, 
+                                 fct_aux.INDEX_ATTRS["R_i_old"]]
                 cons_i = arr_pls_M_T[num_pl, 
                                  num_period, 
                                  fct_aux.INDEX_ATTRS["cons_i"]]
                 prod_i = arr_pls_M_T[num_pl, 
                                  num_period, 
                                  fct_aux.INDEX_ATTRS["prod_i"]]
-                Pi = Pi[0] if type(Pi) is not int else Pi
-                Ci = Ci[0] if type(Ci) is not int else Ci
-                Si = Si[0] if type(Si) is not int else Si
-                Si_max = Si_max[0] if type(Si_max) is not int else Si_max
-                cons_i = cons_i[0] if type(cons_i) is not int else cons_i
-                prod_i = prod_i[0] if type(prod_i) is not int else prod_i
-
                 
                 boolean = None; dico = dict()
                 if state_i == "state1" and mode_i == "CONS+":
-                    boolean = True if np.abs(Pi+Si+cons_i - Ci)<thres else False
-                    formule = "Pi+Si+cons_i - Ci"
-                    res = Pi+Si+cons_i - Ci
-                    dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
-                            'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                    boolean = True \
+                        if np.abs(Pi+(Si_max-R_i_old)+cons_i - Ci)<thres \
+                        else False
+                    formule = "Pi+(Si_max-R_i_old)+cons_i - Ci"
+                    res = Pi+(Si_max-R_i_old)+cons_i - Ci
+                    dico = {'Pi':np.round(Pi,2), 'Ci':np.round(Ci,2),
+                            'Si':np.round(Si,2), 'Si_max':np.round(Si_max,2), 
+                            'cons_i':np.round(cons_i,2), 'R_i_old': np.round(R_i_old,2),
                             "state_i": state_i, "mode_i": mode_i, 
                             "formule": formule, "res": res, "case":rep_case}
                 elif state_i == "state1" and mode_i == "CONS-":
@@ -175,45 +171,50 @@ def test_balanced_player_all_time(thres=0.01):
                     formule = "Pi+cons_i - Ci"
                     res = Pi+cons_i - Ci
                     dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
                             'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
                             "state_i": state_i, "mode_i": mode_i, 
                             "formule": formule, "res": res, "case":rep_case}
                 elif state_i == "state2" and mode_i == "DIS":
-                    boolean = True if np.abs(Pi+Si+cons_i - Ci)<thres else False
-                    formule = "Pi+Si+cons_i - Ci"
-                    res = Pi+Si+cons_i - Ci
+                    boolean = True if np.abs(Pi+(Si_max-R_i_old-Si) - Ci)<thres else False
+                    formule = "Pi+(Si_max-R_i_old-Si) - Ci"
+                    res = Pi+(Si_max-R_i_old-Si) - Ci
                     dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
                             'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
                             "state_i": state_i, "mode_i": mode_i, 
                             "formule": formule, "res": res, "case":rep_case}
                 elif state_i == "state2" and mode_i == "CONS-":
-                    boolean = True if np.abs(Pi+Si+cons_i - Ci)<thres else False
-                    formule = "Pi+Si+cons_i - Ci"
-                    res = Pi+Si+cons_i - Ci
+                    boolean = True if np.abs(Pi+cons_i - Ci)<thres else False
+                    formule = "Pi+cons_i - Ci"
+                    res = Pi+cons_i - Ci
                     dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
                             'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
                             "state_i": state_i, "mode_i": mode_i, 
                             "formule": formule, "res": res, "case":rep_case}
                 elif state_i == "state3" and mode_i == "PROD":
-                    boolean = True if np.abs(Pi - Ci-Si-prod_i)<thres else False
+                    boolean = True if np.abs(Pi - Ci-prod_i)<thres else False
                     formule = "Pi - Ci-Si-prod_i"
-                    res = Pi - Ci-Si-prod_i
+                    res = Pi - Ci-prod_i
                     dico = {'Pi':np.round(Pi,2), 'Si':np.round(Si,2), 
+                            'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
                             "prod_i": np.round(prod_i,2), 
                             'cons_i': np.round(cons_i,2), 
                             'Ci': np.round(Ci,2), "state_i": state_i, 
                             "mode_i": mode_i, "formule": formule, 
                             "res": res, "case":rep_case}
                 elif state_i == "state3" and mode_i == "DIS":
-                    boolean = True if np.abs(Pi - Ci-Si-prod_i)<thres else False
-                    formule = "Pi - Ci-Si-prod_i"
-                    res = Pi - Ci-Si-prod_i
+                    boolean = True if np.abs(Pi - Ci-(Si_max-Si)-prod_i)<thres else False
+                    formule = "Pi - Ci-(Si_max-Si)-prod_i"
+                    res = Pi - Ci-(Si_max-Si)-prod_i
                     dico = {'Pi': np.round(Pi,2), 'Si': np.round(Si,2), 
+                            'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
                             "prod_i": np.round(prod_i,2), 
                             'cons_i': np.round(cons_i,2), 
                             'Ci': np.round(Ci,2), "state_i": state_i, 
                             "mode_i": mode_i, "formule": formule, 
-                            "res": res, "case":rep_case}
+                                "res": res, "case":rep_case}
                 
                 df_bol.loc[num_pl, num_period] = boolean
                 dico_pls[num_pl] = dico
@@ -234,7 +235,7 @@ def test_balanced_player_all_time(thres=0.01):
 if __name__ == "__main__":
     ti = time.time()
     #test_execute_game_onecase(fct_aux.CASE2)
-    #test_execute_game_allcase()
+    test_execute_game_allcase()
     #df_bol, dico = test_balanced_player_all_time()
     df_bol, df_res, dico_cases = test_balanced_player_all_time()
     print("runtime = {}".format(time.time() - ti))  
