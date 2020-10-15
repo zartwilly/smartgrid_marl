@@ -442,7 +442,7 @@ class Player:
         if fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_minus:
             self.set_gamma_i(X-1)
         elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_plus:
-            self.set_gamma_i(Y-1)
+            self.set_gamma_i(Y+1)
         elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_minus and \
             fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_plus:
                 res = (fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1)- Si_minus)\
