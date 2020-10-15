@@ -88,173 +88,325 @@ def generate_energy_unit_price_SG(pi_hp_plus, pi_hp_minus):
     pi_0_minus = pi_hp_minus * rd_num
     return pi_0_plus, pi_0_minus
      
-def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
-    """
-    generate Cis, Pis, Sis and Si_maxs.
-    each variable has 1*n_items shape
-    low_1 and high_1 are the limit of Ci items generated
-    low_2 and high_2 are the limit of Pi, Si, Si_max items generated
+# def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
+#     """
+#     generate Cis, Pis, Sis and Si_maxs.
+#     each variable has 1*n_items shape
+#     low_1 and high_1 are the limit of Ci items generated
+#     low_2 and high_2 are the limit of Pi, Si, Si_max items generated
     
-    return:
-        Cis, Pis, Si_maxs, Sis
-    """
-    Cis = np.random.uniform(low=low_1, high=high_1, 
-                            size=(1, n_items))
+#     return:
+#         Cis, Pis, Si_maxs, Sis
+#     """
+#     Cis = np.random.uniform(low=low_1, high=high_1, 
+#                             size=(1, n_items))
     
-    low = low_2; high = high_2
-    # Pi
-    inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
-    Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
-    # Si
-    inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
-    Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
-    inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
-    Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
-                    for (low_item,high_item) in inters]).reshape((1,-1))
+#     low = low_2; high = high_2
+#     # Pi
+#     inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
+#     Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
+#                     for (low_item,high_item) in inters]).reshape((1,-1))
+#     # Si
+#     inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
+#     Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
+#                     for (low_item,high_item) in inters]).reshape((1,-1))
+#     inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
+#     Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
+#                     for (low_item,high_item) in inters]).reshape((1,-1))
     
-    ## code initial 
-    # Cis = np.random.uniform(low=LOW_VAL_Ci, high=HIGH_VAL_Ci, 
-    #                         size=(1, M_PLAYERS))
+#     ## code initial 
+#     # Cis = np.random.uniform(low=LOW_VAL_Ci, high=HIGH_VAL_Ci, 
+#     #                         size=(1, M_PLAYERS))
     
-    # low = sys_inputs['case'][0]; high = sys_inputs['case'][1]
-    # # Pi
-    # inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
-    # Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
-    #                 for (low_item,high_item) in inters]).reshape((1,-1))
-    # # Si
-    # inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
-    # Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
-    #                 for (low_item,high_item) in inters]).reshape((1,-1))
-    # inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
-    # Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
-    #                 for (low_item,high_item) in inters]).reshape((1,-1))
-    return Cis, Pis, Si_maxs, Sis
+#     # low = sys_inputs['case'][0]; high = sys_inputs['case'][1]
+#     # # Pi
+#     # inters = map(lambda x: (low*x, high*x), Cis.reshape(-1))
+#     # Pis = np.array([np.random.uniform(low=low_item, high=high_item) 
+#     #                 for (low_item,high_item) in inters]).reshape((1,-1))
+#     # # Si
+#     # inters = map(lambda x: (low*x, high*x), Pis.reshape(-1))
+#     # Si_maxs = np.array([np.random.uniform(low=low_item, high=high_item) 
+#     #                 for (low_item,high_item) in inters]).reshape((1,-1))
+#     # inters = map(lambda x: (low*x, high*x), Si_maxs.reshape(-1))
+#     # Sis = np.array([np.random.uniform(low=low_item, high=high_item) 
+#     #                 for (low_item,high_item) in inters]).reshape((1,-1))
+#     return Cis, Pis, Si_maxs, Sis
 
-def generate_Cis_Pis_Sis_oneplayer_alltime(num_player, num_periods, 
-                                           low_Ci, high_Ci):
-    """
-    create initial values for a player attributs
+# def generate_Cis_Pis_Sis_oneplayer_alltime(num_player, num_periods, 
+#                                            low_Ci, high_Ci):
+#     """
+#     create initial values for a player attributs
 
-    Parameters
-    ----------
-    num_player : integer
-        DESCRIPTION.
-        number of player
-    n_periods : integer
-        DESCRIPTION.
-        number of periods in the time
-    low_Ci : integer
-        DESCRIPTION.
-        low value of Ci, Ci constante all the periods
-    high_Ci : integer
-        DESCRIPTION.
-        high value of Ci, Ci constante all the periods
+#     Parameters
+#     ----------
+#     num_player : integer
+#         DESCRIPTION.
+#         number of player
+#     n_periods : integer
+#         DESCRIPTION.
+#         number of periods in the time
+#     low_Ci : integer
+#         DESCRIPTION.
+#         low value of Ci, Ci constante all the periods
+#     high_Ci : integer
+#         DESCRIPTION.
+#         high value of Ci, Ci constante all the periods
         
-    Returns
-    -------
+#     Returns
+#     -------
 
-    arr_pl_i_T : list of (num_periods+1, len(init_values_i_t))
-        DESCRIPTION.
-        avec 
-        init_values_i_t = [Ci_t, Pi_t, Si_t, Si_max_t, str_profil_t, str_case_t]
+#     arr_pl_i_T : list of (num_periods+1, len(init_values_i_t))
+#         DESCRIPTION.
+#         avec 
+#         init_values_i_t = [Ci_t, Pi_t, Si_t, Si_max_t, str_profil_t, str_case_t]
         
-        avec forall t, Ci_t=Ci_t+1, Si_max_t = Si_max_t+1
-    """
-    arr_pl_i_T = []
+#         avec forall t, Ci_t=Ci_t+1, Si_max_t = Si_max_t+1
+#     """
+#     arr_pl_i_T = []
     
-    # Ci = np.random.uniform(low=low_Ci, high=high_Ci)
-    # prob = np.random.uniform(0,1)
-    # Si_max = Ci * 0.8 if prob <= 0.3 else Ci * 0.5
+#     # Ci = np.random.uniform(low=low_Ci, high=high_Ci)
+#     # prob = np.random.uniform(0,1)
+#     # Si_max = Ci * 0.8 if prob <= 0.3 else Ci * 0.5
     
     
-    for t in range(0, num_periods+1):
-        profil_t= None
-        Ci = 0; Si_max = 0
-        prob = np.random.uniform(0,1)
-        if prob <= 0.3:
-            profil_t = np.random.default_rng().choice(
-                            p=[0.5, 0.5],
-                            a=[PROFIL_L, PROFIL_H])
-            Ci = 10
-            Si_max = Ci * 0.8
-        else:
-            profil_t = np.random.default_rng().choice(
-                            p=[0.5, 0.5],
-                            a=[PROFIL_L, PROFIL_M])
-            Ci = 60
-            Si_max = Ci * 0.5
+#     for t in range(0, num_periods+1):
+#         profil_t= None
+#         Ci = 0; Si_max = 0
+#         prob = np.random.uniform(0,1)
+#         if prob <= 0.3:
+#             profil_t = np.random.default_rng().choice(
+#                             p=[0.5, 0.5],
+#                             a=[PROFIL_L, PROFIL_H])
+#             Ci = 10
+#             Si_max = Ci * 0.8
+#         else:
+#             profil_t = np.random.default_rng().choice(
+#                             p=[0.5, 0.5],
+#                             a=[PROFIL_L, PROFIL_M])
+#             Ci = 60
+#             Si_max = Ci * 0.5
             
-        profil_case_t = None
-        prob_case_t = np.random.uniform(0,1)
-        if prob_case_t <= profil_t[0]:
-            profil_case_t = CASE1
-        elif prob_case_t > profil_t[0] \
-            and prob_case_t <= profil_t[0]+profil_t[1]:
-            profil_case_t = CASE2
-        else:
-            profil_case_t = CASE3
+#         profil_case_t = None
+#         prob_case_t = np.random.uniform(0,1)
+#         if prob_case_t <= profil_t[0]:
+#             profil_case_t = CASE1
+#         elif prob_case_t > profil_t[0] \
+#             and prob_case_t <= profil_t[0]+profil_t[1]:
+#             profil_case_t = CASE2
+#         else:
+#             profil_case_t = CASE3
         
-        min_val_profil = profil_case_t[0]*Ci 
-        max_val_profil = profil_case_t[1]*Ci
-        Pi_t = np.random.uniform(low=min_val_profil, high=max_val_profil) 
+#         min_val_profil = profil_case_t[0]*Ci 
+#         max_val_profil = profil_case_t[1]*Ci
+#         Pi_t = np.random.uniform(low=min_val_profil, high=max_val_profil) 
                             
-        Si_t = 0 if t == 0 else np.random.uniform(0,1) * Si_max
+#         Si_t = 0 if t == 0 else np.random.uniform(0,1) * Si_max
         
-        str_profil_t = "_".join(map(str, profil_t))
-        str_case_t = "_".join(map(str, profil_case_t))
+#         str_profil_t = "_".join(map(str, profil_t))
+#         str_case_t = "_".join(map(str, profil_case_t))
         
-        init_values_i_t = [Ci, Pi_t, Si_t, Si_max,
-                           0, 0, 0, 0, "", "", 
-                           str_profil_t, str_case_t, Si_max - Si_t]
+#         init_values_i_t = [Ci, Pi_t, Si_t, Si_max,
+#                            0, 0, 0, 0, "", "", 
+#                            str_profil_t, str_case_t, Si_max - Si_t]
         
-        arr_pl_i_T.append(init_values_i_t)
+#         arr_pl_i_T.append(init_values_i_t)
         
-    return arr_pl_i_T
-        
-def generate_Cis_Pis_Sis_allplayer_alltime(m_players, num_periods, 
-                                           low_Ci, high_Ci):
-    """
-    create initial values for all player attributs all the time
+#     return arr_pl_i_T
+      
+# def generate_Cis_Pis_Sis_allplayer_alltime(m_players, num_periods, 
+#                                             low_Ci, high_Ci):
+#     """
+#     create initial values for all player attributs all the time
 
+
+#     Parameters
+#     ----------
+#     m_players : integer
+#         DESCRIPTION.
+#         number of players in the game
+#     n_periods : integer
+#         DESCRIPTION.
+#         number of periods in the time
+#     low_Ci : integer
+#         DESCRIPTION.
+#         low value of Ci, Ci constante all the periods
+#     high_Ci : integer
+#         DESCRIPTION.
+#         high value of Ci, Ci constante all the periods
+
+#     Returns
+#     -------
+#     arr_pl_M_T : array of (num_players, num_periods+1, len(init_values_i_t))
+#         DESCRIPTION.
+#         avec 
+#         init_values_i_t = [Ci_t, Pi_t, Si_t, Si_max_t, str_profil_t, str_case_t]
+        
+#         avec forall t, Ci_t = Ci_t+1, Si_max_t = Si_max_t+1
+#     """
+    
+#     arr_pl_M_T = []
+#     for num_player in range(0, m_players):
+#         arr_pl_i_T = generate_Cis_Pis_Sis_oneplayer_alltime(
+#                         num_player, num_periods, 
+#                         low_Ci, high_Ci)
+#         arr_pl_M_T.append(arr_pl_i_T)
+    
+#     arr_pl_M_T = np.array( arr_pl_M_T, dtype=object)
+#     return arr_pl_M_T
+
+# __________    generate Cis, Pis, Si_maxs and Sis --> debut   ________________
+def generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                                    m_players=3, num_periods=5, 
+                                    scenario="scenario1", prob_Ci=0.3, 
+                                    Ci_low=10, Ci_high=60):
+    """
+    create the initial values of all players at all time intervals
 
     Parameters
     ----------
-    m_players : integer
-        DESCRIPTION.
-        number of players in the game
-    n_periods : integer
-        DESCRIPTION.
-        number of periods in the time
-    low_Ci : integer
-        DESCRIPTION.
-        low value of Ci, Ci constante all the periods
-    high_Ci : integer
-        DESCRIPTION.
-        high value of Ci, Ci constante all the periods
-
+    m_players : Integer optional
+        DESCRIPTION. The default is 3.
+        the number of players
+    num_periods : Integer, optional
+        DESCRIPTION. The default is 5.
+        the number of time intervals 
+    scenario : String, optional
+        DESCRIPTION. The default is "scenario1".
+        indicate the scenario to play
+    prob_Ci : float, optional
+        DESCRIPTION. The default is 0.3.
+        the probability of choosing the type of players' consumption
+    Ci_low : float, optional
+        DESCRIPTION. The default is 10.
+        the min value of the consumption
+    Ci_high : float, optional
+        DESCRIPTION. The default is 60.
+        the max value of the consumption
     Returns
     -------
-    arr_pl_M_T : array of (num_players, num_periods+1, len(init_values_i_t))
+    arr_pl_M_T : array of shape (M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))
         DESCRIPTION.
-        avec 
-        init_values_i_t = [Ci_t, Pi_t, Si_t, Si_max_t, str_profil_t, str_case_t]
-        
-        avec forall t, Ci_t = Ci_t+1, Si_max_t = Si_max_t+1
+
     """
-    
     arr_pl_M_T = []
-    for num_player in range(0, m_players):
-        arr_pl_i_T = generate_Cis_Pis_Sis_oneplayer_alltime(
-                        num_player, num_periods, 
-                        low_Ci, high_Ci)
-        arr_pl_M_T.append(arr_pl_i_T)
+    for num_pl in range(0, m_players):
+        Ci = None; profili = None
+        prob = np.random.uniform(0, 1)
+        if prob <= prob_Ci:
+            Ci = Ci_low
+            Si_max = 0.8 * Ci
+            if scenario == "scenario1":
+                profili = PROFIL_L
+            elif scenario == "scenario2":
+                profili = PROFIL_H
+            elif scenario == "scenario3":
+                profili = PROFIL_M
+        else:
+            Ci = Ci_low
+            Si_max = 0.5 * Ci
+            if scenario == "scenario1":
+                profili = PROFIL_H
+            elif scenario == "scenario2":
+                profili = PROFIL_M
+            elif scenario == "scenario3":
+                profili = np.random.default_rng().choice(
+                            p=[0.5, 0.5],
+                            a=[PROFIL_H, PROFIL_M])
+                
+        # profil_casei = None
+        # prob_casei = np.random.uniform(0,1)
+        # if prob_casei <= profili[0]:
+        #     profil_casei = fct_aux.CASE1
+        # elif prob_casei > profili[0] \
+        #     and prob_casei <= profili[0]+profili[1]:
+        #     profil_casei = fct_aux.CASE2
+        # else:
+        #     profil_casei = fct_aux.CASE3
+        profil_casei = None
+        if prob <= profili[0]:
+            profil_casei = CASE1
+        elif prob > profili[0] \
+            and prob <= profili[0]+profili[1]:
+            profil_casei = CASE2
+        else:
+            profil_casei = CASE3
+                
+        min_val_profil = profil_casei[0]*Ci 
+        max_val_profil = profil_casei[1]*Ci
+        
+        Pi_s = list( np.around(np.random.uniform(
+                                low=min_val_profil, 
+                                high=max_val_profil, 
+                                size=(num_periods,)
+                                ), decimals=2) )
+        Si_s = list( np.around(np.random.uniform(0,1,size=(num_periods,))*Si_max,
+                               decimals=2))
+        Si_s[0] = 0; 
+        str_profili_s = ["_".join(map(str, profili))] * num_periods
+        str_casei_s = ["_".join(map(str, profil_casei))] * num_periods
+        
+        # building list of list 
+        Ci_s = [Ci] * num_periods
+        Si_max_s = [Si_max] * num_periods
+        gamma_i_s, r_i_s = [0]*num_periods, [0]*num_periods
+        prod_i_s, cons_i_s = [0]*num_periods, [0]*num_periods
+        state_i_s, mode_i_s = [""]*num_periods, [""]*num_periods
+        R_i_old_s = [round(x - y, 2) for x, y in zip(Si_max_s, Si_s)]
+        init_values_i_s = list(zip(Ci_s, Pi_s, Si_s, Si_max_s, gamma_i_s, 
+                                   prod_i_s, cons_i_s, r_i_s, state_i_s, 
+                                   mode_i_s, str_profili_s, str_casei_s, 
+                                   R_i_old_s))
+        arr_pl_M_T.append(init_values_i_s)
     
-    arr_pl_M_T = np.array( arr_pl_M_T, dtype=object)
+    arr_pl_M_T = np.array(arr_pl_M_T, dtype=object)
+    
     return arr_pl_M_T
 
+def generer_Pi_Ci_Si_Simax_for_all_scenarios(scenarios=["scenario1"], 
+                                    m_players=3, num_periods=5, 
+                                    prob_Ci=0.3, Ci_low=10, Ci_high=60):
+    """
+    create the variables for all scenarios
 
+    Parameters
+    ----------
+    scenarios : list of String, optional
+        DESCRIPTION. The default is [].
+    m_players : Integer optional
+        DESCRIPTION. The default is 3.
+        the number of players
+    num_periods : Integer, optional
+        DESCRIPTION. The default is 5.
+        the number of time intervals 
+    prob_Ci : float, optional
+        DESCRIPTION. The default is 0.3.
+        the probability of choosing the type of players' consumption
+    Ci_low : float, optional
+        DESCRIPTION. The default is 10.
+        the min value of the consumption
+    Ci_high : float, optional
+        DESCRIPTION. The default is 60.
+        the max value of the consumption
+
+    Returns
+    -------
+    list of arrays. 
+    Each array has a shape ((M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))).
+
+    """
+    l_arr_pl_M_T = []
+    for scenario in scenarios:
+        arr_pl_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                            m_players=m_players, num_periods=num_periods, 
+                            scenario=scenario, prob_Ci=prob_Ci, 
+                            Ci_low=Ci_low, Ci_high=Ci_high)
+        l_arr_pl_M_T.append(arr_pl_M_T)
+        
+    return l_arr_pl_M_T
+
+# __________    generate Cis, Pis, Si_maxs and Sis --> fin   ________________
+
+# __________    look for whether pli is balanced or not --> debut  ____________
 def balanced_player(pl_i, thres=0.1, dbg=False):
     """
     verify if pl_i is whether balanced or unbalanced
@@ -340,6 +492,8 @@ def balanced_player(pl_i, thres=0.1, dbg=False):
                 "mode_i": mode_i, "formule": formule, 
                     "res": res, }
     return boolean
+
+# __________    look for whether pli is balanced or not --> fin  ____________
 
 
 def compute_real_money_SG(arr_pls_M_T, pi_sg_plus_s, pi_sg_minus_s, 
@@ -506,7 +660,6 @@ def test_fct_positive():
                 
     print("fct_positive: %OK={}, %NOK={}".format(OK/(OK+NOK), NOK/(OK+NOK)))
       
-    
 def test_generate_energy_unit_price_SG():
     N = 10
     pi_hp_plus = np.random.random_sample(N) * 20
@@ -544,45 +697,78 @@ def test_compute_real_money_SG():
     else:
         print("False")
     
-def test_find_path_to_variables():
-    name_dir = "tests"
-    depth = 2
-    ext = "npy"
-    find_path_to_variables(name_dir, ext, depth)
+# def test_find_path_to_variables():
+#     name_dir = "tests"
+#     depth = 2
+#     ext = "npy"
+#     find_path_to_variables(name_dir, ext, depth)
     
-def test_generate_Cis_Pis_Sis_oneplayer_alltime():
-    num_player = 1; 
-    num_periods = 5;
-    low_Ci, high_Ci = 1, 30
-    init_values_i_t = ["Ci","Pi_t","Si_max","Si_t",
-                       0, 0, 0, 0, 0, 0, 
-                       "str_profil_t","str_case_t"]
-    arr_pl_i_T = generate_Cis_Pis_Sis_oneplayer_alltime(
-                    num_player, num_periods, low_Ci, high_Ci)
-    arr_pl_i_T = np.array(arr_pl_i_T, dtype=object)
-    if arr_pl_i_T.shape == (num_periods+1, len(init_values_i_t)):
-        print("test_generate_Cis_Pis_Sis_oneplayer_alltime OK")
+# def test_generate_Cis_Pis_Sis_oneplayer_alltime():
+#     num_player = 1; 
+#     num_periods = 5;
+#     low_Ci, high_Ci = 1, 30
+#     init_values_i_t = ["Ci","Pi_t","Si_max","Si_t",
+#                        0, 0, 0, 0, 0, 0, 
+#                        "str_profil_t","str_case_t"]
+#     arr_pl_i_T = generate_Cis_Pis_Sis_oneplayer_alltime(
+#                     num_player, num_periods, low_Ci, high_Ci)
+#     arr_pl_i_T = np.array(arr_pl_i_T, dtype=object)
+#     if arr_pl_i_T.shape == (num_periods+1, len(init_values_i_t)):
+#         print("test_generate_Cis_Pis_Sis_oneplayer_alltime OK")
+#     else:
+#         print("test_generate_Cis_Pis_Sis_oneplayer_alltime NOK")
+#     print("arr_pl_i_T shape: {}".format( arr_pl_i_T.shape ))
+    
+# def test_generate_Cis_Pis_Sis_allplayer_alltime():
+    
+#     m_players = 50; 
+#     num_periods = 50;
+#     low_Ci, high_Ci = 1, 30
+#     init_values_i_t = ["Ci","Pi_t","Si_t","Si_max", 0, 0, 0, 0, 0, 0,
+#                        "str_profil_t","str_case_t"]
+    
+#     arr_pl_M_T = generate_Cis_Pis_Sis_allplayer_alltime(
+#                     m_players, num_periods, 
+#                     low_Ci, high_Ci)
+    
+#     if arr_pl_M_T.shape == (m_players, num_periods+1, len(init_values_i_t)):
+#         print("test_generate_Cis_Pis_Sis_allplayer_alltime OK")
+#     else: 
+#         print("test_generate_Cis_Pis_Sis_allplayer_alltime NOK")
+#     print("arr_pl_M_T shape={}, size={} Mo".format(arr_pl_M_T.shape, 
+#             round(sys.getsizeof(arr_pl_M_T)/(1024*1024),3)))
+
+def test_generate_Pi_Ci_Si_Simax_by_profil_scenario():
+    
+    arr_pl_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                            m_players=3, num_periods=5, 
+                            scenario="scenario1", prob_Ci=0.3, 
+                            Ci_low=10, Ci_high=60)
+    
+    print("___ arr_pl_M_T : {}".format(arr_pl_M_T.shape))
+    return arr_pl_M_T
+
+def test_generer_Pi_Ci_Si_Simax_for_all_scenarios():
+    m_players=100; num_periods=250
+    l_arr_pl_M_T = []
+    l_arr_pl_M_T = generer_Pi_Ci_Si_Simax_for_all_scenarios(
+                        scenarios=["scenario1", "scenario2", "scenario3"], 
+                        m_players=m_players, num_periods=num_periods, 
+                        prob_Ci=0.3, Ci_low=10, Ci_high=60)
+    cpt_true = 0
+    for arr_pl_M_T in l_arr_pl_M_T:
+        if arr_pl_M_T.shape == (m_players, num_periods, len(INDEX_ATTRS)):
+            cpt_true += 1
+            
+    if cpt_true == len(l_arr_pl_M_T):
+        print("___ generer_Pi_Ci_Si_Simax_for_all_scenarios ___ OK")
+        print(" m_players={}, num_periods={}".format(m_players, num_periods))
+        print(" memsize \n scenario1:{} Mo, scenario2:{} Mo, scenario3:{} Mo".format(
+                sys.getsizeof(l_arr_pl_M_T[0])/(1024*1024), 
+                sys.getsizeof(l_arr_pl_M_T[1])/(1024*1024),
+                sys.getsizeof(l_arr_pl_M_T[2])/(1024*1024)))
     else:
-        print("test_generate_Cis_Pis_Sis_oneplayer_alltime NOK")
-    print("arr_pl_i_T shape: {}".format( arr_pl_i_T.shape ))
-    
-def test_generate_Cis_Pis_Sis_allplayer_alltime():
-    m_players = 50; 
-    num_periods = 50;
-    low_Ci, high_Ci = 1, 30
-    init_values_i_t = ["Ci","Pi_t","Si_t","Si_max", 0, 0, 0, 0, 0, 0,
-                       "str_profil_t","str_case_t"]
-    
-    arr_pl_M_T = generate_Cis_Pis_Sis_allplayer_alltime(
-                    m_players, num_periods, 
-                    low_Ci, high_Ci)
-    
-    if arr_pl_M_T.shape == (m_players, num_periods+1, len(init_values_i_t)):
-        print("test_generate_Cis_Pis_Sis_allplayer_alltime OK")
-    else: 
-        print("test_generate_Cis_Pis_Sis_allplayer_alltime NOK")
-    print("arr_pl_M_T shape={}, size={} Mo".format(arr_pl_M_T.shape, 
-            round(sys.getsizeof(arr_pl_M_T)/(1024*1024),3)))
+        print("___ generer_Pi_Ci_Si_Simax_for_all_scenarios ___ NOK")
 
 #------------------------------------------------------------------------------
 #           execution
@@ -592,11 +778,15 @@ if __name__ == "__main__":
     test_fct_positive()
     test_generate_energy_unit_price_SG()
     
-    path_file = test_find_path_to_variables()
+    # path_file = test_find_path_to_variables()
     
     test_compute_real_money_SG()
     
-    test_generate_Cis_Pis_Sis_oneplayer_alltime()
-    test_generate_Cis_Pis_Sis_allplayer_alltime()
+    # test_generate_Cis_Pis_Sis_oneplayer_alltime()
+    # test_generate_Cis_Pis_Sis_allplayer_alltime()
+    
+    arrs = test_generate_Pi_Ci_Si_Simax_by_profil_scenario()
+    
+    test_generer_Pi_Ci_Si_Simax_for_all_scenarios()
     
     print("runtime = {}".format(time.time() - ti))
