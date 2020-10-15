@@ -91,151 +91,7 @@ def execute_game_allcases(cases):
                                pi_0_plus, pi_0_minus, 
                                case, path_to_save)
         
-def generate_Pi_Ci_Si_Simax_by_profil_scenario(
-                                    m_players=3, num_periods=5, 
-                                    scenario="scenario1", prob_Ci=0.3, 
-                                    Ci_low=10, Ci_high=60):
-    """
-    create the initial values of all players at all time intervals
 
-    Parameters
-    ----------
-    m_players : Integer optional
-        DESCRIPTION. The default is 3.
-        the number of players
-    num_periods : Integer, optional
-        DESCRIPTION. The default is 5.
-        the number of time intervals 
-    scenario : String, optional
-        DESCRIPTION. The default is "scenario1".
-        indicate the scenario to play
-    prob_Ci : float, optional
-        DESCRIPTION. The default is 0.3.
-        the probability of choosing the type of players' consumption
-    Ci_low : float, optional
-        DESCRIPTION. The default is 10.
-        the min value of the consumption
-    Ci_high : float, optional
-        DESCRIPTION. The default is 60.
-        the max value of the consumption
-    Returns
-    -------
-    arr_pl_M_T : array of shape (M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))
-        DESCRIPTION.
-
-    """
-    arr_pl_M_T = []
-    for num_pl in range(0, m_players):
-        Ci = None; profili = None
-        prob = np.random.uniform(0, 1)
-        if prob <= prob_Ci:
-            Ci = Ci_low
-            Si_max = 0.8 * Ci
-            if scenario == "scenario1":
-                profili = fct_aux.PROFIL_L
-            elif scenario == "scenario2":
-                profili = fct_aux.PROFIL_H
-            elif scenario == "scenario3":
-                profili = fct_aux.PROFIL_M
-        else:
-            Ci = Ci_low
-            Si_max = 0.5 * Ci
-            if scenario == "scenario1":
-                profili = fct_aux.PROFIL_H
-            elif scenario == "scenario2":
-                profili = fct_aux.PROFIL_M
-            elif scenario == "scenario3":
-                profili = np.random.default_rng().choice(
-                            p=[0.5, 0.5],
-                            a=[fct_aux.PROFIL_H, fct_aux.PROFIL_M])
-                
-        # profil_casei = None
-        # prob_casei = np.random.uniform(0,1)
-        # if prob_casei <= profili[0]:
-        #     profil_casei = fct_aux.CASE1
-        # elif prob_casei > profili[0] \
-        #     and prob_casei <= profili[0]+profili[1]:
-        #     profil_casei = fct_aux.CASE2
-        # else:
-        #     profil_casei = fct_aux.CASE3
-        profil_casei = None
-        if prob <= profili[0]:
-            profil_casei = fct_aux.CASE1
-        elif prob > profili[0] \
-            and prob <= profili[0]+profili[1]:
-            profil_casei = fct_aux.CASE2
-        else:
-            profil_casei = fct_aux.CASE3
-                
-        min_val_profil = profil_casei[0]*Ci 
-        max_val_profil = profil_casei[1]*Ci
-        
-        Pi_s = list( np.around(np.random.uniform(low=min_val_profil, high=max_val_profil, 
-                                 size=(num_periods,)), decimals=2) )
-        Si_s = list( np.around(np.random.uniform(0,1,size=(num_periods,))*Si_max,
-                    decimals=2))
-        Si_s[0] = 0; 
-        str_profili_s = ["_".join(map(str, profili))] * num_periods
-        str_casei_s = ["_".join(map(str, profil_casei))] * num_periods
-        
-        # building list of list 
-        Ci_s = [Ci] * num_periods
-        Si_max_s = [Si_max] * num_periods
-        gamma_i_s, r_i_s = [0]*num_periods, [0]*num_periods
-        prod_i_s, cons_i_s = [0]*num_periods, [0]*num_periods
-        state_i_s, mode_i_s = [""]*num_periods, [""]*num_periods
-        R_i_old_s = [round(x - y, 2) for x, y in zip(Si_max_s, Si_s)]
-        init_values_i_s = list(zip(Ci_s, Pi_s, Si_s, Si_max_s, gamma_i_s, 
-                                   prod_i_s, cons_i_s, r_i_s, state_i_s, 
-                                   mode_i_s, str_profili_s, str_casei_s, 
-                                   R_i_old_s))
-        arr_pl_M_T.append(init_values_i_s)
-    
-    arr_pl_M_T = np.array(arr_pl_M_T, dtype=object)
-    
-    return arr_pl_M_T
-
-def generer_Pi_Ci_Si_Simax_for_all_scenarios(scenarios=["scenario1"], 
-                                    m_players=3, num_periods=5, 
-                                    prob_Ci=0.3, Ci_low=10, Ci_high=60):
-    """
-    create the variables for all scenarios
-
-    Parameters
-    ----------
-    scenarios : list of String, optional
-        DESCRIPTION. The default is [].
-    m_players : Integer optional
-        DESCRIPTION. The default is 3.
-        the number of players
-    num_periods : Integer, optional
-        DESCRIPTION. The default is 5.
-        the number of time intervals 
-    prob_Ci : float, optional
-        DESCRIPTION. The default is 0.3.
-        the probability of choosing the type of players' consumption
-    Ci_low : float, optional
-        DESCRIPTION. The default is 10.
-        the min value of the consumption
-    Ci_high : float, optional
-        DESCRIPTION. The default is 60.
-        the max value of the consumption
-
-    Returns
-    -------
-    list of arrays. 
-    Each array has a shape ((M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))).
-
-    """
-    l_arr_pl_M_T = []
-    for scenario in scenarios:
-        arr_pl_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
-                            m_players=m_players, num_periods=num_periods, 
-                            scenario=scenario, prob_Ci=prob_Ci, 
-                            Ci_low=Ci_low, Ci_high=Ci_high)
-        l_arr_pl_M_T.append(arr_pl_M_T)
-        
-    return l_arr_pl_M_T
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------ 
@@ -375,32 +231,6 @@ def test_balanced_player_all_time(thres=0.01):
     return df_bol, df_res, dico_cases #dico_numT #df_dico
 
 
-def test_generate_Pi_Ci_Si_Simax_by_profil_scenario():
-    
-    arr_pl_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
-                            m_players=3, num_periods=5, 
-                            scenario="scenario1", prob_Ci=0.3, 
-                            Ci_low=10, Ci_high=60)
-    
-    print("___ arr_pl_M_T : {}".format(arr_pl_M_T.shape))
-    return arr_pl_M_T
-
-def test_generer_Pi_Ci_Si_Simax_for_all_scenarios():
-    m_players=3; num_periods=5
-    l_arr_pl_M_T = []
-    l_arr_pl_M_T = generer_Pi_Ci_Si_Simax_for_all_scenarios(
-                        scenarios=["scenario1", "scenario2", "scenario3"], 
-                        m_players=m_players, num_periods=num_periods, 
-                        prob_Ci=0.3, Ci_low=10, Ci_high=60)
-    cpt_true = 0
-    for arr_pl_M_T in l_arr_pl_M_T:
-        if arr_pl_M_T.shape == (m_players, num_periods, len(fct_aux.INDEX_ATTRS)):
-            cpt_true += 1
-            
-    if cpt_true == len(l_arr_pl_M_T):
-        print("___ generer_Pi_Ci_Si_Simax_for_all_scenarios ___ OK")
-    else:
-        print("___ generer_Pi_Ci_Si_Simax_for_all_scenarios ___ NOK")
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -409,10 +239,8 @@ if __name__ == "__main__":
     #test_execute_game_onecase(fct_aux.CASE2)
     #test_execute_game_allcase()
     #df_bol, dico = test_balanced_player_all_time()
-    # df_bol, df_res, dico_cases = test_balanced_player_all_time(
+    df_bol, df_res, dico_cases = test_balanced_player_all_time(
     
-    arrs = test_generate_Pi_Ci_Si_Simax_by_profil_scenario()
     
-    test_generer_Pi_Ci_Si_Simax_for_all_scenarios()
     print("runtime = {}".format(time.time() - ti))  
     
