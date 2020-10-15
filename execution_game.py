@@ -91,6 +91,85 @@ def execute_game_allcases(cases):
                                pi_0_plus, pi_0_minus, 
                                case, path_to_save)
         
+def generate_Pi_Si_by_profil_scenario(n_players=3, num_periods=5, 
+                                   scenario="scenario1", prob_Ci=0.3, 
+                                   Ci_low=10, Ci_high=60):
+    arr_pl_M_T = []
+    for num_pl in range(0, n_players):
+        Ci = None; profili = None
+        prob = np.random.uniform(0, 1)
+        if prob <= prob_Ci:
+            Ci = Ci_low
+            Si_max = 0.8 * Ci
+            if scenario == "scenario1":
+                profili = fct_aux.PROFIL_L
+            elif scenario == "scenario2":
+                profili = fct_aux.PROFIL_H
+            elif scenario == "scenario3":
+                profili = fct_aux.PROFIL_M
+        else:
+            Ci = Ci_low
+            Si_max = 0.5 * Ci
+            if scenario == "scenario1":
+                profili = fct_aux.PROFIL_H
+            elif scenario == "scenario2":
+                profili = fct_aux.PROFIL_M
+            elif scenario == "scenario3":
+                profili = np.random.default_rng().choice(
+                            p=[0.5, 0.5],
+                            a=[fct_aux.PROFIL_H, fct_aux.PROFIL_M])
+                
+        # profil_casei = None
+        # prob_casei = np.random.uniform(0,1)
+        # if prob_casei <= profili[0]:
+        #     profil_casei = fct_aux.CASE1
+        # elif prob_casei > profili[0] \
+        #     and prob_casei <= profili[0]+profili[1]:
+        #     profil_casei = fct_aux.CASE2
+        # else:
+        #     profil_casei = fct_aux.CASE3
+        profil_casei = None
+        if prob <= profili[0]:
+            profil_casei = fct_aux.CASE1
+        elif prob > profili[0] \
+            and prob <= profili[0]+profili[1]:
+            profil_casei = fct_aux.CASE2
+        else:
+            profil_casei = fct_aux.CASE3
+                
+        min_val_profil = profil_casei[0]*Ci 
+        max_val_profil = profil_casei[1]*Ci
+        
+        Pi_s = list( np.around(np.random.uniform(low=min_val_profil, high=max_val_profil, 
+                                 size=(num_periods,)), decimals=2) )
+        Si_s = list( np.around(np.random.uniform(0,1,size=(num_periods,))*Si_max,
+                    decimals=2))
+        Si_s[0] = 0; 
+        str_profili_s = ["_".join(map(str, profili))] * num_periods
+        str_casei_s = ["_".join(map(str, profil_casei))] * num_periods
+        
+        # building list of list 
+        """
+        "Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+        "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
+        "Profili":10, "Casei":11, "R_i_old":12
+        """
+        Ci_s = [Ci] * num_periods
+        Si_max_s = [Si_max] * num_periods
+        gamma_i_s, r_i_s = [0]*num_periods, [0]*num_periods
+        prod_i_s, cons_i_s = [0]*num_periods, [0]*num_periods
+        state_i_s, mode_i_s = [""]*num_periods, [""]*num_periods
+        R_i_old_s = [round(x - y, 2) for x, y in zip(Si_max_s, Si_s)]
+        init_values_i_s = list(zip(Ci_s, Pi_s, Si_s, Si_max_s, gamma_i_s, 
+                                   prod_i_s, cons_i_s, r_i_s, state_i_s, 
+                                   mode_i_s, str_profili_s, str_casei_s, 
+                                   R_i_old_s))
+        arr_pl_M_T.append(init_values_i_s)
+    
+    arr_pl_M_T = np.array(arr_pl_M_T, dtype=object)
+    
+    return arr_pl_M_T
+
 
 #------------------------------------------------------------------------------
 #           unit test of functions
@@ -229,14 +308,26 @@ def test_balanced_player_all_time(thres=0.01):
     # convert dataframe to json
     # TODO
     return df_bol, df_res, dico_cases #dico_numT #df_dico
+
+
+def test_generate_Pi_Si_by_profil_scenario():
+    
+    arr_pl_M_T = generate_Pi_Si_by_profil_scenario(n_players=3, num_periods=5, 
+                                   scenario="scenario1", prob_Ci=0.3, 
+                                   Ci_low=10, Ci_high=60)
+    
+    print("___ arr_pl_M_T : {}".format(arr_pl_M_T.shape))
+    return arr_pl_M_T
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
     #test_execute_game_onecase(fct_aux.CASE2)
-    test_execute_game_allcase()
+    #test_execute_game_allcase()
     #df_bol, dico = test_balanced_player_all_time()
-    df_bol, df_res, dico_cases = test_balanced_player_all_time()
+    # df_bol, df_res, dico_cases = test_balanced_player_all_time(
+    
+    arrs = test_generate_Pi_Si_by_profil_scenario()
     print("runtime = {}".format(time.time() - ti))  
     
