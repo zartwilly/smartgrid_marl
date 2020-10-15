@@ -50,8 +50,10 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t):
 #
 ###############################################################################
 def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
-                        m_players=3, num_periods=5, path_to_save="tests", 
-                        dbg=False):
+                        m_players=3, num_periods=5, 
+                        Ci_low=10, Ci_high=30,
+                        prob_Ci=0.3, scenario="scenario1", 
+                        path_to_save="tests", dbg=False):
     
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
@@ -61,10 +63,11 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     BENs, CSTs = np.array([]), np.array([])
     # _______ variables' initialization --> fin   ________________
     
-    arr_pl_M_T = fct_aux.generate_Cis_Pis_Sis_allplayer_alltime(
-                    m_players=m_players, num_periods=num_periods, 
-                    low_Ci=10, high_Ci=30
-                    )
+    arr_pl_M_T = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                                    m_players=m_players, 
+                                    num_periods=num_periods, 
+                                    scenario=scenario, prob_Ci=prob_Ci, 
+                                    Ci_low=Ci_low, Ci_high=Ci_high)
     
     arr_pl_M_T_old = arr_pl_M_T.copy()
     for t in range(0, num_periods):
@@ -105,8 +108,12 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             print("====> balanced: {}  ".format(boolean)) if dbg else None
             
             # compute gamma_i
-            Pi_t_plus_1 = arr_pl_M_T[num_pl_i, t+1, fct_aux.INDEX_ATTRS["Pi"]]
-            Ci_t_plus_1 = arr_pl_M_T[num_pl_i, t+1, fct_aux.INDEX_ATTRS["Ci"]]
+            Pi_t_plus_1 = arr_pl_M_T[num_pl_i, t+1, fct_aux.INDEX_ATTRS["Pi"]] \
+                            if t+1 < num_periods \
+                            else arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]]
+            Ci_t_plus_1 = arr_pl_M_T[num_pl_i, t+1, fct_aux.INDEX_ATTRS["Ci"]] \
+                            if t+1 < num_periods \
+                            else arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]]
             pl_i.select_storage_politic(
                 Ci_t_plus_1 = Ci_t_plus_1, 
                 Pi_t_plus_1 = Pi_t_plus_1, 
@@ -199,8 +206,8 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     # B_is, C_is of shape (M_PLAYERS, )
     CONS_is = np.sum(arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["cons_i"]], axis=1)
     PROD_is = np.sum(arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["prod_i"]], axis=1)
-    prod_i_T = arr_pl_M_T[:,1:, fct_aux.INDEX_ATTRS["prod_i"]]
-    cons_i_T = arr_pl_M_T[:,1:, fct_aux.INDEX_ATTRS["cons_i"]]
+    prod_i_T = arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["prod_i"]]
+    cons_i_T = arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["cons_i"]]
     B_is = np.sum(b0_s * prod_i_T, axis=1)
     C_is = np.sum(c0_s * cons_i_T, axis=1)
     
@@ -251,6 +258,9 @@ def test_balance_player_game():
     pi_hp_plus = 0.10; pi_hp_minus = 0.15
     pi_hp_plus = 10; pi_hp_minus = 15
     m_players = 3; num_periods = 5
+    Ci_low = 10; Ci_high = 30
+    prob_Ci = 0.3; scenario = "scenario1"
+    path_to_save = "tests"
     
     arr_pl_M_T_old, arr_pl_M_T, \
     b0_s, c0_s, \
@@ -261,7 +271,12 @@ def test_balance_player_game():
         balance_player_game(pi_hp_plus = pi_hp_plus, 
                             pi_hp_minus = pi_hp_minus,
                             m_players = m_players, 
-                            num_periods = num_periods)
+                            num_periods = num_periods,
+                            Ci_low = Ci_low, Ci_high = Ci_high,
+                            prob_Ci = prob_Ci, scenario = scenario,
+                            path_to_save = path_to_save, dbg = False
+                            )
+        
         
     print("_____ shape _____")
     print("arr_pl_M_T={}".format(arr_pl_M_T.shape))
@@ -292,7 +307,7 @@ def test_determine_new_pricing_sg_and_new():
     
     pi_hp_plus, pi_hp_minus = 10, 20
     new_pi_sg_plus, new_pi_sg_minus = \
-       determine_new_pricing_sg_old(prod_is_0_t, cons_is_0_t, 
+       gmpT.determine_new_pricing_sg(prod_is_0_t, cons_is_0_t, 
                              pi_hp_plus, pi_hp_minus, t, dbg=False)
     print("OLD: new_pi_sg_plus={}, new_pi_sg_minus={}".format(new_pi_sg_plus, new_pi_sg_minus))
  
