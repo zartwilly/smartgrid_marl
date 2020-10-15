@@ -36,8 +36,25 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
         diff_energy_prod_t += energ_k_prod
         print("k={}, energ_k_prod={}, energ_k_cons={}".format(
             t, energ_k_prod, energ_k_cons)) if dbg else None
-    sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]]))
-    sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]]))
+    sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
+    sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
+    
+    print("sum_cons={}, sum_prod={}".format(sum_cons, sum_prod))
+    print("NAN: cons={}, prod={}".format(
+            np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
+            np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
+        )
+    arr_cons = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
+    arr_prod = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
+    print("positions of nan cons:{}, prod={}".format(arr_cons, arr_prod))
+    print("state")
+    if arr_cons.size != 0:
+        for arr in arr_cons:
+            print("{}-->state:{}, Pi={}, Ci={}, Si={}".format(
+                arr, arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["state_i"]],
+                arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Pi"]],
+                arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Ci"]],
+                arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Si"]]))
     
     new_pi_sg_minus_t = round(pi_hp_minus*diff_energy_cons_t / sum_cons,2)  \
                     if sum_cons != 0 else np.nan
@@ -152,6 +169,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     arr_pl_M_T_old = arr_pl_M_T.copy()
     for t in range(0, num_periods):
         print("******* t = {} *******".format(t)) if dbg else None
+        print("___t = {}, pi_sg_plus_t={}, pi_sg_minus_t={}".format(t, pi_sg_plus_t, pi_sg_minus_t))
         
         # compute pi_0_plus, pi_0_minus, pi_sg_plus, pi_sg_minus
         pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
