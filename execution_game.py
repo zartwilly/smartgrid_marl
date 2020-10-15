@@ -13,9 +13,11 @@ import math
 import json
 import numpy as np
 import pandas as pd
+import itertools as it
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 import game_model_period_T as gmpT
+import deterministic_game_model as detGameModel
 import visu_bkh as bkh
 
 from datetime import datetime
@@ -91,7 +93,78 @@ def execute_game_allcases(cases):
                                pi_0_plus, pi_0_minus, 
                                case, path_to_save)
         
+def execute_game_probCis_scenarios(
+            pi_hp_plus=10, pi_hp_minus=15,
+            probCis=[0.3, 0.5, 0.7], 
+            scenarios=["scenario1", "scenario2", "scenario3"],
+            m_players=3, num_periods=5, 
+            Ci_low=10, Ci_high=60, name_dir='tests', dbg=False):
+    """
+    run the game using the combinaison of probCis and scenarios
 
+    Parameters
+    ----------
+    pi_hp_plus : float,
+        DESCRIPTION.
+        the price of exported energy from SG to HP
+    pi_hp_minus : float,
+        DESCRIPTION.
+        the price of imported energy from HP to SG
+    probCis : list of float
+        DESCRIPTION.
+        list of probability for choosing the kind of consommation
+    scenarios : list of String
+        DESCRIPTION.
+        a plan for operating a game of players
+    m_players : Integer optional
+        DESCRIPTION. The default is 3.
+        the number of players
+    num_periods : Integer, optional
+        DESCRIPTION. The default is 5.
+        the number of time intervals 
+    Ci_low : float, optional
+        DESCRIPTION. The default is 10.
+        the min value of the consumption
+    Ci_high : float, optional
+        DESCRIPTION. The default is 60.
+        the max value of the consumption
+    name_dir: String,
+         DESCRIPTION.
+         name of directory for saving variables of players
+    Returns
+    -------
+    None.
+    Nothing to return
+
+    """
+    pi_hp_plus = 10; pi_hp_minus = 15
+    
+    date_hhmm = datetime.now().strftime("%d%m_%H%M")
+    
+    probCi_scen_s = it.product(probCis, scenarios)
+    for (prob_Ci, scenario) in probCi_scen_s:
+        path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci))
+        Path(path_to_save).mkdir(parents=True, exist_ok=True)
+        
+        arr_pl_M_T_old, arr_pl_M_T, \
+        b0_s, c0_s, \
+        B_is, C_is, \
+        BENs, CSTs, \
+        BB_is, CC_is, RU_is , \
+        pi_sg_plus, pi_sg_minus = \
+            detGameModel.balance_player_game(pi_hp_plus = pi_hp_plus, 
+                            pi_hp_minus = pi_hp_minus,
+                            m_players = m_players, 
+                            num_periods = num_periods,
+                            Ci_low = Ci_low, Ci_high = Ci_high,
+                            prob_Ci = prob_Ci, scenario = scenario,
+                            path_to_save = path_to_save, dbg = dbg
+                            )
+        
+    
+        
+        
 #------------------------------------------------------------------------------
 #           unit test of functions
 #------------------------------------------------------------------------------ 
@@ -231,6 +304,14 @@ def test_balanced_player_all_time(thres=0.01):
     return df_bol, df_res, dico_cases #dico_numT #df_dico
 
 
+def test_execute_game_probCis_scenarios():
+    execute_game_probCis_scenarios(
+            pi_hp_plus=10, pi_hp_minus=15,
+            probCis=[0.3, 0.5, 0.7], 
+            scenarios=["scenario1", "scenario2", "scenario3"],
+            m_players=1000, num_periods=50, 
+            Ci_low=10, Ci_high=60, name_dir='tests', dbg=False)
+
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -239,8 +320,9 @@ if __name__ == "__main__":
     #test_execute_game_onecase(fct_aux.CASE2)
     #test_execute_game_allcase()
     #df_bol, dico = test_balanced_player_all_time()
-    df_bol, df_res, dico_cases = test_balanced_player_all_time(
+    # df_bol, df_res, dico_cases = test_balanced_player_all_time()
     
+    test_execute_game_probCis_scenarios()
     
     print("runtime = {}".format(time.time() - ti))  
     
