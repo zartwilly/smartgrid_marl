@@ -17,7 +17,7 @@ import visu_bkh as bkh
 from datetime import datetime
 from pathlib import Path
 
-def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t):
+def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
     diff_energy_cons_t = 0
     diff_energy_prod_t = 0
     for k in range(0, t+1):
@@ -34,13 +34,14 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t):
             
         diff_energy_cons_t += energ_k_cons
         diff_energy_prod_t += energ_k_prod
-        print("k={}, energ_k_prod={}, energ_k_cons={}".format(t, energ_k_prod, energ_k_cons))
+        print("k={}, energ_k_prod={}, energ_k_cons={}".format(
+            t, energ_k_prod, energ_k_cons)) if dbg else None
     sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]]))
     sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]]))
     
-    new_pi_sg_minus_t = pi_hp_minus*diff_energy_cons_t / sum_cons  \
+    new_pi_sg_minus_t = round(pi_hp_minus*diff_energy_cons_t / sum_cons,2)  \
                     if sum_cons != 0 else np.nan
-    new_pi_sg_plus_t = pi_hp_plus*diff_energy_prod_t / sum_prod \
+    new_pi_sg_plus_t = round(pi_hp_plus*diff_energy_prod_t / sum_prod,2) \
                         if sum_prod != 0 else np.nan
                             
     return new_pi_sg_plus_t, new_pi_sg_minus_t
@@ -54,7 +55,86 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                         Ci_low=10, Ci_high=30,
                         prob_Ci=0.3, scenario="scenario1", 
                         path_to_save="tests", dbg=False):
-    
+    """
+    create a game for balancing all players at all periods of time NUM_PERIODS = [1..T]
+
+    Parameters
+    ----------
+    pi_hp_plus : float, optional
+        DESCRIPTION. The default is 0.10.
+        the price of exported energy from SG to HP
+    pi_hp_minus : float, optional
+        DESCRIPTION. The default is 0.15.
+        the price of imported energy from HP to SG
+    m_players : Integer, optional
+        DESCRIPTION. The default is 3.
+        the number of players
+    num_periods : Integer, optional
+        DESCRIPTION. The default is 5.
+        the number of time intervals 
+    Ci_low : float, optional
+        DESCRIPTION. The default is 10.
+        the min value of the consumption
+    Ci_high : float, optional
+        DESCRIPTION. The default is 30.
+        the max value of the consumption
+    prob_Ci : float, optional
+        DESCRIPTION. The default is 0.3.
+        probability for choosing the kind of consommation
+    scenario : String, optional
+        DESCRIPTION. The default is "scenario1".
+        a plan for operating a game of players
+    path_to_save : String, optional
+        DESCRIPTION. The default is "tests".
+        name of directory for saving variables of players
+    dbg : boolean, optional
+        DESCRIPTION. The default is False.
+
+    Returns
+    -------
+    arr_pl_M_T_old : array of shape (M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))
+        DESCRIPTION.
+        initial array of variables for all players. it contains initial values 
+        before starting a game 
+    arr_pl_M_T : array of shape (M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))
+        DESCRIPTION.
+        array of variables for all players. it contains final values 
+        at time NUM_PERIODS
+    b0_s : array of shape(NUM_PERIODS,) 
+        DESCRIPTION.
+        array of unit price of benefit for all periods
+    c0_s : array of shape(NUM_PERIODS,) 
+        DESCRIPTION.
+        array of unit price of cost for all periods
+    B_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of global benefit for all players
+    C_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of global cost for all players
+    BENs : array of shape (M_PLAYERS, NUM_PERIODS)
+        DESCRIPTION.
+        array of benefits of a player at for all times t
+    CSTs : array of shape (M_PLAYERS, NUM_PERIODS)
+        DESCRIPTION.
+        array of costs of a player at for all times t
+    BB_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of real money a player need to pay if it depends on SG
+    CC_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of real money a player need to pay if it depends on HP 
+    RU_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        the difference between BB_i and CC_i for all players
+    pi_sg_plus : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        array of exported unit price from player to SG at all time  
+    pi_sg_minus : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        array of imported unit price from player to SG at all time 
+
+    """
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
     pi_sg_plus, pi_sg_minus = [], []
@@ -157,7 +237,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                                                 arr_pl_M_T, 
                                                 pi_hp_plus, 
                                                 pi_hp_minus, 
-                                                t)
+                                                t, dbg=dbg)
                             
         pi_sg_plus_t = pi_sg_plus_t if pi_sg_plus_t_new is np.nan \
                                     else pi_sg_plus_t_new
