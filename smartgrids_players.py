@@ -276,7 +276,7 @@ class Player:
             self.state_i = "state1"
         elif self.Pi + self.Si > self.Ci and self.Pi < self.Ci:
             self.state_i = "state2"
-        elif self.Pi > self.Ci:
+        elif self.Pi >= self.Ci:
             self.state_i = "state3"
         else:
             self.state_i = None
@@ -448,6 +448,8 @@ class Player:
                 res = (fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1)- Si_minus)\
                        / (Si_plus - Si_minus)
                 Z = X + (Y-X)*res
+                
+                print("res={}, Z={}, X={}, Y={}".format(res, Z, X, Y))
                 self.set_gamma_i(math.floor(Z))   
         else:
             self.set_gamma_i(np.inf) 
