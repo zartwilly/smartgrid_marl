@@ -87,7 +87,35 @@ def generate_energy_unit_price_SG(pi_hp_plus, pi_hp_minus):
     pi_0_plus = pi_hp_plus * rd_num
     pi_0_minus = pi_hp_minus * rd_num
     return pi_0_plus, pi_0_minus
-     
+
+def compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0):
+    """
+    calculate the benefit and the cost of each player at time t
+
+    Parameters
+    ----------
+    arr_pls_M_T : array of shape M_PLAYERS*NUM_PERIODS*9
+        DESCRIPTION.
+    gamma_is :  array of shape (M_PLAYERS,)
+        DESCRIPTION.
+    t : integer
+        DESCRIPTION.
+    b0 : float
+        benefit per unit.
+    c0 : float
+        cost per unit.
+
+    Returns
+    -------
+    bens: benefits of M_PLAYERS, shape (M_PLAYERS,).
+    csts: costs of M_PLAYERS, shape (M_PLAYERS,)
+    """
+    bens = b0 * arr_pls_M_T[:, t, INDEX_ATTRS["prod_i"]] \
+            + gamma_is * arr_pls_M_T[:, t, INDEX_ATTRS["r_i"]]
+    csts = c0 * arr_pls_M_T[:, t, INDEX_ATTRS["cons_i"]]
+    return bens, csts     
+
+
 # def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
 #     """
 #     generate Cis, Pis, Sis and Si_maxs.
@@ -696,6 +724,28 @@ def test_compute_real_money_SG():
     else:
         print("False")
     
+def test_compute_utility_players():
+    
+    arr_pls_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                            m_players=M_PLAYERS, num_periods=NUM_PERIODS, 
+                            scenario="scenario1", prob_Ci=0.3, 
+                            Ci_low=10, Ci_high=60)
+    
+    OK = 0
+    for t in range(0, NUM_PERIODS):
+        b0, c0 = np.random.randn(), np.random.randn()
+        gamma_is = arr_pls_M_T[:,t, INDEX_ATTRS["gamma_i"]]
+            
+        bens, csts = compute_utility_players(arr_pls_M_T, gamma_is, t, b0, c0)
+        
+        if bens.shape == (M_PLAYERS,) \
+            and csts.shape == (M_PLAYERS,):
+            print("bens={}, csts={}, gamma_is={}".format(
+                    bens.shape, csts.shape, gamma_is.shape))
+            OK += 1
+    print("test_compute_utility_players: rp={}".format(
+            round(OK/NUM_PERIODS,2)))
+    
 # def test_find_path_to_variables():
 #     name_dir = "tests"
 #     depth = 2
@@ -783,7 +833,7 @@ if __name__ == "__main__":
     test_generate_energy_unit_price_SG()
     
     # path_file = test_find_path_to_variables()
-    
+    test_compute_utility_players()
     test_compute_real_money_SG()
     
     # test_generate_Cis_Pis_Sis_oneplayer_alltime()
