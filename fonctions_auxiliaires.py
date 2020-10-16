@@ -38,7 +38,7 @@ PROFIL_L = (0.2, 0.2, 0.6)
 
 INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
-               "Profili":10, "Casei":11, "R_i_old":12}
+               "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13}
 
 #------------------------------------------------------------------------------
 #           definitions of class
@@ -426,10 +426,11 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
         prod_i_s, cons_i_s = [0]*num_periods, [0]*num_periods
         state_i_s, mode_i_s = [""]*num_periods, [""]*num_periods
         R_i_old_s = [round(x - y, 2) for x, y in zip(Si_max_s, Si_s)]
+        Si_old_s = [0]*num_periods
         init_values_i_s = list(zip(Ci_s, Pi_s, Si_s, Si_max_s, gamma_i_s, 
                                    prod_i_s, cons_i_s, r_i_s, state_i_s, 
                                    mode_i_s, str_profili_s, str_casei_s, 
-                                   R_i_old_s))
+                                   R_i_old_s, Si_old_s))
         arr_pl_M_T.append(init_values_i_s)
     
     arr_pl_M_T = np.array(arr_pl_M_T, dtype=object)
@@ -500,6 +501,7 @@ def balanced_player(pl_i, thres=0.1, dbg=False):
     state_i = pl_i.get_state_i(); 
     mode_i = pl_i.get_mode_i()
     cons_i = pl_i.get_cons_i(); prod_i = pl_i.get_prod_i()
+    Si_old = pl_i.get_Si_old()
     
     if dbg:
         print("_____ balanced_player Pi={}, Ci={}, Si={}, Si_max={}, state_i={}, mode_i={}"\
