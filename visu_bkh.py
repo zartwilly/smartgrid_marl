@@ -594,6 +594,36 @@ def plot_variables_players_game_old(arr_pls_M_T, RUs, pi_sg_plus_s, pi_sg_minus_
     p_ru.circle(x="pl", y="CC", source=source, size=4, fill_color='white')
     ps.append(p_ru)
     
+    # ______ plot CONS_i, PROD_i variables
+    CONS_i_s = np.sum(arr_pls_M_T[:,:, fct_aux.INDEX_ATTRIBUTS["cons_i"]],
+                      axis=1)
+    PROD_i_s = np.sum(arr_pls_M_T[:,:, fct_aux.INDEX_ATTRIBUTS["prod_i"]],
+                      axis=1)
+    title = "production/consumption of players over periods"
+    ylabel = "quantity"
+    xlabel = "player"
+    pls = range(0, arr_pls_M_T.shape[0])
+    data_pl_cons_prod = {"pl":pls, "CONS":CONS_i_s, "PROD":PROD_i_s}
+    source = ColumnDataSource(data=data_pl_cons_prod)
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("quantity", "$y"),
+                            ("player", "$x")
+                            ]
+                        ) 
+    p_cons_prod = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    p_cons_prod.line(x="pl", y="CONS", source=source, legend_label="CONS_i",
+              line_width=2, color=Category20[20][0], line_dash=[1,1])
+    p_cons_prod.line(x="pl", y="PROD", source=source, legend_label="PROD_i",
+              line_width=2, color=Category20[20][2], line_dash=[1,1])
+    
+    ps.append(p_cons_prod)
+    
     # ______ plot players' variables _______
     TOOLS[7] = HoverTool(tooltips=[
                             ("quantity", "$y"),
@@ -672,7 +702,8 @@ def plot_variables_players_game(arr_pl_M_T,
                                 BENs, CSTs, 
                                 BB_is, CC_is, RU_is, 
                                 pi_sg_plus_s, pi_sg_minus_s, 
-                                pi_hp_plus_s, pi_hp_minus_s):
+                                pi_hp_plus_s, pi_hp_minus_s
+                                ):
     """
     representation of players' variables and game variables
 
@@ -713,6 +744,7 @@ def plot_variables_players_game(arr_pl_M_T,
     pi_sg_minus_s : array of shape (NUM_PERIODS,)
         DESCRIPTION.
         the price pf exchanged energy inside SG (purchasing from SG to player)
+    
     Returns
     -------
     ps: list of figures
@@ -728,7 +760,8 @@ def plot_variables_players_game(arr_pl_M_T,
     key_minus = "pi_sg_minus"
     
     args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
-          "pi_sg_plus_s": pi_sg_plus_s,"pi_sg_minus_s":pi_sg_minus_s, 
+          "pi_sg_plus_s": pi_sg_plus_s,
+          "pi_sg_minus_s":pi_sg_minus_s, 
           "key_plus":key_plus, "key_minus":key_minus}
     
     p_pi_sg_hp = plot_pi_X(args)
@@ -773,6 +806,114 @@ def plot_variables_players_game(arr_pl_M_T,
     p_ru.circle(x="pl", y="BB_i", source=source, size=4, fill_color='white')
     p_ru.circle(x="pl", y="CC_i", source=source, size=4, fill_color='white')
     ps.append(p_ru)
+    
+    # ______ plot BB_is, CC_is pour les forts et faibles consommations
+    ind_rows, ind_cols = np.where(arr_pl_M_T[:,:,fct_aux.INDEX_ATTRS["Ci"]] == 10)
+    ind_rows = list(set(ind_rows))
+    BB_is_weak = BB_is[ind_rows]
+    ind_rows, ind_cols = np.where(arr_pl_M_T[:,:,fct_aux.INDEX_ATTRS["Ci"]] == 60)
+    ind_rows = list(set(ind_rows))
+    BB_is_strong = BB_is[ind_rows] 
+    
+    ind_rows, ind_cols = np.where(arr_pl_M_T[:,:,fct_aux.INDEX_ATTRS["Ci"]] == 10)
+    ind_rows = list(set(ind_rows))
+    CC_is_weak = CC_is[ind_rows]
+    ind_rows, ind_cols = np.where(arr_pl_M_T[:,:,fct_aux.INDEX_ATTRS["Ci"]] == 60)
+    ind_rows = list(set(ind_rows))
+    CC_is_strong = CC_is[ind_rows]
+    print("ind_rows:{}, BB_is_strong={}, CC_is_strong={}".format(
+        ind_rows, BB_is_strong, CC_is_strong)) 
+    print("ind_rows:{}, BB_is_weak={}, CC_is_weak={}".format(
+        ind_rows, BB_is_weak.shape, CC_is_weak.shape))                      
+    
+    
+    ## BB_is, CC_is WEAK
+    title = "real utility of weak players"
+    xlabel = "player" 
+    ylabel = "price"
+    pls = range(0, BB_is_weak.shape[0])
+    data_pl_bb_cc_weak = {"pl":pls, "BB_is_weak": BB_is_weak, 
+                        "CC_is_weak": CC_is_weak}
+    source = ColumnDataSource(data=data_pl_bb_cc_weak)
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("price", "$y"),
+                            ("player", "$x")
+                            ]
+                        ) 
+    p_bb_cc_weak = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    p_bb_cc_weak.line(x="pl", y="BB_is_weak", source=source, 
+                      legend_label="BB_is_weak", line_width=2, 
+                      color=Category20[20][0], line_dash=[1,1])
+    p_bb_cc_weak.line(x="pl", y="CC_is_weak", source=source, 
+                      legend_label="CC_is_weak", line_width=2, 
+                      color=Category20[20][2], line_dash=[1,1])
+    
+    
+    ## BB_is, CC_is STRONG
+    title = "real utility of strong players"
+    xlabel = "player" 
+    ylabel = "price"
+    pls = range(0, BB_is_strong.shape[0])
+    data_pl_bb_cc_strong = {"pl":pls, "BB_is_strong": BB_is_strong, 
+                        "CC_is_strong": CC_is_strong}
+    source = ColumnDataSource(data=data_pl_bb_cc_strong)
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("price", "$y"),
+                            ("player", "$x")
+                            ]
+                        ) 
+    p_bb_cc_strong = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    p_bb_cc_strong.line(x="pl", y="BB_is_strong", source=source, 
+                      legend_label="BB_is_strong", line_width=2, 
+                      color=Category20[20][0], line_dash=[1,1])
+    p_bb_cc_strong.line(x="pl", y="CC_is_strong", source=source, 
+                      legend_label="CC_is_strong", line_width=2, 
+                      color=Category20[20][2], line_dash=[1,1])
+    
+    ps.append(p_bb_cc_weak)
+    ps.append(p_bb_cc_strong)
+    
+    # ______ plot CONS_i, PROD_i variables
+    CONS_i_s = np.sum(arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["cons_i"]],
+                      axis=1)
+    PROD_i_s = np.sum(arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["prod_i"]],
+                      axis=1)
+    title = "production/consumption of players over periods"
+    ylabel = "quantity"
+    xlabel = "player"
+    pls = range(0, arr_pl_M_T.shape[0])
+    data_pl_cons_prod = {"pl":pls, "CONS":CONS_i_s, "PROD":PROD_i_s}
+    source = ColumnDataSource(data=data_pl_cons_prod)
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("quantity", "$y"),
+                            ("player", "$x")
+                            ]
+                        ) 
+    p_cons_prod = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    p_cons_prod.line(x="pl", y="CONS", source=source, legend_label="CONS_i",
+              line_width=2, color=Category20[20][0], line_dash=[1,1])
+    p_cons_prod.line(x="pl", y="PROD", source=source, legend_label="PROD_i",
+              line_width=2, color=Category20[20][2], line_dash=[1,1])
+    
+    ps.append(p_cons_prod)
     
     # ______ plot players' variables _______
     TOOLS[7] = HoverTool(tooltips=[
@@ -1152,6 +1293,7 @@ def test_plot_variables_allplayers_old(rep, case):
         reps = os.listdir(rep)
         str_case = reps[np.random.randint(0, len(reps))]
     path_to_variable = os.path.join(name_dir, rep, str_case)
+    path_to_variable = "tests/simu_1510_1736/scenario1/0.3/"
     
     # import arr_pls_M_T
     arr_pls_M_T, RUs, \
@@ -1166,7 +1308,9 @@ def test_plot_variables_allplayers_old(rep, case):
     plot_variables_onehtml(ps, path_to_variable, ncols = 1, 
                 name_file_html="player_attributs_game_variables_dashboard.html")
     
-def test_plot_variables_allplayers(rep="debug"):
+def test_plot_variables_allplayers(rep="debug", 
+                                   num_period_to_show=50,
+                                   num_player_to_show=50):
     """
     Plot the variables of games and also the attributs of players
 
@@ -1174,6 +1318,12 @@ def test_plot_variables_allplayers(rep="debug"):
     ----------
     rep : name of simulation directory
         DESCRIPTION.
+    num_period_to_show : integer,
+        DESCRIPTION.
+        Number of periods to display
+    num_player_to_show : integer,
+        DESCRIPTION.
+        Number of players to display
 
     Returns
     -------
@@ -1185,6 +1335,7 @@ def test_plot_variables_allplayers(rep="debug"):
         reps = os.listdir(name_dir)
         rep = reps[-1]
     path_to_variable = os.path.join(name_dir, rep)
+    path_to_variable = "tests/simu_1510_1736/scenario1/0.3/"
     
     # import variables for file
     arr_pl_M_T_old, arr_pl_M_T, \
@@ -1196,13 +1347,21 @@ def test_plot_variables_allplayers(rep="debug"):
     pi_hp_plus_s, pi_hp_minus_s= \
         get_local_storage_variables(path_to_variable)
     
-    ps = plot_variables_players_game(arr_pl_M_T, 
-                                    b0_s, c0_s, 
-                                    B_is, C_is, 
-                                    BENs, CSTs, 
-                                    BB_is, CC_is, RU_is, 
-                                    pi_sg_plus_s, pi_sg_minus_s,
-                                    pi_hp_plus_s, pi_hp_minus_s)
+    ps = plot_variables_players_game(
+                arr_pl_M_T[:num_player_to_show,:num_period_to_show], 
+                b0_s[:num_period_to_show], 
+                c0_s[:num_period_to_show], 
+                B_is[:num_player_to_show], 
+                C_is[:num_player_to_show], 
+                BENs[:num_player_to_show,:num_period_to_show], 
+                CSTs[:num_player_to_show,:num_period_to_show], 
+                BB_is[:num_player_to_show], 
+                CC_is[:num_player_to_show], 
+                RU_is[:num_player_to_show], 
+                pi_sg_plus_s[:num_period_to_show], 
+                pi_sg_minus_s[:num_period_to_show],
+                pi_hp_plus_s[:num_period_to_show], 
+                pi_hp_minus_s[:num_period_to_show])
     plot_variables_onehtml(ps, path_to_variable, ncols = 1, 
                 name_file_html="player_attributs_game_variables_dashboard.html")
     
@@ -1226,7 +1385,8 @@ if __name__ == "__main__":
     
     #test_plot_variables_allplayers(rep="simu_1410_0859")
     #test_plot_variables_allplayers(rep="simu_1410_0931")
-    test_plot_variables_allplayers()
+    test_plot_variables_allplayers(num_period_to_show=50,
+                                   num_player_to_show=50)
     print("runtime {}".format(time.time()-ti))
     
 
