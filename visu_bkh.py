@@ -1335,7 +1335,7 @@ def test_plot_variables_allplayers(rep="debug",
         reps = os.listdir(name_dir)
         rep = reps[-1]
     path_to_variable = os.path.join(name_dir, rep)
-    path_to_variable = "tests/simu_1510_1736/scenario1/0.3/"
+    path_to_variable = "tests/simu_1610_1519/scenario3/0.7/"
     
     # import variables for file
     arr_pl_M_T_old, arr_pl_M_T, \
