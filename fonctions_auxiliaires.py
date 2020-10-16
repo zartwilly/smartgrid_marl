@@ -160,9 +160,7 @@ def compute_energy_unit_price(pi_0_plus, pi_0_minus,
     b0 = pi_0_plus \
         if In_sg < Out_sg \
         else (In_sg * pi_0_plus + (- Out_sg + In_sg)*pi_0_plus)/In_sg
-    print("types: In_sg={}, Out_sg={}, pi_0_plus={}, pi_0_minus={}".format(
-            type(In_sg), type(Out_sg), type(pi_0_plus), type(pi_0_minus) ))
-    print("pi_0_plus={}, {}".format(pi_0_plus, pi_0_plus.shape))
+   
     return round(b0, 2), round(c0, 2)
 
 # def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
