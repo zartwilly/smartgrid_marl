@@ -195,14 +195,16 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             # balancing
             boolean = fct_aux.balanced_player(pl_i, thres=0.1)
             print("_____ pl_{} _____".format(num_pl_i)) if dbg else None
-            print("Pi={}, Ci={}, Si={}, Si_max={}, state_i={}, mode_i={}".format(
-                   pl_i.get_Pi(),pl_i.get_Ci(),pl_i.get_Si(),pl_i.get_Si_max(), 
-                   pl_i.get_state_i(), pl_i.get_mode_i() 
+            print("Pi={}, Ci={}, Si_old={}, Si={}, Si_max={}, state_i={}, mode_i={}"\
+                  .format(
+                   pl_i.get_Pi(), pl_i.get_Ci(), pl_i.get_Si_old(), pl_i.get_Si(),
+                   pl_i.get_Si_max(), pl_i.get_state_i(), pl_i.get_mode_i() 
                 )) if dbg else None
-            print("====> prod_i={}, cons_i={}, new_S_i={}, R_i_old={}, r_i={}".format(
+            print("====> prod_i={}, cons_i={}, new_S_i={}, new_Si_old={}, R_i_old={}, r_i={}".format(
                 round(pl_i.get_prod_i(),2), round(pl_i.get_cons_i(),2),
-                round(pl_i.get_Si(),2), round(pl_i.get_R_i_old(),2), 
-                round(pl_i.get_r_i(),2) )) if dbg else None
+                round(pl_i.get_Si(),2), round(pl_i.get_Si_old(),2), 
+                round(pl_i.get_R_i_old(),2), round(pl_i.get_r_i(),2) )) \
+                if dbg else None
             print("====> balanced: {}  ".format(boolean)) if dbg else None
             
             # compute gamma_i
@@ -236,6 +238,9 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             arr_pl_M_T[num_pl_i, 
                        t, 
                        fct_aux.INDEX_ATTRS["Si"]] = pl_i.get_Si()
+            arr_pl_M_T[num_pl_i, 
+                       t, 
+                       fct_aux.INDEX_ATTRS["Si_old"]] = pl_i.get_Si_old()
             arr_pl_M_T[num_pl_i, 
                        t, 
                        fct_aux.INDEX_ATTRS["state_i"]] = pl_i.get_state_i()
@@ -372,7 +377,7 @@ def test_balance_player_game():
                             num_periods = num_periods,
                             Ci_low = Ci_low, Ci_high = Ci_high,
                             prob_Ci = prob_Ci, scenario = scenario,
-                            path_to_save = path_to_save, dbg = False
+                            path_to_save = path_to_save, dbg = True
                             )
         
         
