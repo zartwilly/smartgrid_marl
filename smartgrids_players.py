@@ -37,6 +37,7 @@ class Player:
         self.prod_i = prod_i
         self.cons_i = cons_i
         self.R_i_old = 0
+        self.Si_old = 0
         self.r_i = r_i
         self.state_i = state_i
         self.mode_i = ""
@@ -137,6 +138,38 @@ class Player:
         """
         self.R_i_old = (update==False)*new_R_i_old \
                         + (update==True)*(self.R_i_old + new_R_i_old)
+                        
+    def get_Si_old(self):
+        """
+        return the battery storage amount before updating Si
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        return self.Si_old
+    
+    def set_Si_old(self, new_Si_old, update=False):
+        """
+        turn the old the battery storage amount into new_Si_old if update=False else add 
+        new_Si_old to the last value
+
+        Parameters
+        ----------
+        new_Si_old : float
+            DESCRIPTION.
+        update : booelan, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        float.
+
+        """
+        self.Si_old = (update==False)*new_Si_old \
+                        + (update==True)*(self.Si_old + new_Si_old)
                         
     def get_gamma_i(self):
         """
@@ -359,6 +392,8 @@ class Player:
             self.prod_i = 0
             self.cons_i = (self.mode_i == "CONS+")*(self.Ci - (self.Pi + self.Si)) \
                             + (self.mode_i == "CONS-")*(self.Ci - self.Pi)
+            self.Si_old = (self.mode_i == "CONS+")*self.Si \
+                            + (self.mode_i == "CONS-")*self.Si_old
             self.Si = (self.mode_i == "CONS+")*0 \
                         + (self.mode_i == "CONS-")*self.Si
             R_i = self.Si_max - self.Si
@@ -372,12 +407,16 @@ class Player:
             #TODO demander si le r_i est mis avant ou apres la mise a jour de S_i
             self.r_i = self.Si - (self.Ci - self.Pi) \
                         if self.mode_i == "DIS" else 0
+            self.Si_old = (self.mode_i == "DIS")*self.Si \
+                            + (self.mode_i == "CONS-")*self.Si_old
             self.Si = (self.mode_i == "DIS")*(
                         max(0,self.Si - (self.Ci - self.Pi))) \
                         + (self.mode_i == "CONS-")*self.Si
     
         elif self.state_i ==  "state3":
             self.cons_i = 0
+            self.Si_old = (self.mode_i == "DIS")*self.Si \
+                            + (self.mode_i == "PROD")*self.Si_old
             self.Si = (self.mode_i == "DIS") \
                             *(max(self.Si_max, self.Si + (self.Pi - self.Ci))) \
                         + (self.mode_i == "PROD")*self.Si
@@ -449,7 +488,7 @@ class Player:
                        / (Si_plus - Si_minus)
                 Z = X + (Y-X)*res
                 
-                print("res={}, Z={}, X={}, Y={}".format(res, Z, X, Y))
+                #print("res={}, Z={}, X={}, Y={}".format(res, Z, X, Y))
                 self.set_gamma_i(math.floor(Z))   
         else:
             self.set_gamma_i(np.inf) 
