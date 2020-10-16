@@ -289,10 +289,9 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
 
     """
     arr_pl_M_T = []
-    for num_pl in range(0, m_players):
+    for num_pl, prob in enumerate(np.random.uniform(0, 1, size=m_players)):
         Ci = None; profili = None
-        prob = np.random.uniform(0, 1)
-        if prob <= prob_Ci:
+        if prob < prob_Ci:
             Ci = Ci_low
             Si_max = 0.8 * Ci
             if scenario == "scenario1":
@@ -302,7 +301,7 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
             elif scenario == "scenario3":
                 profili = PROFIL_M
         else:
-            Ci = Ci_low
+            Ci = Ci_high
             Si_max = 0.5 * Ci
             if scenario == "scenario1":
                 profili = PROFIL_H
@@ -312,24 +311,24 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
                 profili = np.random.default_rng().choice(
                             p=[0.5, 0.5],
                             a=[PROFIL_H, PROFIL_M])
-                
-        # profil_casei = None
-        # prob_casei = np.random.uniform(0,1)
-        # if prob_casei <= profili[0]:
-        #     profil_casei = fct_aux.CASE1
-        # elif prob_casei > profili[0] \
-        #     and prob_casei <= profili[0]+profili[1]:
-        #     profil_casei = fct_aux.CASE2
-        # else:
-        #     profil_casei = fct_aux.CASE3
+            
         profil_casei = None
-        if prob <= profili[0]:
+        prob_casei = np.random.uniform(0,1)
+        if prob_casei < profili[0]:
             profil_casei = CASE1
-        elif prob > profili[0] \
-            and prob <= profili[0]+profili[1]:
+        elif prob_casei >= profili[0] \
+            and prob_casei < profili[0]+profili[1]:
             profil_casei = CASE2
         else:
             profil_casei = CASE3
+        # profil_casei = None
+        # if prob < profili[0]:
+        #     profil_casei = CASE1
+        # elif prob >= profili[0] \
+        #     and prob < profili[0]+profili[1]:
+        #     profil_casei = CASE2
+        # else:
+        #     profil_casei = CASE3
                 
         min_val_profil = profil_casei[0]*Ci 
         max_val_profil = profil_casei[1]*Ci
@@ -741,11 +740,16 @@ def test_compute_real_money_SG():
 def test_generate_Pi_Ci_Si_Simax_by_profil_scenario():
     
     arr_pl_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
-                            m_players=3, num_periods=5, 
+                            m_players=30, num_periods=5, 
                             scenario="scenario1", prob_Ci=0.3, 
                             Ci_low=10, Ci_high=60)
+    # compter le nombre players ayant Ci = 10 et Ci = 60
+    cis_weak = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == 10].shape[0]
+    cis_strong = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == 60].shape[0]
     
-    print("___ arr_pl_M_T : {}".format(arr_pl_M_T.shape))
+    print("___ arr_pl_M_T : {}, Ci_weak={}, Ci_strong={}".format(
+            arr_pl_M_T.shape, round(cis_weak/arr_pl_M_T.shape[0],2), 
+            round(cis_strong/arr_pl_M_T.shape[0],2)))
     return arr_pl_M_T
 
 def test_generer_Pi_Ci_Si_Simax_for_all_scenarios():
@@ -787,6 +791,6 @@ if __name__ == "__main__":
     
     arrs = test_generate_Pi_Ci_Si_Simax_by_profil_scenario()
     
-    test_generer_Pi_Ci_Si_Simax_for_all_scenarios()
+    #test_generer_Pi_Ci_Si_Simax_for_all_scenarios()
     
     print("runtime = {}".format(time.time() - ti))
