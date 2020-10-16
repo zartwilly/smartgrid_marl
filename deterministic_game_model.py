@@ -266,9 +266,9 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         
         ## compute prices inside smart grids
         # compute In_sg, Out_sg
-        In_sg, Out_sg = gmpT.compute_prod_cons_SG(arr_pl_M_T, t)
+        In_sg, Out_sg = fct_aux.compute_prod_cons_SG(arr_pl_M_T, t)
         # compute prices of an energy unit price for cost and benefit players
-        b0_t, c0_t = gmpT.compute_energy_unit_price(
+        b0_t, c0_t = fct_aux.compute_energy_unit_price(
                         pi_sg_plus_t, pi_sg_minus_t, 
                         pi_hp_plus, pi_hp_minus,
                         In_sg, Out_sg)
@@ -278,7 +278,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         # compute ben, cst of shape (M_PLAYERS,) 
         # compute cost (csts) and benefit (bens) players by energy exchanged.
         gamma_is = arr_pl_M_T[:, t, fct_aux.INDEX_ATTRS["gamma_i"]]
-        bens, csts = gmpT.compute_utility_players(arr_pl_M_T, 
+        bens, csts = fct_aux.compute_utility_players(arr_pl_M_T, 
                                                   gamma_is, 
                                                   t, 
                                                   b0_t, 
@@ -396,13 +396,8 @@ def test_determine_new_pricing_sg_and_new():
     arrs = np.array(arrs, dtype=object)
     
     t = 2
-    prod_is_0_t = gmpT.extract_values_to_array(
-                    arrs, range(0,t+1), 
-                    attribut_position = fct_aux.INDEX_ATTRS["prod_i"])
-    cons_is_0_t = gmpT.extract_values_to_array(
-                    arrs, range(0,t+1), 
-                    attribut_position = fct_aux.INDEX_ATTRS["cons_i"])
-    
+    prod_is_0_t = arrs[:, range(0,t+1), fct_aux.INDEX_ATTRS["prod_i"]]
+    cons_is_0_t = arrs[:, range(0,t+1), fct_aux.INDEX_ATTRS["cons_i"]]
     pi_hp_plus, pi_hp_minus = 10, 20
     new_pi_sg_plus, new_pi_sg_minus = \
        gmpT.determine_new_pricing_sg(prod_is_0_t, cons_is_0_t, 
