@@ -135,6 +135,35 @@ def compute_prod_cons_SG(arr_pl_M_T, t):
     Out_sg = sum( arr_pl_M_T[:, t, INDEX_ATTRS["cons_i"]] )
     return In_sg, Out_sg
     
+def compute_energy_unit_price(pi_0_plus, pi_0_minus, 
+                              pi_hp_plus, pi_hp_minus,
+                              In_sg, Out_sg):
+    """
+    compute the unit price of energy benefit and energy cost 
+    
+    pi_0_plus: the intern benefit price of one unit of energy inside SG
+    pi_0_minus: the intern cost price of one unit of energy inside SG
+    pi_hp_plus: the intern benefit price of one unit of energy between SG and HP
+    pi_hp_minus: the intern cost price of one unit of energy between SG and HP
+    Out_sg: the total amount of energy relative to the consumption of the SG
+    In_sg: the total amount of energy relative to the production of the SG
+    
+    Returns
+    -------
+    bo: the benefit of one unit of energy in SG.
+    co: the cost of one unit of energy in SG.
+
+    """
+    c0 = pi_0_minus \
+        if In_sg >= Out_sg \
+        else ((Out_sg - In_sg)*pi_hp_minus + In_sg*pi_0_minus)/Out_sg
+    b0 = pi_0_plus \
+        if In_sg < Out_sg \
+        else (In_sg * pi_0_plus + (- Out_sg + In_sg)*pi_0_plus)/In_sg
+    print("types: In_sg={}, Out_sg={}, pi_0_plus={}, pi_0_minus={}".format(
+            type(In_sg), type(Out_sg), type(pi_0_plus), type(pi_0_minus) ))
+    print("pi_0_plus={}, {}".format(pi_0_plus, pi_0_plus.shape))
+    return round(b0, 2), round(c0, 2)
 
 # def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
 #     """
@@ -796,6 +825,15 @@ def test_compute_prod_cons_SG():
             round(production/NUM_PERIODS,2), 
             round(consumption/NUM_PERIODS,2),
             round(balanced/NUM_PERIODS,2) ))
+  
+def test_compute_energy_unit_price():
+    pi_0_plus, pi_0_minus, pi_hp_plus, pi_hp_minus = np.random.randn(4)
+    In_sg, Out_sg = np.random.randint(2, len(INDEX_ATTRS), 2)
+    
+    b0, c0 = compute_energy_unit_price(pi_0_plus, pi_0_minus, 
+                                       pi_hp_plus, pi_hp_minus,
+                                       In_sg, Out_sg)
+    print("b0={}, c0={}".format(b0, c0))
     
 # def test_find_path_to_variables():
 #     name_dir = "tests"
@@ -887,6 +925,7 @@ if __name__ == "__main__":
     test_compute_utility_players()
     test_compute_real_money_SG()
     test_compute_prod_cons_SG()
+    test_compute_energy_unit_price()
     
     # test_generate_Cis_Pis_Sis_oneplayer_alltime()
     # test_generate_Cis_Pis_Sis_allplayer_alltime()
