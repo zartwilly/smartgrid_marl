@@ -486,7 +486,7 @@ def generer_Pi_Ci_Si_Simax_for_all_scenarios(scenarios=["scenario1"],
 # __________    generate Cis, Pis, Si_maxs and Sis --> fin   ________________
 
 # __________    look for whether pli is balanced or not --> debut  ____________
-def balanced_player(pl_i, thres=0.1, dbg=False):
+def balanced_player_old(pl_i, thres=0.1, dbg=False):
     """
     verify if pl_i is whether balanced or unbalanced
 
@@ -565,6 +565,93 @@ def balanced_player(pl_i, thres=0.1, dbg=False):
         formule = "Pi - Ci-(Si_max-Si)-prod_i"
         res = Pi - Ci-(Si_max-Si)-prod_i
         dico = {'Pi': np.round(Pi,2), 'Si': np.round(Si,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                "prod_i": np.round(prod_i,2), 
+                'cons_i': np.round(cons_i,2), 
+                'Ci': np.round(Ci,2), "state_i": state_i, 
+                "mode_i": mode_i, "formule": formule, 
+                    "res": res, }
+    return boolean, formule
+
+def balanced_player(pl_i, thres=0.1, dbg=False):
+    """
+    verify if pl_i is whether balanced or unbalanced
+
+    Parameters
+    ----------
+    pl_i : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    Pi = pl_i.get_Pi(); Ci = pl_i.get_Ci(); Si_new = pl_i.get_Si(); 
+    Si_max = pl_i.get_Si_max(); R_i_old = pl_i.get_R_i_old()
+    state_i = pl_i.get_state_i(); 
+    mode_i = pl_i.get_mode_i()
+    cons_i = pl_i.get_cons_i(); prod_i = pl_i.get_prod_i()
+    Si_old = pl_i.get_Si_old()
+    
+    if dbg:
+        print("_____ balanced_player Pi={}, Ci={}, Si={}, Si_max={}, state_i={}, mode_i={}"\
+              .format(pl_i.get_Pi(), pl_i.get_Ci(), pl_i.get_Si(), 
+                      pl_i.get_Si_max(), pl_i.get_state_i(), 
+                      pl_i.get_mode_i())) 
+    boolean = None
+    if state_i == "state1" and mode_i == "CONS+":
+        boolean = True if np.abs(Pi+(Si_old-Si_new)+cons_i - Ci)<thres else False
+        formule = "Pi+(Si_old-Si_new)+cons_i - Ci"
+        res = Pi+(Si_old-Si_new)+cons_i - Ci
+        dico = {'Pi':np.round(Pi,2), 'Ci':np.round(Ci,2),
+                'Si_new':np.round(Si_new,2), 'Si_max':np.round(Si_max,2), 
+                'cons_i':np.round(cons_i,2), 'R_i_old': np.round(R_i_old,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state1" and mode_i == "CONS-":
+        boolean = True if np.abs(Pi+cons_i - Ci)<thres else False
+        formule = "Pi+cons_i - Ci"
+        res = Pi+cons_i - Ci
+        dico = {'Pi':np.round(Pi,2), 'Si_new':np.round(Si_new,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state2" and mode_i == "DIS":
+        boolean = True if np.abs(Pi+(Si_old-Si_new) - Ci)<thres else False
+        formule = "Pi+(Si_old-Si_new) - Ci"
+        res = Pi+(Si_old-Si_new) - Ci
+        dico = {'Pi':np.round(Pi,2), 'Si_new':np.round(Si_new,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state2" and mode_i == "CONS-":
+        boolean = True if np.abs(Pi+cons_i - Ci)<thres else False
+        formule = "Pi+cons_i - Ci"
+        res = Pi+cons_i - Ci
+        dico = {'Pi':np.round(Pi,2), 'Si_new':np.round(Si_new,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                'cons_i':np.round(cons_i,2), 'Ci':np.round(Ci,2),
+                "state_i": state_i, "mode_i": mode_i, 
+                "formule": formule, "res": res}
+    elif state_i == "state3" and mode_i == "PROD":
+        boolean = True if np.abs(Pi - Ci-prod_i)<thres else False
+        formule = "Pi - Ci-prod_i"
+        res = Pi - Ci-prod_i
+        dico = {'Pi':np.round(Pi,2), 'Si_new':np.round(Si_new,2), 
+                'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
+                "prod_i": np.round(prod_i,2), 
+                'cons_i': np.round(cons_i,2), 
+                'Ci': np.round(Ci,2), "state_i": state_i, 
+                "mode_i": mode_i, "formule": formule, 
+                "res": res}
+    elif state_i == "state3" and mode_i == "DIS":
+        boolean = True if np.abs(Pi - Ci-(Si_max-Si_old)-prod_i)<thres else False
+        formule = "Pi - Ci-(Si_max-Si_old)-prod_i"
+        res = Pi - Ci-(Si_max-Si_old)-prod_i
+        dico = {'Pi': np.round(Pi,2), 'Si_new': np.round(Si_new,2), 
                 'Si_max':np.round(Si_max,2), 'R_i_old': np.round(R_i_old,2),
                 "prod_i": np.round(prod_i,2), 
                 'cons_i': np.round(cons_i,2), 
