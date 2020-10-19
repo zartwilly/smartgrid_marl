@@ -144,9 +144,8 @@ def execute_game_probCis_scenarios(
     
     probCi_scen_piHpPlus_piHpMinus_s = it.product(probCis, 
                                                   scenarios, 
-                                                  pi_hp_plus, 
-                                                  pi_hp_minus)
-    for (prob_Ci, scenario, pi_hp_plus_elt, pi_hp_minus_elt) \
+                                                  zip_pi_hp)
+    for (prob_Ci, scenario, (pi_hp_plus_elt, pi_hp_minus_elt)) \
         in probCi_scen_piHpPlus_piHpMinus_s:
         msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
                                         +"_pi_hp_minus_"+str(pi_hp_minus_elt)
