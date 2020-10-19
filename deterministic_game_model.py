@@ -9,6 +9,7 @@ import os
 import time
 
 import numpy as np
+import pandas as pd
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 import game_model_period_T as gmpT
@@ -167,6 +168,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                                     Ci_low=Ci_low, Ci_high=Ci_high)
     
     arr_pl_M_T_old = arr_pl_M_T.copy()
+    dico_stats_res={}
     for t in range(0, num_periods):
         print("******* t = {} *******".format(t)) if dbg else None
         print("___t = {}, pi_sg_plus_t={}, pi_sg_minus_t={}".format(t, pi_sg_plus_t, pi_sg_minus_t))
@@ -175,6 +177,8 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
         pi_sg_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t
         
+        cpt_error_gamma = 0; cpt_balanced = 0;
+        dico_state_mode_i = {}; dico_balanced_pl_i = {}
         for num_pl_i in range(0, m_players):
             Ci = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]],2)
             Pi = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]],2)
@@ -194,6 +198,13 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         
             # balancing
             boolean = fct_aux.balanced_player(pl_i, thres=0.1)
+            cpt_balanced += round(1/m_players, 2) if boolean else 0
+            dico_balanced_pl_i["cpt"] = cpt_balanced
+            if "player" in dico_balanced_pl_i and boolean is False:
+                dico_balanced_pl_i['player'].append(num_pl_i)
+            elif boolean is False:
+                dico_balanced_pl_i['player'] = [num_pl_i]
+            
             print("_____ pl_{} _____".format(num_pl_i)) if dbg else None
             print("Pi={}, Ci={}, Si_old={}, Si={}, Si_max={}, state_i={}, mode_i={}"\
                   .format(
@@ -211,9 +222,18 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             Pi_t_plus_1 = arr_pl_M_T[num_pl_i, t+1, fct_aux.INDEX_ATTRS["Pi"]] \
                             if t+1 < num_periods \
                             else arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]]
-            Ci_t_plus_1 = arr_pl_M_T[num_pl_i, t+1, fct_aux.INDEX_ATTRS["Ci"]] \
-                            if t+1 < num_periods \
-                            else arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]]
+            Ci_t_plus_1 = None
+            if t == 0 or t == 1:
+                Ci_t_plus_1 = 0
+            else:
+                Ci_t_plus_1 = arr_pl_M_T[num_pl_i, 
+                                         t+1, 
+                                         fct_aux.INDEX_ATTRS["Ci"]] \
+                                if t+1 < num_periods \
+                                else arr_pl_M_T[num_pl_i, 
+                                                t, 
+                                                fct_aux.INDEX_ATTRS["Ci"]]
+                         
             pl_i.select_storage_politic(
                 Ci_t_plus_1 = Ci_t_plus_1, 
                 Pi_t_plus_1 = Pi_t_plus_1, 
@@ -221,6 +241,22 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                 pi_0_minus = pi_sg_minus_t, 
                 pi_hp_plus = pi_hp_plus, 
                 pi_hp_minus = pi_hp_minus)
+            gamma_i = pl_i.get_gamma_i()
+            if gamma_i >= min(pi_sg_minus_t, pi_sg_plus_t) -1 \
+                and gamma_i <= max(pi_hp_minus, pi_hp_plus):
+                pass
+            else :
+                cpt_error_gamma = round(1/m_players, 2)
+                dico_state_mode_i["cpt"] = \
+                    dico_state_mode_i["cpt"] + cpt_error_gamma \
+                    if "cpt" in dico_state_mode_i \
+                    else cpt_error_gamma
+                dico_state_mode_i[(pl_i.state_i, pl_i.mode_i)] \
+                    = dico_state_mode_i[(pl_i.state_i, pl_i.mode_i)] + 1 \
+                    if (pl_i.state_i, pl_i.mode_i) in dico_state_mode_i \
+                    else 1
+                # print(" *** error gamma_i: state_i={}, mode_i={}".format(
+                #     pl_i.state_i, pl_i.mode_i))
             
             # update variables in arr_pl_M_T
             arr_pl_M_T[num_pl_i, 
@@ -253,6 +289,12 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             arr_pl_M_T_old[num_pl_i, 
                            t, 
                            fct_aux.INDEX_ATTRS["mode_i"]] = pl_i.get_mode_i()
+        
+        dico_stats_res[t] = (round(cpt_balanced/m_players,2),
+                             round(cpt_error_gamma/m_players,2), 
+                             dico_state_mode_i)
+        dico_stats_res[t] = {"balanced": dico_balanced_pl_i, 
+                             "gamma_i": dico_state_mode_i}    
             
         # compute the new prices pi_sg_plus_t+1, pi_sg_minus_t+1 
         # from a pricing model in the document
@@ -345,13 +387,16 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     np.save(os.path.join(path_to_save, "pi_sg_plus_s.npy"), pi_sg_plus)
     np.save(os.path.join(path_to_save, "pi_hp_plus_s.npy"), pi_hp_plus_s)
     np.save(os.path.join(path_to_save, "pi_hp_minus_s.npy"), pi_hp_minus_s)
+    pd.DataFrame.from_dict(dico_stats_res)\
+        .to_csv(os.path.join(path_to_save, "stats_res.csv"))
     
     return arr_pl_M_T_old, arr_pl_M_T, \
             b0_s, c0_s, \
             B_is, C_is, \
             BENs, CSTs, \
             BB_is, CC_is, RU_is, \
-            pi_sg_plus, pi_sg_minus
+            pi_sg_plus, pi_sg_minus, \
+            dico_stats_res
             
             
 #------------------------------------------------------------------------------
@@ -370,7 +415,8 @@ def test_balance_player_game():
     B_is, C_is, \
     BENs, CSTs, \
     BB_is, CC_is, RU_is , \
-    pi_sg_plus, pi_sg_minus = \
+    pi_sg_plus, pi_sg_minus, \
+    dico_stats_res = \
         balance_player_game(pi_hp_plus = pi_hp_plus, 
                             pi_hp_minus = pi_hp_minus,
                             m_players = m_players, 
@@ -393,6 +439,9 @@ def test_balance_player_game():
     print("CSTs={}".format(CSTs))
     print("pi_sg_plus_s={}, pi_sg_minus_s={}".format(
             pi_sg_plus.shape, pi_sg_minus.shape))
+    
+    return dico_stats_res
+    
 def test_determine_new_pricing_sg_and_new():
     
     arrs = [[[0,0,0,0,0,15,1], [0,0,0,0,0,18,20], [0,0,0,0,0,6,30]], 
@@ -420,6 +469,6 @@ def test_determine_new_pricing_sg_and_new():
 if __name__ == "__main__":
     ti = time.time()
     test_determine_new_pricing_sg_and_new()
-    test_balance_player_game()
+    dico_stats_res = test_balance_player_game()
     bkh.test_plot_variables_allplayers()
     print("runtime = {}".format(time.time() - ti))
