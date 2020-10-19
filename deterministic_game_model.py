@@ -197,7 +197,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             pl_i.update_prod_cons_r_i()
         
             # balancing
-            boolean = fct_aux.balanced_player(pl_i, thres=0.1)
+            boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
             cpt_balanced += round(1/m_players, 2) if boolean else 0
             dico_balanced_pl_i["cpt"] = cpt_balanced
             if "player" in dico_balanced_pl_i and boolean is False:
@@ -283,6 +283,12 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             arr_pl_M_T[num_pl_i, 
                        t, 
                        fct_aux.INDEX_ATTRS["mode_i"]] = pl_i.get_mode_i()
+            arr_pl_M_T[num_pl_i, 
+                       t, 
+                       fct_aux.INDEX_ATTRS["balanced_pl_i"]] = boolean
+            arr_pl_M_T[num_pl_i, 
+                       t, 
+                       fct_aux.INDEX_ATTRS["formule"]] = formule
             arr_pl_M_T_old[num_pl_i, 
                            t, 
                            fct_aux.INDEX_ATTRS["state_i"]] = pl_i.get_state_i()
