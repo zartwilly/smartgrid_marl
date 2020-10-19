@@ -38,7 +38,8 @@ PROFIL_L = (0.2, 0.2, 0.6)
 
 INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
-               "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13}
+               "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
+               "balanced_pl_i": 14, "formule":15}
 
 #------------------------------------------------------------------------------
 #           definitions of class
@@ -427,10 +428,13 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
         state_i_s, mode_i_s = [""]*num_periods, [""]*num_periods
         R_i_old_s = [round(x - y, 2) for x, y in zip(Si_max_s, Si_s)]
         Si_old_s = [0]*num_periods
+        balanced_pl_i_s = [False]*num_periods
+        formules = [""]*num_periods
         init_values_i_s = list(zip(Ci_s, Pi_s, Si_s, Si_max_s, gamma_i_s, 
                                    prod_i_s, cons_i_s, r_i_s, state_i_s, 
                                    mode_i_s, str_profili_s, str_casei_s, 
-                                   R_i_old_s, Si_old_s))
+                                   R_i_old_s, Si_old_s, balanced_pl_i_s, 
+                                   formules))
         arr_pl_M_T.append(init_values_i_s)
     
     arr_pl_M_T = np.array(arr_pl_M_T, dtype=object)
@@ -567,7 +571,7 @@ def balanced_player(pl_i, thres=0.1, dbg=False):
                 'Ci': np.round(Ci,2), "state_i": state_i, 
                 "mode_i": mode_i, "formule": formule, 
                     "res": res, }
-    return boolean
+    return boolean, formule
 
 # __________    look for whether pli is balanced or not --> fin  ____________
 
@@ -882,6 +886,7 @@ def test_generate_Pi_Ci_Si_Simax_by_profil_scenario():
                             m_players=30, num_periods=5, 
                             scenario="scenario1", prob_Ci=0.3, 
                             Ci_low=10, Ci_high=60)
+
     # compter le nombre players ayant Ci = 10 et Ci = 60
     cis_weak = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == 10].shape[0]
     cis_strong = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == 60].shape[0]
@@ -922,10 +927,10 @@ if __name__ == "__main__":
     test_generate_energy_unit_price_SG()
     
     # path_file = test_find_path_to_variables()
-    test_compute_utility_players()
-    test_compute_real_money_SG()
-    test_compute_prod_cons_SG()
-    test_compute_energy_unit_price()
+    # test_compute_utility_players()
+    # test_compute_real_money_SG()
+    # test_compute_prod_cons_SG()
+    # test_compute_energy_unit_price()
     
     # test_generate_Cis_Pis_Sis_oneplayer_alltime()
     # test_generate_Cis_Pis_Sis_allplayer_alltime()
