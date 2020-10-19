@@ -94,7 +94,7 @@ def execute_game_allcases(cases):
                                case, path_to_save)
         
 def execute_game_probCis_scenarios(
-            pi_hp_plus=10, pi_hp_minus=15,
+            pi_hp_plus=[10], pi_hp_minus=[15],
             probCis=[0.3, 0.5, 0.7], 
             scenarios=["scenario1", "scenario2", "scenario3"],
             m_players=3, num_periods=5, 
@@ -137,14 +137,23 @@ def execute_game_probCis_scenarios(
     Nothing to return
 
     """
-    pi_hp_plus = 10; pi_hp_minus = 15
-    
+
     date_hhmm = datetime.now().strftime("%d%m_%H%M")
     
-    probCi_scen_s = it.product(probCis, scenarios)
-    for (prob_Ci, scenario) in probCi_scen_s:
+    zip_pi_hp = zip(pi_hp_plus, pi_hp_minus)
+    
+    probCi_scen_piHpPlus_piHpMinus_s = it.product(probCis, 
+                                                  scenarios, 
+                                                  pi_hp_plus, 
+                                                  pi_hp_minus)
+    for (prob_Ci, scenario, pi_hp_plus_elt, pi_hp_minus_elt) \
+        in probCi_scen_piHpPlus_piHpMinus_s:
+        msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
+                                        +"_pi_hp_minus_"+str(pi_hp_minus_elt)
         path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
-                                    scenario, str(prob_Ci))
+                                    scenario, str(prob_Ci), 
+                                    msg
+                                    )
         Path(path_to_save).mkdir(parents=True, exist_ok=True)
         
         arr_pl_M_T_old, arr_pl_M_T, \
@@ -152,14 +161,19 @@ def execute_game_probCis_scenarios(
         B_is, C_is, \
         BENs, CSTs, \
         BB_is, CC_is, RU_is , \
-        pi_sg_plus, pi_sg_minus = \
-            detGameModel.balance_player_game(pi_hp_plus = pi_hp_plus, 
-                            pi_hp_minus = pi_hp_minus,
+        pi_sg_plus, pi_sg_minus, \
+        dico_stats_res = \
+            detGameModel.balance_player_game(
+                            pi_hp_plus = pi_hp_plus_elt, 
+                            pi_hp_minus = pi_hp_minus_elt,
                             m_players = m_players, 
                             num_periods = num_periods,
-                            Ci_low = Ci_low, Ci_high = Ci_high,
-                            prob_Ci = prob_Ci, scenario = scenario,
-                            path_to_save = path_to_save, dbg = dbg
+                            Ci_low = Ci_low, 
+                            Ci_high = Ci_high,
+                            prob_Ci = prob_Ci, 
+                            scenario = scenario,
+                            path_to_save = path_to_save, 
+                            dbg = dbg
                             )
         
     
@@ -305,8 +319,15 @@ def test_balanced_player_all_time(thres=0.01):
 
 
 def test_execute_game_probCis_scenarios():
+    pi_hp_plus=[5, 10, 15]
+    coef = 3; coefs = [coef]
+    for i in range(0,len(pi_hp_plus)-1):
+        val = round(coefs[i]/coef,1)
+        coefs.append(val)
+    pi_hp_minus = [ int(math.floor(pi_hp_plus[i]*coefs[i])) 
+                   for i in range(0, len(pi_hp_plus))]
     execute_game_probCis_scenarios(
-            pi_hp_plus=10, pi_hp_minus=15,
+            pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
             probCis=[0.3, 0.5, 0.7], 
             scenarios=["scenario1", "scenario2", "scenario3"],
             m_players=1000, num_periods=50, 
