@@ -918,14 +918,23 @@ def plot_variables_players_game(arr_pl_M_T,
     # ______ plot players' variables _______
     TOOLS[7] = HoverTool(tooltips=[
                             ("quantity", "$y"),
-                            ("Time", "$x")
+                            ("Time", "$x"),
+                            ("mode", "@mode_i"),
+                            ("state", "@state_i"), 
+                            ("formule", "@formule"),
+                            ("balanced", "@balanced"),
+                            ("profile", "@Profile"), 
+                            ("case","@Case")
                             ]
                         ) 
     ylabel = "energy quantity"
     xlabel = "time" 
     ts = list(map(str,range(0, arr_pl_M_T.shape[1])))
     for num_pl in range(0, arr_pl_M_T.shape[0]):
-        title = "attributs of player pl_"+str(num_pl)
+        title = "attributs of player pl_"+str(num_pl)+" : profile = " \
+                + arr_pl_M_T[num_pl, 0, fct_aux.INDEX_ATTRS["Profili"]] \
+                + ", case = " \
+                + arr_pl_M_T[num_pl, 0, fct_aux.INDEX_ATTRS["Casei"]]
         Pi_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Pi"]]
         Ci_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Ci"]]
         diff_Pi_Ci_s = Pi_s - Ci_s 
@@ -933,13 +942,24 @@ def plot_variables_players_game(arr_pl_M_T,
         Si_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Si"]]
         Ri_s = Si_max_s - Si_s
         R_i_old = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["R_i_old"]]
+        Si_old = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Si_old"]]
         r_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["r_i"]]
         prod_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["prod_i"]]
         cons_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["cons_i"]]
+        mode_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["mode_i"]]
+        state_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["state_i"]]
+        formule_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["formule"]]
+        Profili_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Profili"]]
+        Casei_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Casei"]]
+        balanced_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["balanced_pl_i"]]
     
         data_vars_pl = {"t":ts, "diff_Pi_Ci": diff_Pi_Ci_s, 
                         "Ri":Ri_s, "r_i":r_i_s, "prod_i":prod_i_s, 
-                        "cons_i":cons_i_s, "R_i_old": R_i_old}
+                        "cons_i": cons_i_s, "R_i_old": R_i_old, 
+                        "Si_old": Si_old, "mode_i": mode_i_s, 
+                        "state_i": state_i_s, "formule":formule_s,
+                        "Profile": Profili_s, "Case":Casei_s, 
+                        "balanced": balanced_s}
         source = ColumnDataSource(data=data_vars_pl)
         arr_reshape = np.concatenate((diff_Pi_Ci_s, Ri_s, r_i_s, prod_i_s, cons_i_s))
         min_val = arr_reshape.min()
@@ -1335,7 +1355,8 @@ def test_plot_variables_allplayers(rep="debug",
         reps = os.listdir(name_dir)
         rep = reps[-1]
     path_to_variable = os.path.join(name_dir, rep)
-    path_to_variable = "tests/simu_1610_1519/scenario3/0.7/"
+    path_to_variable = "tests/simu_1910_1636/scenario3/0.7/"\
+                        +"pi_hp_plus_15_pi_hp_minus_4"
     
     # import variables for file
     arr_pl_M_T_old, arr_pl_M_T, \
