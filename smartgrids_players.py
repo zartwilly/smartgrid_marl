@@ -469,21 +469,33 @@ class Player:
 
         """
         Si_minus, Si_plus = 0, 0
+        X, Y = 0, 0
         if self.state_i == "state1":
             Si_minus = 0 if self.mode_i == "CONS+" else 0
             Si_plus = self.get_Si() if self.mode_i == "CONS-" else 0
+            X = pi_0_minus
+            Y = pi_hp_minus
         elif self.state_i == "state2":
             Si_minus = self.get_Si() - (self.get_Ci() - self.get_Pi()) \
                 if self.mode_i == "DIS" else 0
             Si_plus = self.get_Si() if self.mode_i == "CONS-" else 0
+            X = pi_0_minus
+            Y = pi_hp_minus
         elif self.state_i == "state3":
             Si_minus = self.get_Si() if self.mode_i == "PROD" else 0
             Si_plus = max(self.get_Si_max(), 
                           self.get_Si() + (self.get_Pi() - self.get_Ci()))
+            X = pi_0_plus
+            Y = pi_hp_plus
         else:
             Si_minus, Si_plus = np.inf, np.inf
+            X, Y = np.inf, np.inf
 
-        X = pi_0_minus; Y = pi_hp_minus
+        #print("gamma_i Si_minus < Si_plus {}".format(Si_minus <= Si_plus))
+        # if Si_minus > Si_plus:
+        #     print("Si_minus={} Si_plus={}".format(Si_minus, Si_plus))
+        #     print("Si_old={}, Si={}, state={}, mode={}".format(self.Si_old, 
+        #             self.Si, self.state_i, self.mode_i))
         if fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_minus:
             self.set_gamma_i(X-1)
         elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_plus:
