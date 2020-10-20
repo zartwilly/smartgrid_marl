@@ -40,15 +40,18 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
     sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
     sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
     
-    print("sum_cons={}, sum_prod={}".format(sum_cons, sum_prod))
+    print("sum_cons={}, sum_prod={}".format(
+            round(sum_cons,2), round(sum_prod,2))) \
+            if t%20 == 0 \
+            else None
     print("NAN: cons={}, prod={}".format(
             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
-        )
+        ) if dbg else None
     arr_cons = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
     arr_prod = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
-    print("positions of nan cons:{}, prod={}".format(arr_cons, arr_prod))
-    print("state")
+    # print("positions of nan cons:{}, prod={}".format(arr_cons, arr_prod))
+    # print("state")
     if arr_cons.size != 0:
         for arr in arr_cons:
             print("{}-->state:{}, Pi={}, Ci={}, Si={}".format(
@@ -171,7 +174,10 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     dico_stats_res={}
     for t in range(0, num_periods):
         print("******* t = {} *******".format(t)) if dbg else None
-        print("___t = {}, pi_sg_plus_t={}, pi_sg_minus_t={}".format(t, pi_sg_plus_t, pi_sg_minus_t))
+        print("___t = {}, pi_sg_plus_t={}, pi_sg_minus_t={}".format(
+                t, pi_sg_plus_t, pi_sg_minus_t)) \
+            if t%20 == 0 \
+            else None
         
         # compute pi_0_plus, pi_0_minus, pi_sg_plus, pi_sg_minus
         pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
@@ -221,18 +227,12 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             # compute gamma_i
             Pi_t_plus_1 = arr_pl_M_T[num_pl_i, t+1, fct_aux.INDEX_ATTRS["Pi"]] \
                             if t+1 < num_periods \
-                            else arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]]
-            Ci_t_plus_1 = None
-            if t == 0 or t == 1:
-                Ci_t_plus_1 = 0
-            else:
-                Ci_t_plus_1 = arr_pl_M_T[num_pl_i, 
-                                         t+1, 
-                                         fct_aux.INDEX_ATTRS["Ci"]] \
-                                if t+1 < num_periods \
-                                else arr_pl_M_T[num_pl_i, 
-                                                t, 
-                                                fct_aux.INDEX_ATTRS["Ci"]]
+                            else 0
+            Ci_t_plus_1 = arr_pl_M_T[num_pl_i, 
+                                     t+1, 
+                                     fct_aux.INDEX_ATTRS["Ci"]] \
+                            if t+1 < num_periods \
+                            else 0
                          
             pl_i.select_storage_politic(
                 Ci_t_plus_1 = Ci_t_plus_1, 
@@ -395,6 +395,10 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     np.save(os.path.join(path_to_save, "pi_hp_minus_s.npy"), pi_hp_minus_s)
     pd.DataFrame.from_dict(dico_stats_res)\
         .to_csv(os.path.join(path_to_save, "stats_res.csv"))
+        
+    print("{}, probCi={}, dico_stats_res[t=0]={} \n".format( scenario, prob_Ci,
+            len(dico_stats_res[0]["gamma_i"])))
+    # print("dico_stats_res={}".format(dico_stats_res))
     
     return arr_pl_M_T_old, arr_pl_M_T, \
             b0_s, c0_s, \
