@@ -1330,7 +1330,13 @@ def test_plot_variables_allplayers_old(rep, case):
     
 def test_plot_variables_allplayers(rep="debug", 
                                    num_period_to_show=50,
-                                   num_player_to_show=50):
+                                   num_player_to_show=50, 
+                                   name_dir="tests", 
+                                   date_hhmm="2010_1258",
+                                   probCi=0.3,
+                                   scenario="scenario1",
+                                   pi_hp_plus=15,
+                                   pi_hp_minus=4):
     """
     Plot the variables of games and also the attributs of players
 
@@ -1349,14 +1355,10 @@ def test_plot_variables_allplayers(rep="debug",
     -------
     None.
 
-    """
-    name_dir = "tests"
-    if not os.path.isdir(os.path.join(name_dir, rep)):
-        reps = os.listdir(name_dir)
-        rep = reps[-1]
-    path_to_variable = os.path.join(name_dir, rep)
-    path_to_variable = "tests/simu_1910_1636/scenario3/0.7/"\
-                        +"pi_hp_plus_15_pi_hp_minus_4"
+    """    
+    msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
+    path_to_variable = os.path.join(name_dir, "simu_"+date_hhmm, scenario, 
+                                   str(probCi), msg)
     
     # import variables for file
     arr_pl_M_T_old, arr_pl_M_T, \
@@ -1406,8 +1408,20 @@ if __name__ == "__main__":
     
     #test_plot_variables_allplayers(rep="simu_1410_0859")
     #test_plot_variables_allplayers(rep="simu_1410_0931")
+    name_dir="tests"
+    date_hhmm="2010_1258"
+    probCi=0.3
+    scenario="scenario1"
+    pi_hp_plus=15
+    pi_hp_minus=4
     test_plot_variables_allplayers(num_period_to_show=50,
-                                   num_player_to_show=50)
+                                   num_player_to_show=50,
+                                   name_dir=name_dir, 
+                                   date_hhmm=date_hhmm,
+                                   probCi=probCi,
+                                   scenario=scenario,
+                                   pi_hp_plus=pi_hp_plus,
+                                   pi_hp_minus=pi_hp_minus)
     print("runtime {}".format(time.time()-ti))
     
 
