@@ -367,7 +367,7 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
     arr_pl_M_T = []
     for num_pl, prob in enumerate(np.random.uniform(0, 1, size=m_players)):
         Ci = None; profili = None
-        if prob < prob_Ci:
+        if prob <= prob_Ci:
             Ci = Ci_low
             Si_max = 0.8 * Ci
             if scenario == "scenario1":
