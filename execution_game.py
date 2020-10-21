@@ -161,6 +161,7 @@ def execute_game_probCis_scenarios(
         BENs, CSTs, \
         BB_is, CC_is, RU_is , \
         pi_sg_plus, pi_sg_minus, \
+        pi_0_plus, pi_0_minus, \
         dico_stats_res = \
             detGameModel.balance_player_game(
                             pi_hp_plus = pi_hp_plus_elt, 
@@ -318,21 +319,22 @@ def test_balanced_player_all_time(thres=0.01):
 
 
 def test_execute_game_probCis_scenarios():
-    pi_hp_plus= [15] # [5, 10, 15]
+    pi_hp_plus= [5, 10, 15]
     coef = 3; coefs = [coef]
     for i in range(0,len(pi_hp_plus)-1):
         val = round(coefs[i]/coef,1)
         coefs.append(val)
     pi_hp_minus = [ int(math.floor(pi_hp_plus[i]*coefs[i])) 
                    for i in range(0, len(pi_hp_plus))]
-    probCis=[0.5] #[0.3, 0.5, 0.7]
-    scenarios=["scenario2"] # ["scenario1", "scenario2", "scenario3"]
-    m_players= 1000#1000
+    probCis = [0.3, 0.5, 0.7]
+    scenarios = ["scenario1", "scenario2", "scenario3"]
+    m_players = 1000
+    num_periods = 50
     execute_game_probCis_scenarios(
             pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
             probCis=probCis, 
             scenarios=scenarios,
-            m_players=m_players, num_periods=50, 
+            m_players=m_players, num_periods=num_periods, 
             Ci_low=10, Ci_high=60, name_dir='tests', dbg=False)
 
 #------------------------------------------------------------------------------
