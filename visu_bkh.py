@@ -942,7 +942,7 @@ def plot_variables_players_game(arr_pl_M_T,
         Si_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Si"]]
         Ri_s = Si_max_s - Si_s
         R_i_old = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["R_i_old"]]
-        Si_old = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Si_old"]]
+        Si_old_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["Si_old"]]
         r_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["r_i"]]
         prod_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["prod_i"]]
         cons_i_s = arr_pl_M_T[num_pl, :, fct_aux.INDEX_ATTRS["cons_i"]]
@@ -956,7 +956,8 @@ def plot_variables_players_game(arr_pl_M_T,
         data_vars_pl = {"t":ts, "diff_Pi_Ci": diff_Pi_Ci_s, 
                         "Ri":Ri_s, "r_i":r_i_s, "prod_i":prod_i_s, 
                         "cons_i": cons_i_s, "R_i_old": R_i_old, 
-                        "Si_old": Si_old, "mode_i": mode_i_s, 
+                        "Si_old": Si_old_s, "mode_i": mode_i_s,
+                        "Si": Si_s,
                         "state_i": state_i_s, "formule":formule_s,
                         "Profile": Profili_s, "Case":Casei_s, 
                         "balanced": balanced_s}
@@ -992,23 +993,23 @@ def plot_variables_players_game(arr_pl_M_T,
                   line_width=2, color=Category20[20][4], line_dash=[1,1])
         p_pl.circle(x="t", y="cons_i", source=source, 
                     size=4, fill_color='white')
-        # Ri_s
-        p_pl.line(x="t", y="Ri", source=source, 
-                  legend_label="Ri",
-                  line_width=2, color=Category20[20][6], line_dash=[1,1])
-        p_pl.circle(x="t", y="Ri", source=source, 
-                    size=4, fill_color='white')
-        # r_i_s
+        # r_i
         p_pl.line(x="t", y="r_i", source=source, 
                   legend_label="r_i",
-                  line_width=2, color=Category20[20][8], line_dash=[1,1])
+                  line_width=2, color=Category20[20][6], line_dash=[1,1])
         p_pl.circle(x="t", y="r_i", source=source, 
                     size=4, fill_color='white')
-        # R_i_old
-        p_pl.line(x="t", y="R_i_old", source=source, 
-                  legend_label="R_i_old",
+        # S_i_old
+        p_pl.line(x="t", y="Si_old", source=source, 
+                  legend_label="Si_old",
+                  line_width=2, color=Category20[20][8], line_dash=[1,1])
+        p_pl.circle(x="t", y="Si_old", source=source, 
+                    size=4, fill_color='white')
+        # Si
+        p_pl.line(x="t", y="Si", source=source, 
+                  legend_label="Si",
                   line_width=2, color=Category20[20][10], line_dash=[1,1])
-        p_pl.circle(x="t", y="R_i_old", source=source, 
+        p_pl.circle(x="t", y="Si", source=source, 
                     size=4, fill_color='white')
         
         ps.append(p_pl)
@@ -1409,11 +1410,11 @@ if __name__ == "__main__":
     #test_plot_variables_allplayers(rep="simu_1410_0859")
     #test_plot_variables_allplayers(rep="simu_1410_0931")
     name_dir="tests"
-    date_hhmm="2010_1258"
-    probCi=0.3
-    scenario="scenario1"
-    pi_hp_plus=15
-    pi_hp_minus=4
+    date_hhmm="2010_1357"
+    probCi=0.7
+    scenario="scenario3"
+    pi_hp_plus=15   #5 #10 #15
+    pi_hp_minus=4 #15 #10 #4
     test_plot_variables_allplayers(num_period_to_show=50,
                                    num_player_to_show=50,
                                    name_dir=name_dir, 
