@@ -39,9 +39,17 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
             t, energ_k_prod, energ_k_cons)) if dbg else None
         # print("k={}, energ_k_prod={}, energ_k_cons={}".format(
         #     t, energ_k_prod, energ_k_cons))
+    
     sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
     sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
     
+    print("t={}, diff_energy_cons_t={}, diff_energy_prod_t={}, sum_cons={}, sum_prod={}".format(
+        t, round(diff_energy_cons_t,2), round(diff_energy_prod_t,2), 
+            round(sum_cons,2), round(sum_prod,2) ))
+    for k in range(0, t+1):
+        bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
+        unique,counts=np.unique(bool_,return_counts=True)
+        print("t={}, k={}, unique:{}, counts={}".format(t,k,unique, counts))
     # print("sum_cons={}, sum_prod={}".format(
     #         round(sum_cons,2), round(sum_prod,2))) \
     #         if t%20 == 0 \
@@ -163,6 +171,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
     pi_sg_plus, pi_sg_minus = [], []
+    pi_0_plus, pi_0_minus = [], []
     B_is, C_is = [], []
     b0_s, c0_s = [], []
     BENs, CSTs = np.array([]), np.array([])
@@ -314,20 +323,27 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                                                 pi_hp_minus, 
                                                 t, dbg=dbg)
         print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}".format(
-            t, pi_sg_plus_t_new, pi_sg_minus_t_new))  if dbg else None                  
+            t, pi_sg_plus_t_new, pi_sg_minus_t_new))  if dbg else None
+        print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}".format(
+            t, pi_sg_plus_t_new, pi_sg_minus_t_new))                
         pi_sg_plus_t = pi_sg_plus_t if pi_sg_plus_t_new is np.nan \
                                     else pi_sg_plus_t_new
         pi_sg_minus_t = pi_sg_minus_t if pi_sg_minus_t_new is np.nan \
                                     else pi_sg_minus_t_new
+        pi_0_plus_t = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 2)
+        pi_0_minus_t = pi_sg_minus_t
+        
         pi_sg_plus.append(pi_sg_plus_t)
         pi_sg_minus.append(pi_sg_minus_t)
+        pi_0_plus.append(pi_0_plus_t)
+        pi_0_minus.append(pi_0_minus_t)
         
         ## compute prices inside smart grids
         # compute In_sg, Out_sg
         In_sg, Out_sg = fct_aux.compute_prod_cons_SG(arr_pl_M_T, t)
         # compute prices of an energy unit price for cost and benefit players
         b0_t, c0_t = fct_aux.compute_energy_unit_price(
-                        pi_sg_plus_t, pi_sg_minus_t, 
+                        pi_0_plus_t, pi_0_minus_t, 
                         pi_hp_plus, pi_hp_minus,
                         In_sg, Out_sg)
         b0_s.append(b0_t)
@@ -350,6 +366,9 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     # pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
     pi_sg_plus = np.array(pi_sg_plus, dtype=object).reshape((len(pi_sg_plus),))
     pi_sg_minus = np.array(pi_sg_minus, dtype=object).reshape((len(pi_sg_minus),))
+    pi_0_plus = np.array(pi_0_plus, dtype=object).reshape((len(pi_0_plus),))
+    pi_0_minus = np.array(pi_0_minus, dtype=object).reshape((len(pi_0_minus),))
+
     
     # BENs, CSTs of shape (M_PLAYERS, NUM_PERIODS)
     BENs = BENs.reshape(num_periods, m_players).T
@@ -399,6 +418,8 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     np.save(os.path.join(path_to_save, "RU_is.npy"), RU_is)
     np.save(os.path.join(path_to_save, "pi_sg_minus_s.npy"), pi_sg_minus)
     np.save(os.path.join(path_to_save, "pi_sg_plus_s.npy"), pi_sg_plus)
+    np.save(os.path.join(path_to_save, "pi_0_minus_s.npy"), pi_0_minus)
+    np.save(os.path.join(path_to_save, "pi_0_plus_s.npy"), pi_0_plus)
     np.save(os.path.join(path_to_save, "pi_hp_plus_s.npy"), pi_hp_plus_s)
     np.save(os.path.join(path_to_save, "pi_hp_minus_s.npy"), pi_hp_minus_s)
     pd.DataFrame.from_dict(dico_stats_res)\
@@ -413,6 +434,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             B_is, C_is, \
             BENs, CSTs, \
             BB_is, CC_is, RU_is, \
+            pi_0_plus, pi_0_minus, \
             pi_sg_plus, pi_sg_minus, \
             dico_stats_res
             
@@ -434,6 +456,7 @@ def test_balance_player_game():
     BENs, CSTs, \
     BB_is, CC_is, RU_is , \
     pi_sg_plus, pi_sg_minus, \
+    pi_0_plus, pi_0_minus, \
     dico_stats_res = \
         balance_player_game(pi_hp_plus = pi_hp_plus, 
                             pi_hp_minus = pi_hp_minus,
@@ -457,6 +480,8 @@ def test_balance_player_game():
     print("CSTs={}".format(CSTs))
     print("pi_sg_plus_s={}, pi_sg_minus_s={}".format(
             pi_sg_plus.shape, pi_sg_minus.shape))
+    print("pi_0_plus_s={}, pi_0_minus_s={}".format(
+            pi_0_plus.shape, pi_0_minus.shape))
     
     return dico_stats_res
     
@@ -488,5 +513,5 @@ if __name__ == "__main__":
     ti = time.time()
     test_determine_new_pricing_sg_and_new()
     dico_stats_res = test_balance_player_game()
-    bkh.test_plot_variables_allplayers()
+    #bkh.test_plot_variables_allplayers()
     print("runtime = {}".format(time.time() - ti))
