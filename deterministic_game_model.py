@@ -37,13 +37,15 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
         diff_energy_prod_t += energ_k_prod
         print("k={}, energ_k_prod={}, energ_k_cons={}".format(
             t, energ_k_prod, energ_k_cons)) if dbg else None
+        # print("k={}, energ_k_prod={}, energ_k_cons={}".format(
+        #     t, energ_k_prod, energ_k_cons))
     sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
     sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
     
-    print("sum_cons={}, sum_prod={}".format(
-            round(sum_cons,2), round(sum_prod,2))) \
-            if t%20 == 0 \
-            else None
+    # print("sum_cons={}, sum_prod={}".format(
+    #         round(sum_cons,2), round(sum_prod,2))) \
+    #         if t%20 == 0 \
+    #         else None
     print("NAN: cons={}, prod={}".format(
             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
@@ -156,6 +158,8 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         array of imported unit price from player to SG at all time 
 
     """
+    print("{}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> debut \n".format(
+            scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
     pi_sg_plus, pi_sg_minus = [], []
@@ -173,11 +177,11 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     arr_pl_M_T_old = arr_pl_M_T.copy()
     dico_stats_res={}
     for t in range(0, num_periods):
-        print("******* t = {} *******".format(t)) if dbg else None
-        print("___t = {}, pi_sg_plus_t={}, pi_sg_minus_t={}".format(
-                t, pi_sg_plus_t, pi_sg_minus_t)) \
-            if t%20 == 0 \
-            else None
+        # print("******* t = {} *******".format(t)) if dbg else None
+        # print("___t = {}, pi_sg_plus_t={}, pi_sg_minus_t={}".format(
+        #         t, pi_sg_plus_t, pi_sg_minus_t)) \
+        #     if t%20 == 0 \
+        #     else None
         
         # compute pi_0_plus, pi_0_minus, pi_sg_plus, pi_sg_minus
         pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
@@ -309,7 +313,8 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                                                 pi_hp_plus, 
                                                 pi_hp_minus, 
                                                 t, dbg=dbg)
-                            
+        print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}".format(
+            t, pi_sg_plus_t_new, pi_sg_minus_t_new))  if dbg else None                  
         pi_sg_plus_t = pi_sg_plus_t if pi_sg_plus_t_new is np.nan \
                                     else pi_sg_plus_t_new
         pi_sg_minus_t = pi_sg_minus_t if pi_sg_minus_t_new is np.nan \
@@ -364,6 +369,9 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     
     # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
     BB_is = pi_sg_plus[-1] * PROD_is #np.sum(PROD_is)
+    for num_pl, bb_i in enumerate(BB_is):
+        if bb_i != 0:
+            print("player {}, BB_i={}".format(num_pl, bb_i))
     CC_is = pi_sg_minus[-1] * CONS_is #np.sum(CONS_is)
     RU_is = BB_is - CC_is
     
@@ -396,7 +404,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     pd.DataFrame.from_dict(dico_stats_res)\
         .to_csv(os.path.join(path_to_save, "stats_res.csv"))
         
-    print("{}, probCi={}, dico_stats_res[t=0]={} \n".format( scenario, prob_Ci,
+    print("{}, probCi={}, dico_stats_res[t=0]={} ---> fin \n".format( scenario, prob_Ci,
             len(dico_stats_res[0]["gamma_i"])))
     # print("dico_stats_res={}".format(dico_stats_res))
     
