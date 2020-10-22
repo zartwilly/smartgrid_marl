@@ -356,9 +356,15 @@ class Player:
     #--------------------------------------------------------------------------
     #           definition of functions of an agent
     #--------------------------------------------------------------------------
-    def select_mode_i(self):
+    def select_mode_i(self, p_i=0.5, thres=None):
         """
         select randomly a mode of an agent i
+        
+        Parameters
+        ----------
+        p_i: float [0,1], 
+            DESCRIPTION. The default is 0.5
+            probability to choose the first item in state mode
 
         Returns
         -------
@@ -367,7 +373,7 @@ class Player:
 
         """
         mode_i = None
-        rd_num =  np.random.choice([0,1])
+        rd_num =  np.random.choice([0,1], p=[p_i, 1-p_i])
         if self.state_i == None:
             mode_i = None
         elif self.state_i == "state1":
