@@ -39,21 +39,31 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
             t, energ_k_prod, energ_k_cons)) if dbg else None
         # print("k={}, energ_k_prod={}, energ_k_cons={}".format(
         #     t, energ_k_prod, energ_k_cons))
+        ## debug
+        bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
+        unique,counts=np.unique(bool_,return_counts=True)
+        sum_prod_k = round(np.sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]),2)
+        sum_cons_k = round(np.sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]]),2)
+        diff_sum_prod_cons_k = sum_prod_k - sum_cons_k
+        print("t={}, k={}, unique:{}, counts={}, sum_prod_k={}, sum_cons_k={}, diff_sum_k={}".format(
+                t,k,unique, counts, sum_prod_k, sum_cons_k, diff_sum_prod_cons_k))
+        ## debug
     
     sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
     sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
     
-    print("t={}, diff_energy_cons_t={}, diff_energy_prod_t={}, sum_cons={}, sum_prod={}".format(
-        t, round(diff_energy_cons_t,2), round(diff_energy_prod_t,2), 
-            round(sum_cons,2), round(sum_prod,2) ))
-    for k in range(0, t+1):
-        bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
-        unique,counts=np.unique(bool_,return_counts=True)
-        print("t={}, k={}, unique:{}, counts={}".format(t,k,unique, counts))
-    # print("sum_cons={}, sum_prod={}".format(
-    #         round(sum_cons,2), round(sum_prod,2))) \
-    #         if t%20 == 0 \
-    #         else None
+    
+    # for k in range(0, t+1):
+    #     bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
+    #     unique,counts=np.unique(bool_,return_counts=True)
+    #     print("t={}, k={}, unique:{}, counts={}".format(t,k,unique, counts))
+    # print("t={}, sum_diff_energy_cons_t={}, sum_diff_energy_prod_t={}, sum_cons={}, sum_prod={}".format(
+    #     t, round(diff_energy_cons_t,2), round(diff_energy_prod_t,2), 
+    #         round(sum_cons,2), round(sum_prod,2) ))
+    # # print("sum_cons={}, sum_prod={}".format(
+    # #         round(sum_cons,2), round(sum_prod,2))) \
+    # #         if t%20 == 0 \
+    # #         else None
     print("NAN: cons={}, prod={}".format(
             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
