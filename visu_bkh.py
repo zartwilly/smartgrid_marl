@@ -108,6 +108,10 @@ def get_local_storage_variables(path_to_variable):
                           allow_pickle=True)
     pi_sg_minus_s = np.load(os.path.join(path_to_variable, "pi_sg_minus_s.npy"),
                           allow_pickle=True)
+    pi_0_plus_s = np.load(os.path.join(path_to_variable, "pi_0_plus_s.npy"),
+                          allow_pickle=True)
+    pi_0_minus_s = np.load(os.path.join(path_to_variable, "pi_0_minus_s.npy"),
+                          allow_pickle=True)
     pi_hp_plus_s = np.load(os.path.join(path_to_variable, "pi_hp_plus_s.npy"),
                           allow_pickle=True)
     pi_hp_minus_s = np.load(os.path.join(path_to_variable, "pi_hp_minus_s.npy"),
@@ -119,6 +123,7 @@ def get_local_storage_variables(path_to_variable):
             BENs, CSTs, \
             BB_is, CC_is, RU_is, \
             pi_sg_plus_s, pi_sg_minus_s, \
+            pi_0_plus_s, pi_0_minus_s, \
             pi_hp_plus_s, pi_hp_minus_s
 
 def plot_pi_sg(pi_sg_plus_s, pi_sg_minus_s, path_to_variable):
@@ -230,10 +235,14 @@ def plot_pi_X(args, p_X=None, styles={"line":"solid"}):
 
 def plot_more_prices(path_to_variable, dbg=True):
     # get datas
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pl_M_T_old, arr_pl_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
-    pi_sg_plus_s, pi_sg_minus_s = \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s = \
         get_local_storage_variables(path_to_variable)
     
     # _______ plot pi_sg_plus, pi_sg_minus _______
@@ -257,7 +266,7 @@ def plot_more_prices(path_to_variable, dbg=True):
     key_minus = "C0s"
     
     args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
-          "pi_sg_plus_s": B0s,"pi_sg_minus_s":C0s, 
+          "pi_sg_plus_s": b0_s,"pi_sg_minus_s":c0_s, 
           "key_plus":key_plus, "key_minus":key_minus}
     
     p_B0_C0s = plot_pi_X(args)
@@ -702,6 +711,7 @@ def plot_variables_players_game(arr_pl_M_T,
                                 BENs, CSTs, 
                                 BB_is, CC_is, RU_is, 
                                 pi_sg_plus_s, pi_sg_minus_s, 
+                                pi_0_plus_s, pi_0_minus_s, 
                                 pi_hp_plus_s, pi_hp_minus_s
                                 ):
     """
@@ -776,6 +786,47 @@ def plot_variables_players_game(arr_pl_M_T,
     ps.append(p_pi_sg_hp)
     
     # ______ plot b0_s, c0_s _______
+    title = "prices pi_0_plus, pi_0_minus" #"price of exported/imported energy inside SG"
+    xlabel = "periods of time" 
+    ylabel = "price SG"
+    key_plus = "pi_0_plus"
+    key_minus = "pi_0_minus"
+    
+    args={"title": title, "xlabel": xlabel, "ylabel": ylabel,
+          "pi_sg_plus_s": pi_0_plus_s,
+          "pi_sg_minus_s":pi_0_minus_s, 
+          "key_plus":key_plus, "key_minus":key_minus}
+    
+    p_pi_0 = plot_pi_X(args)
+    
+    ps.append(p_pi_0)
+    
+    # ______ plot B_is, C_is _______
+    title = "virtual benefit/cost of players"
+    xlabel = "player" 
+    ylabel = "price"
+    pls = range(0, arr_pl_M_T.shape[0])
+    data_pl_b_c = {"pl":pls, "B_i":B_is, "C_i":C_is}
+    source = ColumnDataSource(data=data_pl_b_c)
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("price", "$y"),
+                            ("player", "$x")
+                            ]
+                        ) 
+    p_b_c = figure(plot_height = int(HEIGHT*1.0), 
+                        plot_width = int(WIDTH*1.5), 
+                        title = title,
+                        x_axis_label = xlabel, 
+                        y_axis_label = ylabel, 
+                        x_axis_type = "linear",
+                        tools = TOOLS)
+    p_b_c.line(x="pl", y="B_i", source=source, legend_label="B_i",
+              line_width=2, color=Category20[20][0], line_dash=[1,1])
+    p_b_c.line(x="pl", y="C_i", source=source, legend_label="C_i",
+              line_width=2, color=Category20[20][2], line_dash=[1,1])
+    p_b_c.circle(x="pl", y="B_i", source=source, size=4, fill_color='white')
+    p_b_c.circle(x="pl", y="C_i", source=source, size=4, fill_color='white')
+    ps.append(p_b_c)
     
     # ______ plot BB_is, CC_is, RU _______
     title = "real utility of players"
@@ -1028,7 +1079,7 @@ def test_get_local_storage_variables():
                             threshold=0.89,
                             n_depth=2)
     
-    arr_pl_M_T_old, arr_pl_M_T, \
+    arr_pl_M_T_old, arr_pls_M_T, \
     b0_s, c0_s, \
     B_is, C_is, \
     BENs, CSTs, \
@@ -1037,20 +1088,20 @@ def test_get_local_storage_variables():
         get_local_storage_variables(path_to_variable)
         
     print("____test_get_local_storage_variables____")
-    print("arr_pls_M_T: {},RUs={},B0s={},pi_sg_plus_s={}".format(arr_pls_M_T.shape,RUs.shape,B0s.shape,pi_sg_plus_s.shape)) 
+    print("arr_pls_M_T: {},RUs={},B0s={},pi_sg_plus_s={}".format(arr_pls_M_T.shape,RU_is.shape,B_is.shape,pi_sg_plus_s.shape)) 
     print("arr_pls_M_T: OK") \
         if arr_pls_M_T.shape == (exec_game.M_PLAYERS,
                                  exec_game.NUM_PERIODS+1,
                                  len(gmT.INDEX_ATTRS)) \
         else print("arr_pls_M_T: NOK")
     print("RUs: OK") \
-        if RUs.shape == (exec_game.M_PLAYERS,) \
+        if RU_is.shape == (exec_game.M_PLAYERS,) \
         else print("RUs: NOK")
-    print("B0s: OK") \
-        if B0s.shape == (exec_game.NUM_PERIODS,) \
+    print("B_is: OK") \
+        if B_is.shape == (exec_game.NUM_PERIODS,) \
         else print("B0s: NOK")
-    print("C0s: OK") \
-        if C0s.shape == (exec_game.NUM_PERIODS,) \
+    print("C_is: OK") \
+        if C_is.shape == (exec_game.NUM_PERIODS,) \
         else print("C0s: NOK")
     print("pi_sg_plus_s: OK") \
         if pi_sg_plus_s.shape == (exec_game.NUM_PERIODS,) \
@@ -1066,10 +1117,14 @@ def test_plot_pi_sg():
                             ext=".npy",
                             threshold=0.89,
                             n_depth=2)
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pl_M_T_old, arr_pl_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
-    pi_sg_plus_s, pi_sg_minus_s = \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s = \
         get_local_storage_variables(path_to_variable)
         
     plot_pi_sg(pi_sg_plus_s, pi_sg_minus_s, path_to_variable)
@@ -1092,13 +1147,17 @@ def test_plot_player():
                             n_depth=2)
     
     
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pl_M_T_old, arr_pls_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
-    pi_sg_plus_s, pi_sg_minus_s = \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s = \
         get_local_storage_variables(path_to_variable)
         
-    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, 
+    ps_pls = plot_player(arr_pls_M_T, RU_is, BENs, CSTs, 
                          path_to_variable, 5)
     
 def test_plot_variables_onehtml(number_of_players=5):
@@ -1124,17 +1183,21 @@ def test_plot_variables_onehtml(number_of_players=5):
                             threshold=0.89,
                             n_depth=2)
     
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pl_M_T_old, arr_pls_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
-    pi_sg_plus_s, pi_sg_minus_s = \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s = \
         get_local_storage_variables(path_to_variable)
         
     id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
                               replace=False)
     
     p_sg, p_B0_C0s = plot_more_prices(path_to_variable, dbg=False)
-    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, id_pls,
+    ps_pls = plot_player(arr_pls_M_T, RU_is, BENs, CSTs, id_pls,
                          path_to_variable, dbg=False)
     ps_pls_prod_conso = plot_prod_cons_player(arr_pls_M_T, id_pls, 
                           path_to_variable, dbg=True)
@@ -1204,17 +1267,21 @@ def test_plot_variables_onecase(rep,case):
         str_case = reps[np.random.randint(0, len(reps))]
     path_to_variable = os.path.join(name_dir, rep, str_case)
     
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pls_M_T_old, arr_pls_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
-    pi_sg_plus_s, pi_sg_minus_s = \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s = \
         get_local_storage_variables(path_to_variable)
         
     id_pls = np.random.choice(arr_pls_M_T.shape[0], number_of_players, 
                               replace=False)
     
     p_sg, p_B0_C0s = plot_more_prices(path_to_variable, dbg=False)
-    ps_pls = plot_player(arr_pls_M_T, RUs, BENs, CSTs, id_pls,
+    ps_pls = plot_player(arr_pls_M_T, RU_is, BENs, CSTs, id_pls,
                          path_to_variable, dbg=False)
     ps_pls_prod_conso = plot_prod_cons_player(arr_pls_M_T, id_pls, 
                           path_to_variable, dbg=True)
@@ -1241,10 +1308,14 @@ def test_plot_variables_oneplayer(rep, case):
     path_to_variable = os.path.join(name_dir, rep, str_case)
     
     # import arr_pls_M_T
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pl_M_T_old, arr_pls_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
-    pi_sg_plus_s, pi_sg_minus_s = \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s = \
         get_local_storage_variables(path_to_variable)
         
     # selected player
@@ -1317,13 +1388,17 @@ def test_plot_variables_allplayers_old(rep, case):
     path_to_variable = "tests/simu_1510_1736/scenario1/0.3/"
     
     # import arr_pls_M_T
-    arr_pls_M_T, RUs, \
-    B0s, C0s, \
+    arr_pl_M_T_old, arr_pls_M_T, \
+    b0_s, c0_s, \
+    B_is, C_is, \
     BENs, CSTs, \
-    pi_sg_plus_s, pi_sg_minus_s = \
+    BB_is, CC_is, RU_is, \
+    pi_sg_plus_s, pi_sg_minus_s, \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s= \
         get_local_storage_variables(path_to_variable)
         
-    ps = plot_variables_players_game(arr_pls_M_T, RUs, 
+    ps = plot_variables_players_game(arr_pls_M_T, RU_is, 
                                      pi_sg_plus_s, pi_sg_minus_s)
     
     plot_variables_onehtml(ps, path_to_variable, ncols = 1, 
@@ -1368,7 +1443,8 @@ def test_plot_variables_allplayers(rep="debug",
     BENs, CSTs, \
     BB_is, CC_is, RU_is, \
     pi_sg_plus_s, pi_sg_minus_s, \
-    pi_hp_plus_s, pi_hp_minus_s= \
+    pi_0_plus_s, pi_0_minus_s, \
+    pi_hp_plus_s, pi_hp_minus_s = \
         get_local_storage_variables(path_to_variable)
     
     ps = plot_variables_players_game(
@@ -1384,6 +1460,8 @@ def test_plot_variables_allplayers(rep="debug",
                 RU_is[:num_player_to_show], 
                 pi_sg_plus_s[:num_period_to_show], 
                 pi_sg_minus_s[:num_period_to_show],
+                pi_0_plus_s[:num_period_to_show], 
+                pi_0_minus_s[:num_period_to_show],
                 pi_hp_plus_s[:num_period_to_show], 
                 pi_hp_minus_s[:num_period_to_show])
     plot_variables_onehtml(ps, path_to_variable, ncols = 1, 
@@ -1410,11 +1488,11 @@ if __name__ == "__main__":
     #test_plot_variables_allplayers(rep="simu_1410_0859")
     #test_plot_variables_allplayers(rep="simu_1410_0931")
     name_dir="tests"
-    date_hhmm="2010_1357"
-    probCi=0.7
-    scenario="scenario3"
+    date_hhmm="2110_1507"
+    probCi=0.5
+    scenario="scenario2"
     pi_hp_plus=15   #5 #10 #15
-    pi_hp_minus=4 #15 #10 #4
+    pi_hp_minus=45 #15 #10 #4
     test_plot_variables_allplayers(num_period_to_show=50,
                                    num_player_to_show=50,
                                    name_dir=name_dir, 
