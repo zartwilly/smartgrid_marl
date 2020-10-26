@@ -46,7 +46,8 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
         sum_cons_k = round(np.sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]]),2)
         diff_sum_prod_cons_k = sum_prod_k - sum_cons_k
         print("t={}, k={}, unique:{}, counts={}, sum_prod_k={}, sum_cons_k={}, diff_sum_k={}".format(
-                t,k,unique, counts, sum_prod_k, sum_cons_k, diff_sum_prod_cons_k))
+                t,k,unique, counts, sum_prod_k, sum_cons_k, diff_sum_prod_cons_k)) \
+            if dbg==True else None
         ## debug
     
     sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
