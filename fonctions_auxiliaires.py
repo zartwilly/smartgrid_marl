@@ -24,6 +24,8 @@ CHOICE_RU = 1
 LOW_VAL_Ci = 100 
 HIGH_VAL_Ci = 300
 
+STATES = ["state1", "state2", "state3"]
+
 STATE1_STRATS = ("CONS+", "CONS-")                                             # strategies possibles pour l'etat 1 de a_i
 STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
 STATE3_STRATS = ("DIS", "PROD")
