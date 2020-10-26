@@ -60,6 +60,7 @@ def save_variables(path_to_save, arr_pl_M_T_old, arr_pl_M_T,
 def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t, 
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t, pi_sg_minus_t,
+                           probs_mode,
                            m_players, num_periods, 
                            dbg):
     # pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t_minus_1
@@ -80,7 +81,16 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
         # get mode_i, state_i and update R_i_old
         pl_i.set_R_i_old(Si_max-Si)
         state_i = pl_i.find_out_state_i()
-        pl_i.select_mode_i()
+        p_i = None
+        if state_i == fct_aux.STATES[0]:            # state1 
+            p_i = probs_mode[0]
+        elif state_i == fct_aux.STATES[1]:          # state_2
+            p_i = probs_mode[1]
+        elif state_i == fct_aux.STATES[2]:          # state_3
+            p_i = probs_mode[2]
+        else: 
+            p_i = None#0.5
+        pl_i.select_mode_i(p_i=p_i)
         
         pl_i.update_prod_cons_r_i()
     
@@ -363,6 +373,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             pi_hp_plus, pi_hp_minus, 
             pi_sg_plus_t = pi_sg_plus_t, 
             pi_sg_minus_t = pi_sg_minus_t,
+            probs_mode = probs_mode,
             m_players = m_players, num_periods = num_periods, 
             dbg = dbg)
             
