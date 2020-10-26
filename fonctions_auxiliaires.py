@@ -30,7 +30,7 @@ STATE1_STRATS = ("CONS+", "CONS-")                                             #
 STATE2_STRATS = ("DIS", "CONS-")                                               # strategies possibles pour l'etat 2 de a_i
 STATE3_STRATS = ("DIS", "PROD")
 
-CASE1 = (0.75, 1.5)
+CASE1 = (1.7, 2.0) #(0.75, 1.5)
 CASE2 = (0.4, 0.75)
 CASE3 = (0, 0.3)
 
