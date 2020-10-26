@@ -502,9 +502,9 @@ class Player:
             X = pi_0_minus
             Y = pi_hp_minus
         elif self.state_i == "state3":
-            Si_minus = self.get_Si() if self.mode_i == "PROD" else 0
-            Si_plus = max(self.get_Si_max(), 
-                          self.get_Si() + (self.get_Pi() - self.get_Ci()))
+            # Si_minus = self.get_Si() if self.mode_i == "PROD" else 0
+            # Si_plus = max(self.get_Si_max(), 
+            #               self.get_Si() + (self.get_Pi() - self.get_Ci()))
             if self.mode_i == "PROD":
                 Si_minus = self.get_Si()
                 Si_plus = self.get_Si_max()
@@ -526,8 +526,8 @@ class Player:
         #print("gamma_i Si_minus={} < Si_plus={} {}".format(round(Si_minus,2), round(Si_plus,2), Si_minus <= Si_plus))
         if Si_minus > Si_plus:
             print("Si_minus={} Si_plus={}".format(Si_minus, Si_plus))
-            print("Si_old={}, Si={}, state={}, mode={}".format(self.Si_old, 
-                    self.Si, self.state_i, self.mode_i))
+            print("Si_old={}, Si={}, Si_max={} state={}, mode={}".format(self.Si_old, 
+                    self.Si, self.Si_max, self.state_i, self.mode_i))
         if fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_minus:
             self.set_gamma_i(X-1)
         elif fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_plus:
