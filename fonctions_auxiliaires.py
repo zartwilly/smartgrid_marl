@@ -20,6 +20,7 @@ M_PLAYERS = 10
 NUM_PERIODS = 50
 
 CHOICE_RU = 1
+N_DECIMALS = 2
 
 LOW_VAL_Ci = 100 
 HIGH_VAL_Ci = 300
@@ -415,9 +416,9 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
                                 low=min_val_profil, 
                                 high=max_val_profil, 
                                 size=(num_periods,)
-                                ), decimals=2) )
+                                ), decimals=N_DECIMALS) )
         Si_s = list( np.around(np.random.uniform(0,1,size=(num_periods,))*Si_max,
-                               decimals=2))
+                               decimals=N_DECIMALS))
         Si_s[0] = 0; 
         str_profili_s = ["_".join(map(str, profili))] * num_periods
         str_casei_s = ["_".join(map(str, profil_casei))] * num_periods
