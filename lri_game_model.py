@@ -218,7 +218,13 @@ def update_probs_mode_by_reward(arr_pl_M_T_t_nstep, t, b0_t, c0_t,
                                + learning_rate*(1-probs_modes_states[num_pl])
         elif action == modes[0] and reward < thres:
             pass
-        
+     
+    U_i_t_nstep = np.array(U_i_t_nstep, dtype=float)
+    U_i_t_nstep = np.around(U_i_t_nstep, decimals=fct_aux.N_DECIMALS)
+    R_i_t_nstep = np.array(R_i_t_nstep, dtype=float)
+    R_i_t_nstep = np.around(R_i_t_nstep, decimals=fct_aux.N_DECIMALS)
+    probs_modes_states = list(np.around(np.array(probs_modes_states),
+                                        decimals=fct_aux.N_DECIMALS))
     return probs_modes_states, list(U_i_t_nstep), list(R_i_t_nstep)
 
 def balanced_player_game_t_old(arr_pl_M_T_old, arr_pl_M_T, t, 
@@ -1046,7 +1052,7 @@ def lri_balanced_player_game_old(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     save_variables(path_to_save, arr_pl_M_T_old, arr_pl_M_T, 
                    b0_s, c0_s, B_is, C_is, BENs, CSTs, BB_is, CC_is, 
                    RU_is, pi_sg_minus, pi_sg_plus, pi_0_minus, pi_0_plus,
-                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res)
+                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, None, None)
     
     print("{}, probCi={}, pi_hp_plus={}, pi_hp_minus ={}, probs_mode={} ---> fin \n".format(
             scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_mode))
