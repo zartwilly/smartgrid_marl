@@ -26,13 +26,24 @@ from pathlib import Path
 def save_variables(path_to_save, arr_pl_M_T_old, arr_pl_M_T, 
                    b0_s, c0_s, B_is, C_is, BENs, CSTs, BB_is, CC_is, 
                    RU_is, pi_sg_minus, pi_sg_plus, pi_0_minus, pi_0_plus,
-                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res):
-    path_to_save = path_to_save \
-                    if path_to_save != "tests" \
-                    else os.path.join(
-                                path_to_save, 
-                                "simu_"+datetime.now().strftime("%d%m_%H%M"))
-    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+                   arr_T_nsteps_vars, algo=None):
+    if algo is None:
+        path_to_save = path_to_save \
+                        if path_to_save != "tests" \
+                        else os.path.join(
+                                    path_to_save, 
+                                    "simu_"+datetime.now().strftime("%d%m_%H%M"))
+        Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    elif algo == "LRI":
+        path_to_save = path_to_save \
+                        if path_to_save != "tests" \
+                        else os.path.join(
+                                    path_to_save, 
+                                    "LRI_simu_"+datetime.now().strftime("%d%m_%H%M"))
+        Path(path_to_save).mkdir(parents=True, exist_ok=True)
+        np.save(os.path.join(path_to_save, "arr_T_nsteps_vars.npy"), 
+                arr_T_nsteps_vars)
     
     np.save(os.path.join(path_to_save, "arr_pls_M_T_old.npy"), arr_pl_M_T_old)
     np.save(os.path.join(path_to_save, "arr_pls_M_T.npy"), arr_pl_M_T)
@@ -1160,7 +1171,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     # _________     run balanced sg for all num_periods     __________________
     arr_pl_M_T_old = arr_pl_M_T.copy()
     pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
-    arr_vars_nsteps_T = []     # array of (m_players, nsteps, T)
+    arr_T_nsteps_vars = []     # array of (num_periods, nsteps, len(vars_nstep)=8)
     for t in range(0, num_periods):
         print("******* t = {} *******".format(t)) if dbg else None
         arr_pl_M_T_old_t = arr_pl_M_T_old.copy()
@@ -1236,7 +1247,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                           dico_stats_res_t_nstep]
             vars_nsteps.append(vars_nstep)
         
-        arr_vars_nsteps_T.append(vars_nsteps)
+        arr_T_nsteps_vars.append(vars_nsteps)
         
         # update arr_pl_M_T_t and arr_pl_M_T_t_old
         arr_pl_M_T = arr_pl_M_T_t 
@@ -1261,7 +1272,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         CSTs = np.append(CSTs, csts)
     
     # array of shape (num_period, nsteps, len(vars_nstep) = 8)
-    arr_vars_nsteps_T = np.array(arr_vars_nsteps_T, dtype=object)
+    arr_T_nsteps_vars = np.array(arr_T_nsteps_vars, dtype=object)
         
     #______________     turn list in numpy array    __________________________ 
     # pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
@@ -1303,12 +1314,13 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     save_variables(path_to_save, arr_pl_M_T_old, arr_pl_M_T, 
                    b0_s, c0_s, B_is, C_is, BENs, CSTs, BB_is, CC_is, 
                    RU_is, pi_sg_minus, pi_sg_plus, pi_0_minus, pi_0_plus,
-                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res)
+                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+                   arr_T_nsteps_vars, algo="LRI")
     
     print("{}, probCi={}, pi_hp_plus={}, pi_hp_minus ={}, probs_mode={} ---> fin \n".format(
             scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_mode))
     
-    return arr_vars_nsteps_T
+    return arr_T_nsteps_vars
 
 ###############################################################################
 #                   definition  des unittests
@@ -1324,7 +1336,7 @@ def test_lri_balanced_player_game():
     n_steps = 4
     scenario = "scenario1"; path_to_save = "tests"
     
-    arr_vars_nsteps_T = \
+    arr_T_nsteps_vars = \
     lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
                              pi_hp_minus=pi_hp_minus,
                              m_players=m_players, 
@@ -1337,7 +1349,7 @@ def test_lri_balanced_player_game():
                              scenario=scenario, n_steps=n_steps, 
                              path_to_save=path_to_save, dbg=False)
     
-    return arr_vars_nsteps_T
+    return arr_T_nsteps_vars
 
 ###############################################################################
 #                   Execution
@@ -1346,7 +1358,7 @@ def test_lri_balanced_player_game():
 if __name__ == "__main__":
     ti = time.time()
     
-    arr_vars_nsteps_T = \
+    arr_T_nsteps_vars = \
     test_lri_balanced_player_game()
     
     print("runtime = {}".format(time.time() - ti))
