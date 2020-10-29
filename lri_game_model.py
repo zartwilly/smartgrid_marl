@@ -182,6 +182,8 @@ def update_probs_mode_by_reward(arr_pl_M_T_t_nstep, t, b0_t, c0_t,
     state_i_t_nstep = arr_pl_M_T_t_nstep[:, t, fct_aux.INDEX_ATTRS["state_i"]]
     U_i_t_nstep = prod_i_t_nstep * b0_t - cons_i_t_nstep * c0_t
     R_i_t_nstep = utility_function(U_i_t_nstep)
+    print("Shapes: mode_i_t_nstep={}, R_i_t_nstep={}, state_i_t_nstep={}, probs_modes_states={}".format(
+        mode_i_t_nstep.shape, R_i_t_nstep.shape, state_i_t_nstep.shape, probs_modes_states))
     actions_rewards_states = zip(mode_i_t_nstep, R_i_t_nstep, state_i_t_nstep)
     for num_pl, tup_action_reward_state in enumerate(actions_rewards_states):
         action = tup_action_reward_state[0]
@@ -206,7 +208,7 @@ def update_probs_mode_by_reward(arr_pl_M_T_t_nstep, t, b0_t, c0_t,
         elif action == modes[0] and reward < thres:
             pass
         
-    return probs_modes_states, U_i_t_nstep, R_i_t_nstep
+    return probs_modes_states, list(U_i_t_nstep), list(R_i_t_nstep)
 
 def balanced_player_game_t_old(arr_pl_M_T_old, arr_pl_M_T, t, 
                            pi_hp_plus, pi_hp_minus, 
@@ -409,6 +411,7 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
     
     cpt_error_gamma = 0; cpt_balanced = 0;
     dico_state_mode_i = {}; dico_balanced_pl_i = {}
+    probs_modes_states_new = []
     for num_pl_i in range(0, m_players):
         Ci = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]],2)
         Pi = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]],2)
@@ -429,12 +432,13 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
         else: 
             if state_i == fct_aux.STATES[0]:            # state1 
                 p_i = probs_mode[0]
-            elif state_i == fct_aux.STATES[1]:          # state_2
+            elif state_i == fct_aux.STATES[1]:          # state2
                 p_i = probs_mode[1]
-            elif state_i == fct_aux.STATES[2]:          # state_3
+            elif state_i == fct_aux.STATES[2]:          # state3
                 p_i = probs_mode[2]
             else: 
                 p_i = None#0.5
+            probs_modes_states_new.append(p_i)
         pl_i.select_mode_i(p_i=p_i)
         
         print("mode_i={}".format(pl_i.get_mode_i())) if state_i == "state3" else None
@@ -444,7 +448,6 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
         # balancing
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
         cpt_balanced += round(1/m_players, 2) if boolean else 0
-        print("cpt_balanced={}, dico_balanced_pl_i={}".format(cpt_balanced, type(dico_balanced_pl_i)))
         dico_balanced_pl_i["cpt"] = cpt_balanced
         if "player" in dico_balanced_pl_i and boolean is False:
             dico_balanced_pl_i['player'].append(num_pl_i)
@@ -581,11 +584,16 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
                                               b0_t, 
                                               c0_t)
     print('#### bens={}'.format(bens.shape)) if dbg else None
+        
+    if probs_modes_states is None:
+        probs_modes_states = probs_modes_states_new
+        print("probs_modes_states_new={}".format(probs_modes_states_new)) \
+            if dbg else None
     
     return arr_pl_M_T_old, arr_pl_M_T, \
             b0_t, c0_t, bens, csts, \
             pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t, \
-            dico_stats_res_t
+            probs_modes_states, dico_stats_res_t
 
 
 def lri_balanced_player_game_old_old(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
@@ -1172,6 +1180,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             b0_t_nstep, c0_t_nstep, bens_nstep, csts_nstep, \
             pi_sg_plus_t_minus_1_nstep, pi_sg_minus_t_minus_1_nstep, \
             pi_0_plus_t_nstep, pi_0_minus_t_nstep, \
+            probs_modes_states, \
             dico_stats_res_t_nstep = \
                 balanced_player_game_t(
                 arr_pl_M_T_old_t, arr_pl_M_T_t, t, 
@@ -1220,8 +1229,10 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             cons_i_pls_nstep = arr_pl_M_T_t_nstep[:,
                                                    t,
                                                    fct_aux.INDEX_ATTRS["cons_i"]]
-            vars_nstep = [probs_mode_new, state_i_pls_nstep, mode_i_pls_nstep,
-                          prod_i_pls_nstep, cons_i_pls_nstep, U_i_t, R_i_t,
+            vars_nstep = [probs_modes_states, 
+                          list(state_i_pls_nstep), list(mode_i_pls_nstep),
+                          list(prod_i_pls_nstep), list(cons_i_pls_nstep), 
+                          U_i_t_nstep, R_i_t_nstep,
                           dico_stats_res_t_nstep]
             vars_nsteps.append(vars_nstep)
         
@@ -1232,7 +1243,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         arr_pl_M_T_old = arr_pl_M_T_old_t
         
         
-        print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, nstep={}, B_i_t={} \n".format(
+        print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, nstep={}, U_i_t={} \n".format(
         t, pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1, nstep, U_i_t))
         
         # update pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
@@ -1249,6 +1260,8 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         BENs = np.append(BENs, bens)
         CSTs = np.append(CSTs, csts)
     
+    # array of shape (num_period, nsteps, len(vars_nstep) = 8)
+    arr_vars_nsteps_T = np.array(arr_vars_nsteps_T, dtype=object)
         
     #______________     turn list in numpy array    __________________________ 
     # pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
@@ -1295,7 +1308,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     print("{}, probCi={}, pi_hp_plus={}, pi_hp_minus ={}, probs_mode={} ---> fin \n".format(
             scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_mode))
     
-    return 
+    return arr_vars_nsteps_T
 
 ###############################################################################
 #                   definition  des unittests
@@ -1308,9 +1321,10 @@ def test_lri_balanced_player_game():
     Ci_low = 10; Ci_high = 30
     prob_Ci = 0.3; learning_rate=0.05;
     probs_mode = [0.5, 0.5, 0.5]
-    n_steps = 5
+    n_steps = 4
     scenario = "scenario1"; path_to_save = "tests"
     
+    arr_vars_nsteps_T = \
     lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
                              pi_hp_minus=pi_hp_minus,
                              m_players=m_players, 
@@ -1323,7 +1337,7 @@ def test_lri_balanced_player_game():
                              scenario=scenario, n_steps=n_steps, 
                              path_to_save=path_to_save, dbg=False)
     
-
+    return arr_vars_nsteps_T
 
 ###############################################################################
 #                   Execution
@@ -1332,6 +1346,7 @@ def test_lri_balanced_player_game():
 if __name__ == "__main__":
     ti = time.time()
     
+    arr_vars_nsteps_T = \
     test_lri_balanced_player_game()
     
     print("runtime = {}".format(time.time() - ti))
