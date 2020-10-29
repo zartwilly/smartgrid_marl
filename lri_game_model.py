@@ -6,9 +6,11 @@ Created on Thu Oct 22 15:42:13 2020
 """
 import os
 import time
+import math
 
 import numpy as np
 import pandas as pd
+import itertools as it
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 import deterministic_game_model as detGameModel
@@ -1260,8 +1262,10 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         arr_pl_M_T_old = arr_pl_M_T_old_t
         
         
-        print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, nstep={}, U_i_t={} \n".format(
-        t, pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1, nstep, U_i_t))
+        # print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, nstep={}, U_i_t={} \n".format(
+        # t, pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1, nstep, U_i_t))
+        print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, nstep={} \n".format(
+        t, pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1, nstep, ))
         
         # update pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
         pi_sg_plus.append(pi_sg_plus_t_minus_1)
@@ -1342,6 +1346,8 @@ def test_lri_balanced_player_game():
     n_steps = 4
     scenario = "scenario1"; path_to_save = "tests"
     
+    fct_aux.N_DECIMALS = 4
+    
     arr_T_nsteps_vars = \
     lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
                              pi_hp_minus=pi_hp_minus,
@@ -1357,6 +1363,74 @@ def test_lri_balanced_player_game():
     
     return arr_T_nsteps_vars
 
+def test_lri_balanced_player_game_manyValues():
+    
+    fct_aux.N_DECIMALS = 4
+    m_players = 3; num_periods = 5; n_steps = 4
+    m_players = 50; num_periods = 40; n_steps = 30
+    Ci_low = 10; Ci_high = 30
+    path_to_save = "tests"
+    
+    path_to_save = os.path.join(path_to_save, 
+                                "LRI_simu_"+datetime.now().strftime("%d%m_%H%M"))
+    
+    # compute pi_hp_plus, pi_hp_minus
+    pi_hp_plus= [5, 10, 15]
+    coef = 3; coefs = [coef]
+    for i in range(0,len(pi_hp_plus)-1):
+        val = round(coefs[i]/coef,1)
+        coefs.append(val)
+    pi_hp_minus = [ int(math.floor(pi_hp_plus[i]*coefs[i])) 
+                   for i in range(0, len(pi_hp_plus))]
+    # prob_Ci and scenario
+    prob_Cis = [0.3, 0.5, 0.7]
+    scenarios = ["scenario1", "scenario2", "scenario3"]
+    
+    # learning rate and probs_mode
+    learning_rates = list(np.arange(start=0.01,stop=0.02,step=0.005))
+    probs_modes = [[0.5, 0.5, 0.5],[0.25, 0.5, 0.75],[0.75, 0.5, 0.25]]
+    
+    cpt = 0
+    for tupl in it.product(zip(pi_hp_plus, pi_hp_minus), prob_Cis, 
+                           scenarios, learning_rates, probs_modes):
+        pi_hp_plus = tupl[0][0]
+        pi_hp_minus = tupl[0][1]
+        prob_Ci = tupl[1]
+        scenario = tupl[2]
+        learning_rate = tupl[3]
+        probs_mode = tupl[4]
+        
+        path_to_save_oneExec = os.path.join(
+                                path_to_save, 
+                                scenario,
+                                str(prob_Ci),
+                                "pi_hp_plus_"+str(pi_hp_plus)+\
+                                    "_pi_hp_minus_"+str(pi_hp_minus),
+                                "probs_mode_"+"_".join(map(str, probs_mode)), 
+                                str(learning_rate)
+                                )
+    
+        cpt += 1
+        #print(path_to_save_oneExec, cpt)
+    
+        arr_T_nsteps_vars = \
+        lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
+                                  pi_hp_minus=pi_hp_minus,
+                                  m_players=m_players, 
+                                  num_periods=num_periods, 
+                                  Ci_low=Ci_low, 
+                                  Ci_high=Ci_high,
+                                  prob_Ci=prob_Ci, 
+                                  learning_rate=learning_rate,
+                                  probs_mode=probs_mode,
+                                  scenario=scenario, n_steps=n_steps, 
+                                  path_to_save=path_to_save_oneExec, 
+                                  dbg=False)
+        
+        
+        
+    return 
+
 ###############################################################################
 #                   Execution
 #
@@ -1364,7 +1438,8 @@ def test_lri_balanced_player_game():
 if __name__ == "__main__":
     ti = time.time()
     
-    arr_T_nsteps_vars = \
-    test_lri_balanced_player_game()
+    # arr_T_nsteps_vars = \
+    # test_lri_balanced_player_game()
+    test_lri_balanced_player_game_manyValues()
     
     print("runtime = {}".format(time.time() - ti))
