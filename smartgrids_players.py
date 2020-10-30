@@ -430,7 +430,7 @@ class Player:
                 self.Si_old = (self.mode_i == "DIS")*self.Si \
                                 + (self.mode_i == "PROD")*self.Si_old
                 self.Si = (self.mode_i == "DIS") \
-                                *(max(self.Si_max, self.Si + (self.Pi - self.Ci))) \
+                                *(min(self.Si_max, self.Si + (self.Pi - self.Ci))) \
                             + (self.mode_i == "PROD")*self.Si
                 R_i = self.Si_max - self.Si
                 self.r_i = min(R_i, self.Pi - self.Ci) \
