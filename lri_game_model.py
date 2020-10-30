@@ -1251,11 +1251,55 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             cons_i_pls_nstep = arr_pl_M_T_t_nstep[:,
                                                    t,
                                                    fct_aux.INDEX_ATTRS["cons_i"]]
-            vars_nstep = [probs_modes_states, 
-                          list(state_i_pls_nstep), list(mode_i_pls_nstep),
-                          list(prod_i_pls_nstep), list(cons_i_pls_nstep), 
-                          U_i_t_nstep, R_i_t_nstep,
-                          dico_stats_res_t_nstep]
+            Ci_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Ci"]]
+            Pi_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Pi"]]
+            Si_max_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Si_max"]]
+            gamma_i_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                                   t, 
+                                                   fct_aux.INDEX_ATTRS["gamma_i"]]
+            r_i_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["r_i"]]
+            Si_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Si"]]
+            Si_old_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                                t, 
+                                                fct_aux.INDEX_ATTRS["Si_old"]]
+            R_i_old_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                                t, 
+                                                fct_aux.INDEX_ATTRS["R_i_old"]]
+            balanced_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                        t, 
+                                        fct_aux.INDEX_ATTRS["balanced_pl_i"]]
+            str_profili_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                        t, 
+                                        fct_aux.INDEX_ATTRS["Profili"]]
+            str_casei_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                        t, 
+                                        fct_aux.INDEX_ATTRS["Casei"]]
+            formules_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["formule"]]
+            # vars_nstep = [probs_modes_states, 
+            #               list(state_i_pls_nstep), list(mode_i_pls_nstep),
+            #               list(prod_i_pls_nstep), list(cons_i_pls_nstep), 
+            #               U_i_t_nstep, R_i_t_nstep,
+            #               dico_stats_res_t_nstep]
+            vars_nstep = [Ci_pls_nstep, Pi_pls_nstep, Si_pls_nstep, 
+                          Si_max_pls_nstep, gamma_i_pls_nstep, 
+                          prod_i_pls_nstep, cons_i_pls_nstep, r_i_pls_nstep, 
+                          state_i_pls_nstep, mode_i_pls_nstep, 
+                          str_profili_pls_nstep, str_casei_pls_nstep, 
+                          R_i_old_pls_nstep, Si_old_pls_nstep, 
+                          balanced_pls_nstep,formules_pls_nstep, 
+                          probs_modes_states, U_i_t_nstep, R_i_t_nstep]
             vars_nsteps.append(vars_nstep)
         
         arr_T_nsteps_vars.append(vars_nsteps)
@@ -1284,8 +1328,10 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         BENs = np.append(BENs, bens)
         CSTs = np.append(CSTs, csts)
     
-    # array of shape (num_period, nsteps, len(vars_nstep) = 8)
+    # array of shape (num_period, nsteps, len(vars_nstep) = 19, m_players)
     arr_T_nsteps_vars = np.array(arr_T_nsteps_vars, dtype=object)
+    # array of shape (num_players, num_period, nsteps, len(vars_nstep) = 19)
+    arr_T_nsteps_vars = np.transpose(arr_T_nsteps_vars, [3,0,1,2])
         
     #______________     turn list in numpy array    __________________________ 
     # pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
@@ -1441,8 +1487,8 @@ def test_lri_balanced_player_game_manyValues():
 if __name__ == "__main__":
     ti = time.time()
     
-    arr_T_nsteps_vars = \
-        test_lri_balanced_player_game()
-    # test_lri_balanced_player_game_manyValues()
+    # arr_T_nsteps_vars = \
+    #     test_lri_balanced_player_game()
+    test_lri_balanced_player_game_manyValues()
     
     print("runtime = {}".format(time.time() - ti))
