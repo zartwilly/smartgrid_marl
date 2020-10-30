@@ -427,16 +427,19 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
                            dbg):
     # pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t_minus_1
     # pi_sg_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t_minus_1
-    
     cpt_error_gamma = 0; cpt_balanced = 0;
     dico_state_mode_i = {}; dico_balanced_pl_i = {}
     probs_modes_states_new = []
     for num_pl_i in range(0, m_players):
-        Ci = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]],2)
-        Pi = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]],2)
-        Si = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Si"]],2)
+        Ci = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]], 
+                   fct_aux.N_DECIMALS)
+        Pi = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]],
+                   fct_aux.N_DECIMALS)
+        Si = round(arr_pl_M_T[num_pl_i, t, fct_aux.INDEX_ATTRS["Si"]],
+                   fct_aux.N_DECIMALS)
         Si_max = round(arr_pl_M_T[num_pl_i, t, 
-                                  fct_aux.INDEX_ATTRS["Si_max"]],2)
+                                  fct_aux.INDEX_ATTRS["Si_max"]],
+                       fct_aux.N_DECIMALS)
         gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
         pl_i = None
         pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
@@ -463,7 +466,7 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
         print("mode_i={}".format(pl_i.get_mode_i())) if state_i == "state3" else None
         
         pl_i.update_prod_cons_r_i()
-    
+        
         # balancing
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
         cpt_balanced += round(1/m_players, 2) if boolean else 0
@@ -508,7 +511,7 @@ def balanced_player_game_t(arr_pl_M_T_old, arr_pl_M_T, t,
             and gamma_i <= max(pi_hp_minus, pi_hp_plus):
             pass
         else :
-            cpt_error_gamma = round(1/m_players, 2)
+            cpt_error_gamma = round(1/m_players, fct_aux.N_DECIMALS)
             dico_state_mode_i["cpt"] = \
                 dico_state_mode_i["cpt"] + cpt_error_gamma \
                 if "cpt" in dico_state_mode_i \
@@ -1438,8 +1441,8 @@ def test_lri_balanced_player_game_manyValues():
 if __name__ == "__main__":
     ti = time.time()
     
-    # arr_T_nsteps_vars = \
-    # test_lri_balanced_player_game()
-    test_lri_balanced_player_game_manyValues()
+    arr_T_nsteps_vars = \
+        test_lri_balanced_player_game()
+    # test_lri_balanced_player_game_manyValues()
     
     print("runtime = {}".format(time.time() - ti))
