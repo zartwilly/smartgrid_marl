@@ -151,7 +151,7 @@ def utility_function(U_i_t_nstep):
     f = lambda x: round(1/(1+np.exp(x)), 4)
     return np.array( list(map(f, U_i_t_nstep)), dtype=np.float32)
 
-def update_probs_mode_by_reward(arr_pl_M_T_t_nstep, t, b0_t, c0_t,
+def update_probs_mode_by_reward_sigmoid(arr_pl_M_T_t_nstep, t, b0_t, c0_t,
                                 m_players, probs_modes_states, 
                                 learning_rate, thres = 0.80):
     """
@@ -1228,7 +1228,7 @@ def lri_balanced_player_game_sigmoid(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                 
             # compute new probabilities by using utility fonction and U_i=B_i-C_i
             probs_modes_states, U_i_t_nstep, R_i_t_nstep = \
-                update_probs_mode_by_reward(
+                update_probs_mode_by_reward_sigmoid(
                                 arr_pl_M_T_t_nstep, 
                                 t,
                                 b0_t, 
@@ -1392,6 +1392,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     """
     create a game using LRI learning method for balancing all players 
     at all periods of time NUM_PERIODS = [1..T]
+    the utility function is defined in the document
 
     Parameters
     ----------
