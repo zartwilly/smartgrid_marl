@@ -1330,7 +1330,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     
     # array of shape (num_period, nsteps, len(vars_nstep) = 19, m_players)
     arr_T_nsteps_vars = np.array(arr_T_nsteps_vars, dtype=object)
-    # array of shape (num_players, num_period, nsteps, len(vars_nstep) = 19)
+    # array of shape (m_players, num_period, nsteps, len(vars_nstep) = 19)
     arr_T_nsteps_vars = np.transpose(arr_T_nsteps_vars, [3,0,1,2])
         
     #______________     turn list in numpy array    __________________________ 
