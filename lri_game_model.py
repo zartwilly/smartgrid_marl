@@ -1064,6 +1064,324 @@ def lri_balanced_player_game_old(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     
     return 
 
+def lri_balanced_player_game_sigmoid(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
+                            m_players=3, num_periods=5, 
+                            Ci_low=10, Ci_high=30,
+                            prob_Ci=0.3, learning_rate=0.05,
+                            probs_mode=[0.5, 0.5, 0.5],
+                            scenario="scenario1", n_steps = 10,
+                            path_to_save="tests", dbg=False):
+    """
+    create a game using LRI learning method for balancing all players 
+    at all periods of time NUM_PERIODS = [1..T]
+    The utility function is sigmoid function
+
+    Parameters
+    ----------
+    pi_hp_plus : float, optional
+        DESCRIPTION. The default is 0.10.
+        the price of exported energy from SG to HP
+    pi_hp_minus : float, optional
+        DESCRIPTION. The default is 0.15.
+        the price of imported energy from HP to SG
+    m_players : Integer, optional
+        DESCRIPTION. The default is 3.
+        the number of players
+    num_periods : Integer, optional
+        DESCRIPTION. The default is 5.
+        the number of time intervals 
+    Ci_low : float, optional
+        DESCRIPTION. The default is 10.
+        the min value of the consumption
+    Ci_high : float, optional
+        DESCRIPTION. The default is 30.
+        the max value of the consumption
+    prob_Ci : float, optional
+        DESCRIPTION. The default is 0.3.
+        probability for choosing the kind of consommation
+    probs_mode: list of float, optional
+        DESCRIPTION. The default is [0.5,0.5, 0.5].
+        probability for choosing for each state, one mode. 
+        exple: if state1, they are 50% to select CONS+ mode and 50% to CONS- mode
+    scenario : String, optional
+        DESCRIPTION. The default is "scenario1".
+        a plan for operating a game of players
+    n_steps : integer, optional
+        DESCRIPTION. The default is 10.
+        number of steps for learning 
+    path_to_save : String, optional
+        DESCRIPTION. The default is "tests".
+        name of directory for saving variables of players
+    dbg : boolean, optional
+        DESCRIPTION. The default is False.
+
+    Returns
+    -------
+    arr_pl_M_T_old : array of shape (M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))
+        DESCRIPTION.
+        initial array of variables for all players. it contains initial values 
+        before starting a game 
+    arr_pl_M_T : array of shape (M_PLAYERS, NUM_PERIODS, len(INDEX_ATTRS))
+        DESCRIPTION.
+        array of variables for all players. it contains final values 
+        at time NUM_PERIODS
+    b0_s : array of shape(NUM_PERIODS,) 
+        DESCRIPTION.
+        array of unit price of benefit for all periods
+    c0_s : array of shape(NUM_PERIODS,) 
+        DESCRIPTION.
+        array of unit price of cost for all periods
+    B_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of global benefit for all players
+    C_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of global cost for all players
+    BENs : array of shape (M_PLAYERS, NUM_PERIODS)
+        DESCRIPTION.
+        array of benefits of a player at for all times t
+    CSTs : array of shape (M_PLAYERS, NUM_PERIODS)
+        DESCRIPTION.
+        array of costs of a player at for all times t
+    BB_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of real money a player need to pay if it depends on SG
+    CC_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        array of real money a player need to pay if it depends on HP 
+    RU_is : array of shape (M_PLAYERS, )
+        DESCRIPTION.
+        the difference between BB_i and CC_i for all players
+    pi_sg_plus : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        array of exported unit price from player to SG at all time  
+    pi_sg_minus : array of shape (NUM_PERIODS,)
+        DESCRIPTION.
+        array of imported unit price from player to SG at all time 
+
+    """
+    print("{}, probCi={}, pi_hp_plus={}, pi_hp_minus ={}, probs_mode={} ---> debut \n".format(
+            scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_mode))
+    
+    # _______ variables' initialization --> debut ________________
+    pi_sg_plus, pi_sg_minus = [], []
+    pi_sg_plus_t, pi_sg_minus_t = 0, 0
+    pi_0_plus, pi_0_minus = [], []
+    B_is, C_is = [], []
+    b0_s, c0_s = [], []
+    BENs, CSTs = np.array([]), np.array([])
+    dico_stats_res = dict()
+    # _______ variables' initialization --> fin   ________________
+    
+    # _______   generation initial variables for all players at any time   ____
+    arr_pl_M_T = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                                    m_players=m_players, 
+                                    num_periods=num_periods, 
+                                    scenario=scenario, prob_Ci=prob_Ci, 
+                                    Ci_low=Ci_low, Ci_high=Ci_high)
+    
+    # _________     run balanced sg for all num_periods     __________________
+    arr_pl_M_T_old = arr_pl_M_T.copy()
+    pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
+    arr_T_nsteps_vars = []     # array of (num_periods, nsteps, len(vars_nstep)=8)
+    for t in range(0, num_periods):
+        print("******* t = {} *******".format(t)) if dbg else None
+        arr_pl_M_T_old_t = arr_pl_M_T_old.copy()
+        arr_pl_M_T_t = arr_pl_M_T.copy()
+        U_i_t, R_i_t =  [], []
+        b0_t, c0_t = 0, 0
+        vars_nsteps = []
+        probs_mode_new = probs_mode
+        probs_modes_states = None
+        for nstep in range(0, n_steps):
+            pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t_minus_1
+            pi_sg_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t_minus_1
+            
+            arr_pl_M_T_old_t_nstep, arr_pl_M_T_t_nstep = None, None
+            
+            arr_pl_M_T_old_t_nstep, arr_pl_M_T_t_nstep, \
+            b0_t_nstep, c0_t_nstep, bens_nstep, csts_nstep, \
+            pi_sg_plus_t_minus_1_nstep, pi_sg_minus_t_minus_1_nstep, \
+            pi_0_plus_t_nstep, pi_0_minus_t_nstep, \
+            probs_modes_states, \
+            dico_stats_res_t_nstep = \
+                balanced_player_game_t(
+                arr_pl_M_T_old_t, arr_pl_M_T_t, t, 
+                pi_hp_plus, pi_hp_minus, 
+                pi_sg_plus_t = pi_sg_plus_t, 
+                pi_sg_minus_t = pi_sg_minus_t,
+                probs_mode = probs_mode_new,
+                probs_modes_states = probs_modes_states,
+                m_players = m_players, 
+                num_periods = num_periods, 
+                dbg = dbg)
+                
+            # update variables at each step because they must have to converge
+            # in the best case
+            pi_sg_plus_t_minus_1 = pi_sg_plus_t_minus_1_nstep
+            pi_sg_minus_t_minus_1 = pi_sg_minus_t_minus_1_nstep
+            pi_0_plus_t, pi_0_minus_t = pi_0_plus_t_nstep, pi_0_minus_t_nstep
+            b0_t, c0_t = b0_t_nstep, c0_t_nstep
+            bens, csts = bens_nstep, csts_nstep
+            arr_pl_M_T_old_t = arr_pl_M_T_old_t_nstep
+            arr_pl_M_T_t = arr_pl_M_T_t_nstep
+                
+            # compute new probabilities by using utility fonction and U_i=B_i-C_i
+            probs_modes_states, U_i_t_nstep, R_i_t_nstep = \
+                update_probs_mode_by_reward(
+                                arr_pl_M_T_t_nstep, 
+                                t,
+                                b0_t, 
+                                c0_t,
+                                m_players, 
+                                probs_modes_states,
+                                learning_rate,
+                                thres = 0.80)
+            
+            U_i_t.append(U_i_t_nstep)
+            R_i_t.append(R_i_t_nstep)
+            state_i_pls_nstep = arr_pl_M_T_t_nstep[:,
+                                                   t,
+                                                   fct_aux.INDEX_ATTRS["state_i"]]
+            mode_i_pls_nstep = arr_pl_M_T_t_nstep[:,
+                                                   t,
+                                                   fct_aux.INDEX_ATTRS["mode_i"]]
+            prod_i_pls_nstep = arr_pl_M_T_t_nstep[:,
+                                                   t,
+                                                   fct_aux.INDEX_ATTRS["prod_i"]]
+            cons_i_pls_nstep = arr_pl_M_T_t_nstep[:,
+                                                   t,
+                                                   fct_aux.INDEX_ATTRS["cons_i"]]
+            Ci_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Ci"]]
+            Pi_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Pi"]]
+            Si_max_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Si_max"]]
+            gamma_i_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                                   t, 
+                                                   fct_aux.INDEX_ATTRS["gamma_i"]]
+            r_i_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["r_i"]]
+            Si_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["Si"]]
+            Si_old_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                                t, 
+                                                fct_aux.INDEX_ATTRS["Si_old"]]
+            R_i_old_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                                t, 
+                                                fct_aux.INDEX_ATTRS["R_i_old"]]
+            balanced_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                        t, 
+                                        fct_aux.INDEX_ATTRS["balanced_pl_i"]]
+            str_profili_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                        t, 
+                                        fct_aux.INDEX_ATTRS["Profili"]]
+            str_casei_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                        t, 
+                                        fct_aux.INDEX_ATTRS["Casei"]]
+            formules_pls_nstep = arr_pl_M_T_t_nstep[:, 
+                                               t, 
+                                               fct_aux.INDEX_ATTRS["formule"]]
+            # vars_nstep = [probs_modes_states, 
+            #               list(state_i_pls_nstep), list(mode_i_pls_nstep),
+            #               list(prod_i_pls_nstep), list(cons_i_pls_nstep), 
+            #               U_i_t_nstep, R_i_t_nstep,
+            #               dico_stats_res_t_nstep]
+            vars_nstep = [Ci_pls_nstep, Pi_pls_nstep, Si_pls_nstep, 
+                          Si_max_pls_nstep, gamma_i_pls_nstep, 
+                          prod_i_pls_nstep, cons_i_pls_nstep, r_i_pls_nstep, 
+                          state_i_pls_nstep, mode_i_pls_nstep, 
+                          str_profili_pls_nstep, str_casei_pls_nstep, 
+                          R_i_old_pls_nstep, Si_old_pls_nstep, 
+                          balanced_pls_nstep,formules_pls_nstep, 
+                          probs_modes_states, U_i_t_nstep, R_i_t_nstep]
+            vars_nsteps.append(vars_nstep)
+        
+        arr_T_nsteps_vars.append(vars_nsteps)
+        
+        # update arr_pl_M_T_t and arr_pl_M_T_t_old
+        arr_pl_M_T = arr_pl_M_T_t 
+        arr_pl_M_T_old = arr_pl_M_T_old_t
+        
+        
+        # print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, nstep={}, U_i_t={} \n".format(
+        # t, pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1, nstep, U_i_t))
+        print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, nstep={} \n".format(
+        t, pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1, nstep, ))
+        
+        # update pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
+        pi_sg_plus.append(pi_sg_plus_t_minus_1)
+        pi_sg_minus.append(pi_sg_minus_t_minus_1)
+        pi_0_plus.append(pi_0_plus_t)
+        pi_0_minus.append(pi_0_minus_t)
+        
+        # update b0_s, c0_s of shape (NUM_PERIODS,) 
+        b0_s.append(b0_t)
+        c0_s.append(c0_t) 
+        
+        # update BENs, CSTs of shape (NUM_PERIODS*M_PLAYERS,)
+        BENs = np.append(BENs, bens)
+        CSTs = np.append(CSTs, csts)
+    
+    # array of shape (num_period, nsteps, len(vars_nstep) = 19, m_players)
+    arr_T_nsteps_vars = np.array(arr_T_nsteps_vars, dtype=object)
+    # array of shape (m_players, num_period, nsteps, len(vars_nstep) = 19)
+    arr_T_nsteps_vars = np.transpose(arr_T_nsteps_vars, [3,0,1,2])
+        
+    #______________     turn list in numpy array    __________________________ 
+    # pi_sg_plus, pi_sg_minus of shape (NUM_PERIODS,)
+    pi_sg_plus = np.array(pi_sg_plus, dtype=object).reshape((len(pi_sg_plus),))
+    pi_sg_minus = np.array(pi_sg_minus, dtype=object).reshape((len(pi_sg_minus),))
+    pi_0_plus = np.array(pi_0_plus, dtype=object).reshape((len(pi_0_plus),))
+    pi_0_minus = np.array(pi_0_minus, dtype=object).reshape((len(pi_0_minus),))
+
+    
+    # BENs, CSTs of shape (M_PLAYERS, NUM_PERIODS)
+    BENs = BENs.reshape(num_periods, m_players).T
+    CSTs = CSTs.reshape(num_periods, m_players).T
+    
+    # b0_s, c0_s of shape (NUM_PERIODS,)
+    b0_s = np.array(b0_s, dtype=object)
+    c0_s = np.array(c0_s, dtype=object)
+    
+    # B_is, C_is of shape (M_PLAYERS, )
+    CONS_is = np.sum(arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["cons_i"]], axis=1)
+    PROD_is = np.sum(arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["prod_i"]], axis=1)
+    prod_i_T = arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["prod_i"]]
+    cons_i_T = arr_pl_M_T[:,:, fct_aux.INDEX_ATTRS["cons_i"]]
+    B_is = np.sum(b0_s * prod_i_T, axis=1)
+    C_is = np.sum(c0_s * cons_i_T, axis=1)
+    
+    # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
+    BB_is = pi_sg_plus[-1] * PROD_is #np.sum(PROD_is)
+    for num_pl, bb_i in enumerate(BB_is):
+        if bb_i != 0:
+            print("player {}, BB_i={}".format(num_pl, bb_i))
+    CC_is = pi_sg_minus[-1] * CONS_is #np.sum(CONS_is)
+    RU_is = BB_is - CC_is
+    
+    pi_hp_plus_s = np.array([pi_hp_plus] * num_periods, dtype=object)
+    pi_hp_minus_s = np.array([pi_hp_minus] * num_periods, dtype=object)
+    
+    #__________      save computed variables locally      _____________________
+    
+    save_variables(path_to_save, arr_pl_M_T_old, arr_pl_M_T, 
+                   b0_s, c0_s, B_is, C_is, BENs, CSTs, BB_is, CC_is, 
+                   RU_is, pi_sg_minus, pi_sg_plus, pi_0_minus, pi_0_plus,
+                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+                   arr_T_nsteps_vars, algo="LRI")
+    
+    print("{}, probCi={}, pi_hp_plus={}, pi_hp_minus ={}, probs_mode={} ---> fin \n".format(
+            scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_mode))
+    
+    return arr_T_nsteps_vars
+
 def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                             m_players=3, num_periods=5, 
                             Ci_low=10, Ci_high=30,
@@ -1385,7 +1703,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
 #                   definition  des unittests
 #
 ###############################################################################
-def test_lri_balanced_player_game():
+def test_lri_balanced_player_game_sigmoid():
     pi_hp_plus = 0.10; pi_hp_minus = 0.15
     pi_hp_plus = 10; pi_hp_minus = 15
     m_players = 3; num_periods = 5
@@ -1398,7 +1716,7 @@ def test_lri_balanced_player_game():
     fct_aux.N_DECIMALS = 4
     
     arr_T_nsteps_vars = \
-    lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
+    lri_balanced_player_game_sigmoid(pi_hp_plus=pi_hp_plus, 
                              pi_hp_minus=pi_hp_minus,
                              m_players=m_players, 
                              num_periods=num_periods, 
@@ -1412,7 +1730,7 @@ def test_lri_balanced_player_game():
     
     return arr_T_nsteps_vars
 
-def test_lri_balanced_player_game_manyValues():
+def test_lri_balanced_player_sigmoid_game_manyValues():
     
     fct_aux.N_DECIMALS = 4
     m_players = 3; num_periods = 5; n_steps = 4
@@ -1463,7 +1781,7 @@ def test_lri_balanced_player_game_manyValues():
         #print(path_to_save_oneExec, cpt)
     
         arr_T_nsteps_vars = \
-        lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
+        lri_balanced_player_game_sigmoid(pi_hp_plus=pi_hp_plus, 
                                   pi_hp_minus=pi_hp_minus,
                                   m_players=m_players, 
                                   num_periods=num_periods, 
@@ -1489,6 +1807,6 @@ if __name__ == "__main__":
     
     # arr_T_nsteps_vars = \
     #     test_lri_balanced_player_game()
-    test_lri_balanced_player_game_manyValues()
+    test_lri_balanced_player_sigmoid_game_manyValues()
     
     print("runtime = {}".format(time.time() - ti))
