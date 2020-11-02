@@ -29,7 +29,8 @@ def save_variables(path_to_save, arr_pl_M_T_old, arr_pl_M_T,
                    b0_s, c0_s, B_is, C_is, BENs, CSTs, BB_is, CC_is, 
                    RU_is, pi_sg_minus, pi_sg_plus, pi_0_minus, pi_0_plus,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-                   arr_T_nsteps_vars, algo=None):
+                   arr_T_nsteps_vars, bg_min_i_s=None, bg_max_i_s=None, 
+                   algo=None):
     if algo is None:
         path_to_save = path_to_save \
                         if path_to_save != "tests" \
@@ -46,6 +47,10 @@ def save_variables(path_to_save, arr_pl_M_T_old, arr_pl_M_T,
         Path(path_to_save).mkdir(parents=True, exist_ok=True)
         np.save(os.path.join(path_to_save, "arr_T_nsteps_vars.npy"), 
                 arr_T_nsteps_vars)
+        if bg_min_i_s is not None:
+            np.save(os.path.join(path_to_save, "bg_min_i_s.npy"), bg_min_i_s)
+        if bg_max_i_s is not None:
+            np.save(os.path.join(path_to_save, "bg_max_i_s.npy"), bg_max_i_s)
     
     np.save(os.path.join(path_to_save, "arr_pls_M_T_old.npy"), arr_pl_M_T_old)
     np.save(os.path.join(path_to_save, "arr_pls_M_T.npy"), arr_pl_M_T)
@@ -298,11 +303,11 @@ def update_probs_mode_by_reward_defined_funtion(
     # I_m, I_M
     P_i_t_s = arr_pl_M_T_t_nstep[
                     arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[2]
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[2]
                     ][:,t,fct_aux.INDEX_ATTRS["Pi"]]
     C_i_t_s = arr_pl_M_T_t_nstep[
                     arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[2]
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[2]
                     ][:,t,fct_aux.INDEX_ATTRS["Ci"]]
     ## I_m
     P_C_i_t_s = P_i_t_s - C_i_t_s
@@ -315,7 +320,7 @@ def update_probs_mode_by_reward_defined_funtion(
     # O_m, O_M
     P_i_t_s = arr_pl_M_T_t_nstep[
                     (arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[0]) 
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[0]) 
                        | 
                     (arr_pl_M_T_t_nstep[:,t,
                         fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[1])
@@ -1682,18 +1687,18 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
         print("******* t = {} *******".format(t)) if dbg else None
         arr_pl_M_T_old_t = arr_pl_M_T_old.copy()
         arr_pl_M_T_t = arr_pl_M_T.copy()
-        U_i_t, R_i_t =  [], []
+        U_i_t = [];  #R_i_t =  []
         b0_t, c0_t = 0, 0
         vars_nsteps = []
         probs_mode_new = probs_mode
         probs_modes_states = None
-        bg_min_i_0_t_1_s, bg_max_i_0_t_1_s = min_max_bg_i_0_t_1(
-                                            bg_min_i_s, 
-                                            bg_max_i_s,
-                                            start=0, 
-                                            stop=t-1) if t > 0 else None
-        bg_min_i_0_t_1_s = bg_min_i_s[:,t] if t == 0 else bg_min_i_0_t_1_s
-        bg_max_i_0_t_1_s = bg_max_i_s[:,t] if t == 0 else bg_max_i_0_t_1_s
+        bg_min_i_0_t_1_s = bg_min_i_s[:,0:t].min(axis=1) if t > 0 else None
+        bg_max_i_0_t_1_s = bg_max_i_s[:,0:t].max(axis=1) if t > 0 else None
+    
+        bg_min_i_0_t_1_s = bg_min_i_s[:,t] if t == 0 \
+                                            else bg_min_i_s[:,0:t].min(axis=1)
+        bg_max_i_0_t_1_s = bg_max_i_s[:,t] if t == 0 \
+                                            else bg_max_i_s[:,0:t].max(axis=1)
         bg_min_i_0_t_s, bg_max_i_0_t_s = None, None
         for nstep in range(0, n_steps):
             pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t_minus_1
@@ -1728,7 +1733,10 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             arr_pl_M_T_old_t = arr_pl_M_T_old_t_nstep
             arr_pl_M_T_t = arr_pl_M_T_t_nstep
                 
-            # compute new probabilities by using utility fonction and U_i=B_i-C_i
+            # compute new probabilities by using utility fonction
+            # TODO verifier si cest necessaire de retourner bg_min_i_0_t_s ,
+            # bg_max_i_0_t_s en list 
+            
             # probs_modes_states, U_i_t_nstep, R_i_t_nstep, \
             # bg_min_i_0_t_s, bg_max_i_0_t_s = \
             probs_modes_states, u_i_t_nstep, \
@@ -1746,11 +1754,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                                 learning_rate,
                                 thres = 0.80)
             
-            # a mettre a jour dans vars_nstep
-            # a definir fonctions  en rouge 
-            # TODO verifier si cest necessaire de retourner bg_min_i_0_t_s ,
-            # bg_max_i_0_t_s en list 
-            u_i_t.append(u_i_t_nstep)
+            U_i_t.append(u_i_t_nstep)
             
             state_i_pls_nstep = arr_pl_M_T_t_nstep[:,
                                                    t,
@@ -1812,7 +1816,8 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                           str_profili_pls_nstep, str_casei_pls_nstep, 
                           R_i_old_pls_nstep, Si_old_pls_nstep, 
                           balanced_pls_nstep,formules_pls_nstep, 
-                          probs_modes_states, bg_min_i_0_t_s, bg_max_i_0_t_s]
+                          probs_modes_states, bg_min_i_0_t_s, bg_max_i_0_t_s,
+                          U_i_t]
                           #U_i_t_nstep, R_i_t_nstep]
             vars_nsteps.append(vars_nstep)
         
@@ -1891,7 +1896,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                    b0_s, c0_s, B_is, C_is, BENs, CSTs, BB_is, CC_is, 
                    RU_is, pi_sg_minus, pi_sg_plus, pi_0_minus, pi_0_plus,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-                   arr_T_nsteps_vars, algo="LRI")
+                   arr_T_nsteps_vars, bg_min_i_s, bg_max_i_s, algo="LRI")
     
     print("{}, probCi={}, pi_hp_plus={}, pi_hp_minus ={}, probs_mode={} ---> fin \n".format(
             scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_mode))
@@ -1928,6 +1933,34 @@ def test_lri_balanced_player_game_sigmoid():
                              path_to_save=path_to_save, dbg=False)
     
     return arr_T_nsteps_vars
+
+def test_lri_balanced_player_game():
+    pi_hp_plus = 0.10; pi_hp_minus = 0.15
+    pi_hp_plus = 10; pi_hp_minus = 15
+    m_players = 3; num_periods = 5
+    Ci_low = 10; Ci_high = 30
+    prob_Ci = 0.3; learning_rate=0.05;
+    probs_mode = [0.5, 0.5, 0.5]
+    n_steps = 4
+    scenario = "scenario1"; path_to_save = "tests"
+    
+    fct_aux.N_DECIMALS = 4
+    
+    arr_T_nsteps_vars = \
+    lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
+                             pi_hp_minus=pi_hp_minus,
+                             m_players=m_players, 
+                             num_periods=num_periods, 
+                             Ci_low=Ci_low, 
+                             Ci_high=Ci_high,
+                             prob_Ci=prob_Ci, 
+                             learning_rate=learning_rate,
+                             probs_mode=probs_mode,
+                             scenario=scenario, n_steps=n_steps, 
+                             path_to_save=path_to_save, dbg=False)
+    
+    return arr_T_nsteps_vars
+
 
 def test_lri_balanced_player_sigmoid_game_manyValues():
     
@@ -2006,6 +2039,8 @@ if __name__ == "__main__":
     
     # arr_T_nsteps_vars = \
     #     test_lri_balanced_player_game()
-    test_lri_balanced_player_sigmoid_game_manyValues()
+    # test_lri_balanced_player_sigmoid_game_manyValues()
+    arr_T_nsteps_vars = \
+        test_lri_balanced_player_game()
     
     print("runtime = {}".format(time.time() - ti))
