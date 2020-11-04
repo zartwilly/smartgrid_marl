@@ -323,21 +323,21 @@ def update_probs_mode_by_reward_defined_funtion(
                         fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[0]) 
                        | 
                     (arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[1])
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[1])
                        ][:,t,fct_aux.INDEX_ATTRS["Pi"]]
     C_i_t_s = arr_pl_M_T_t_nstep[
                     (arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[0]) 
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[0]) 
                        | 
                     (arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[1])
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[1])
                        ][:,t,fct_aux.INDEX_ATTRS["Ci"]]
     S_i_t_s = arr_pl_M_T_t_nstep[
                     (arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[0]) 
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[0]) 
                        | 
                     (arr_pl_M_T_t_nstep[:,t,
-                        fct_aux.INDEX_ATTRS["state"]] == fct_aux.STATES[1])
+                        fct_aux.INDEX_ATTRS["state_i"]] == fct_aux.STATES[1])
                        ][:,t,fct_aux.INDEX_ATTRS["Si"]]
     ## O_m
     C_P_S_i_t_s = C_i_t_s - (P_i_t_s + S_i_t_s)
@@ -362,9 +362,15 @@ def update_probs_mode_by_reward_defined_funtion(
         else:
             bg_i = round(bens_nstep[num_pl_i], fct_aux.N_DECIMALS)
         bg_i_s.append(bg_i)
+    print("bg_i_s = {}".format(len(bg_i_s)))
     # bg_i_min, bg_i_max
-    bg_min_i_0_t_s, bg_max_i_0_t_s = [], [] 
+    bg_min_i_0_t_s = bg_min_i_0_t_1_s.copy()
+    bg_max_i_0_t_s = bg_max_i_0_t_1_s.copy()
     for num_pl_i in range(0,arr_pl_M_T_t_nstep.shape[0]):
+        print("num_pl_i = {}, bg_min_i_0_t_1_s={}, bg_max_i_0_t_1_s={}".format(num_pl_i, 
+                bg_min_i_0_t_1_s.shape, bg_max_i_0_t_1_s.shape))
+        print("bg_min_i_0_t_1_s[{}]={}, bg_max_i_0_t_1_s[{}]={}".format(num_pl_i,bg_min_i_0_t_1_s[num_pl_i], num_pl_i, bg_max_i_0_t_1_s[num_pl_i]))
+        print("bg_i_s[{}]={}".format(num_pl_i,bg_i_s[num_pl_i]))
         if bg_min_i_0_t_1_s[num_pl_i] > bg_i_s[num_pl_i]:
             bg_min_i_0_t_s[num_pl_i] = bg_i_s[num_pl_i]
         if bg_max_i_0_t_1_s[num_pl_i] < bg_i_s[num_pl_i]:
@@ -375,8 +381,8 @@ def update_probs_mode_by_reward_defined_funtion(
     # probs_modes_states_new
     mode_i_t_nstep = arr_pl_M_T_t_nstep[:, t, fct_aux.INDEX_ATTRS["mode_i"]]
     state_i_t_nstep = arr_pl_M_T_t_nstep[:, t, fct_aux.INDEX_ATTRS["state_i"]]
-    print("Shapes: mode_i_t_nstep={},u _i_t_nstep={}, state_i_t_nstep={}, probs_modes_states={}".format(
-        mode_i_t_nstep.shape, u_i_t_nstep.shape, state_i_t_nstep.shape, probs_modes_states))
+    print("Shapes: mode_i_t_nstep={}, state_i_t_nstep={}, probs_modes_states={}, u_i_t_nstep={}=> {}".format(
+        mode_i_t_nstep.shape, state_i_t_nstep.shape, probs_modes_states, u_i_t_nstep.shape, u_i_t_nstep))
     actions_rewards_states = zip(mode_i_t_nstep, u_i_t_nstep, state_i_t_nstep)
     for num_pl, tup_action_reward_state in enumerate(actions_rewards_states):
         action = tup_action_reward_state[0]
@@ -1734,11 +1740,6 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             arr_pl_M_T_t = arr_pl_M_T_t_nstep
                 
             # compute new probabilities by using utility fonction
-            # TODO verifier si cest necessaire de retourner bg_min_i_0_t_s ,
-            # bg_max_i_0_t_s en list 
-            
-            # probs_modes_states, U_i_t_nstep, R_i_t_nstep, \
-            # bg_min_i_0_t_s, bg_max_i_0_t_s = \
             probs_modes_states, u_i_t_nstep, \
             bg_min_i_0_t_s, bg_max_i_0_t_s = \
                 update_probs_mode_by_reward_defined_funtion(
@@ -1817,7 +1818,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
                           R_i_old_pls_nstep, Si_old_pls_nstep, 
                           balanced_pls_nstep,formules_pls_nstep, 
                           probs_modes_states, bg_min_i_0_t_s, bg_max_i_0_t_s,
-                          U_i_t]
+                          u_i_t_nstep]
                           #U_i_t_nstep, R_i_t_nstep]
             vars_nsteps.append(vars_nstep)
         
@@ -1852,6 +1853,7 @@ def lri_balanced_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
     
     # array of shape (num_period, nsteps, len(vars_nstep) = 19, m_players)
     arr_T_nsteps_vars = np.array(arr_T_nsteps_vars, dtype=object)
+    print("arr_T_nsteps_vars={}".format(arr_T_nsteps_vars.shape))
     # array of shape (m_players, num_period, nsteps, len(vars_nstep) = 19)
     arr_T_nsteps_vars = np.transpose(arr_T_nsteps_vars, [3,0,1,2])
         
@@ -2030,6 +2032,74 @@ def test_lri_balanced_player_sigmoid_game_manyValues():
         
     return 
 
+def test_lri_balanced_player_game_manyValues():
+    
+    fct_aux.N_DECIMALS = 4
+    m_players = 3; num_periods = 5; n_steps = 4
+    # m_players = 50; num_periods = 40; n_steps = 30
+    Ci_low = 10; Ci_high = 30
+    path_to_save = "tests"
+    
+    path_to_save = os.path.join(path_to_save, 
+                                "LRI_simu_"+datetime.now().strftime("%d%m_%H%M"))
+    
+    # compute pi_hp_plus, pi_hp_minus
+    pi_hp_plus= [5, 10, 15]
+    coef = 3; coefs = [coef]
+    for i in range(0,len(pi_hp_plus)-1):
+        val = round(coefs[i]/coef,1)
+        coefs.append(val)
+    pi_hp_minus = [ int(math.floor(pi_hp_plus[i]*coefs[i])) 
+                   for i in range(0, len(pi_hp_plus))]
+    # prob_Ci and scenario
+    prob_Cis = [0.3, 0.5, 0.7]
+    scenarios = ["scenario1", "scenario2", "scenario3"]
+    
+    # learning rate and probs_mode
+    learning_rates = list(np.arange(start=0.01,stop=0.02,step=0.005))
+    probs_modes = [[0.5, 0.5, 0.5],[0.25, 0.5, 0.75],[0.75, 0.5, 0.25]]
+    
+    cpt = 0
+    for tupl in it.product(zip(pi_hp_plus, pi_hp_minus), prob_Cis, 
+                           scenarios, learning_rates, probs_modes):
+        pi_hp_plus = tupl[0][0]
+        pi_hp_minus = tupl[0][1]
+        prob_Ci = tupl[1]
+        scenario = tupl[2]
+        learning_rate = tupl[3]
+        probs_mode = tupl[4]
+        
+        path_to_save_oneExec = os.path.join(
+                                path_to_save, 
+                                scenario,
+                                str(prob_Ci),
+                                "pi_hp_plus_"+str(pi_hp_plus)+\
+                                    "_pi_hp_minus_"+str(pi_hp_minus),
+                                "probs_mode_"+"_".join(map(str, probs_mode)), 
+                                str(learning_rate)
+                                )
+    
+        cpt += 1
+        #print(path_to_save_oneExec, cpt)
+    
+        arr_T_nsteps_vars = \
+        lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
+                                  pi_hp_minus=pi_hp_minus,
+                                  m_players=m_players, 
+                                  num_periods=num_periods, 
+                                  Ci_low=Ci_low, 
+                                  Ci_high=Ci_high,
+                                  prob_Ci=prob_Ci, 
+                                  learning_rate=learning_rate,
+                                  probs_mode=probs_mode,
+                                  scenario=scenario, n_steps=n_steps, 
+                                  path_to_save=path_to_save_oneExec, 
+                                  dbg=False)
+        
+        
+        
+    return 
+
 ###############################################################################
 #                   Execution
 #
@@ -2040,7 +2110,8 @@ if __name__ == "__main__":
     # arr_T_nsteps_vars = \
     #     test_lri_balanced_player_game()
     # test_lri_balanced_player_sigmoid_game_manyValues()
-    arr_T_nsteps_vars = \
-        test_lri_balanced_player_game()
+    # arr_T_nsteps_vars = \
+    #     test_lri_balanced_player_game()
+    test_lri_balanced_player_game_manyValues()
     
     print("runtime = {}".format(time.time() - ti))
