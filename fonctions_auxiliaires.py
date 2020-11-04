@@ -115,9 +115,11 @@ def compute_utility_players(arr_pl_M_T, gamma_is, t, b0, c0):
     csts: costs of M_PLAYERS, shape (M_PLAYERS,)
     """
     bens = b0 * arr_pl_M_T[:, t, INDEX_ATTRS["prod_i"]] \
-            + gamma_is * arr_pl_M_T[:, t, INDEX_ATTRS["r_i"]]
+            + gamma_is * arr_pl_M_T[:, t, INDEX_ATTRS["r_i"]] + 1
     csts = c0 * arr_pl_M_T[:, t, INDEX_ATTRS["cons_i"]]
-    return bens, csts     
+    bens = np.around(np.array(bens, dtype=float), N_DECIMALS)
+    csts = np.around(np.array(csts, dtype=float), N_DECIMALS)
+    return bens, csts 
 
 def compute_prod_cons_SG(arr_pl_M_T, t):
     """
