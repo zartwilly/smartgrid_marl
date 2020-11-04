@@ -22,8 +22,8 @@ NUM_PERIODS = 50
 CHOICE_RU = 1
 N_DECIMALS = 2
 
-LOW_VAL_Ci = 100 
-HIGH_VAL_Ci = 300
+Ci_LOW = 10
+Ci_HIGH = 60
 
 STATES = ["state1", "state2", "state3"]
 
@@ -196,7 +196,7 @@ def compute_energy_unit_price(pi_0_plus, pi_0_minus,
 #                     for (low_item,high_item) in inters]).reshape((1,-1))
     
 #     ## code initial 
-#     # Cis = np.random.uniform(low=LOW_VAL_Ci, high=HIGH_VAL_Ci, 
+#     # Cis = np.random.uniform(low=Ci_LOW, high=Ci_HIGH, 
 #     #                         size=(1, M_PLAYERS))
     
 #     # low = sys_inputs['case'][0]; high = sys_inputs['case'][1]
@@ -339,7 +339,7 @@ def compute_energy_unit_price(pi_0_plus, pi_0_minus,
 def generate_Pi_Ci_Si_Simax_by_profil_scenario(
                                     m_players=3, num_periods=5, 
                                     scenario="scenario1", prob_Ci=0.3, 
-                                    Ci_low=10, Ci_high=60):
+                                    Ci_low=Ci_LOW, Ci_high=Ci_HIGH):
     """
     create the initial values of all players at all time intervals
 
@@ -448,7 +448,7 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
 
 def generer_Pi_Ci_Si_Simax_for_all_scenarios(scenarios=["scenario1"], 
                                     m_players=3, num_periods=5, 
-                                    prob_Ci=0.3, Ci_low=10, Ci_high=60):
+                                    prob_Ci=0.3, Ci_low=Ci_LOW, Ci_high=Ci_HIGH):
     """
     create the variables for all scenarios
 
@@ -874,7 +874,7 @@ def test_compute_utility_players():
     arr_pls_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
                             m_players=M_PLAYERS, num_periods=NUM_PERIODS, 
                             scenario="scenario1", prob_Ci=0.3, 
-                            Ci_low=10, Ci_high=60)
+                            Ci_low=Ci_LOW, Ci_high=Ci_HIGH)
     
     OK = 0
     for t in range(0, NUM_PERIODS):
@@ -905,7 +905,7 @@ def test_compute_prod_cons_SG():
     arr_pl_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
                             m_players=M_PLAYERS, num_periods=NUM_PERIODS, 
                             scenario="scenario1", prob_Ci=0.3, 
-                            Ci_low=10, Ci_high=60)
+                            Ci_low=Ci_LOW, Ci_high=Ci_HIGH)
     
     production = 0; consumption = 0; balanced = 0
     for t in range(0, NUM_PERIODS):
@@ -977,11 +977,11 @@ def test_generate_Pi_Ci_Si_Simax_by_profil_scenario():
     arr_pl_M_T = generate_Pi_Ci_Si_Simax_by_profil_scenario(
                             m_players=30, num_periods=5, 
                             scenario="scenario1", prob_Ci=0.3, 
-                            Ci_low=10, Ci_high=60)
+                            Ci_low=Ci_LOW, Ci_high=Ci_HIGH)
 
     # compter le nombre players ayant Ci = 10 et Ci = 60
-    cis_weak = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == 10].shape[0]
-    cis_strong = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == 60].shape[0]
+    cis_weak = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == Ci_LOW].shape[0]
+    cis_strong = arr_pl_M_T[arr_pl_M_T[:, 1, INDEX_ATTRS["Ci"]] == Ci_HIGH].shape[0]
     
     print("___ arr_pl_M_T : {}, Ci_weak={}, Ci_strong={}".format(
             arr_pl_M_T.shape, round(cis_weak/arr_pl_M_T.shape[0],2), 
@@ -994,7 +994,7 @@ def test_generer_Pi_Ci_Si_Simax_for_all_scenarios():
     l_arr_pl_M_T = generer_Pi_Ci_Si_Simax_for_all_scenarios(
                         scenarios=["scenario1", "scenario2", "scenario3"], 
                         m_players=m_players, num_periods=num_periods, 
-                        prob_Ci=0.3, Ci_low=10, Ci_high=60)
+                        prob_Ci=0.3, Ci_low=Ci_LOW, Ci_high=Ci_HIGH)
     cpt_true = 0
     for arr_pl_M_T in l_arr_pl_M_T:
         if arr_pl_M_T.shape == (m_players, num_periods, len(INDEX_ATTRS)):
