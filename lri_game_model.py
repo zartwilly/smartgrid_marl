@@ -2473,7 +2473,7 @@ def test_lri_balanced_player_game_sigmoid():
     pi_hp_plus = 0.10; pi_hp_minus = 0.15
     pi_hp_plus = 10; pi_hp_minus = 15
     m_players = 3; num_periods = 5
-    Ci_low = 10; Ci_high = 30
+    Ci_low = fct_aux.Ci_LOW; Ci_high = fct_aux.Ci_HIGH
     prob_Ci = 0.3; learning_rate=0.05;
     probs_mode = [0.5, 0.5, 0.5]
     n_steps = 4
@@ -2500,7 +2500,7 @@ def test_lri_balanced_player_game():
     pi_hp_plus = 0.10; pi_hp_minus = 0.15
     pi_hp_plus = 10; pi_hp_minus = 15
     m_players = 3; num_periods = 5
-    Ci_low = 10; Ci_high = 30
+    Ci_low = fct_aux.Ci_LOW; Ci_high = fct_aux.Ci_HIGH
     prob_Ci = 0.3; learning_rate=0.05;
     probs_mode = [0.5, 0.5, 0.5]
     n_steps = 4
@@ -2527,7 +2527,7 @@ def test_lri_balanced_player_game_CORRECTION_DIV_ZERO():
     pi_hp_plus = 0.10; pi_hp_minus = 0.15
     pi_hp_plus = 10; pi_hp_minus = 15
     m_players = 3; num_periods = 5
-    Ci_low = 10; Ci_high = 30
+    Ci_low = fct_aux.Ci_LOW; Ci_high = fct_aux.Ci_HIGH
     prob_Ci = 0.3; learning_rate=0.05;
     probs_mode = [0.5, 0.5, 0.5]
     n_steps = 4
@@ -2556,7 +2556,7 @@ def test_lri_balanced_player_sigmoid_game_manyValues():
     fct_aux.N_DECIMALS = 4
     m_players = 3; num_periods = 5; n_steps = 4
     m_players = 50; num_periods = 40; n_steps = 30
-    Ci_low = 10; Ci_high = 30
+    Ci_low = fct_aux.Ci_LOW; Ci_high = fct_aux.Ci_HIGH
     path_to_save = "tests"
     
     path_to_save = os.path.join(path_to_save, 
@@ -2624,7 +2624,7 @@ def test_lri_balanced_player_game_manyValues():
     fct_aux.N_DECIMALS = 4
     m_players = 3; num_periods = 5; n_steps = 4
     # m_players = 50; num_periods = 40; n_steps = 30
-    Ci_low = 10; Ci_high = 30
+    Ci_low = fct_aux.Ci_LOW; Ci_high = fct_aux.Ci_HIGH
     path_to_save = "tests"
     
     path_to_save = os.path.join(path_to_save, 
@@ -2693,8 +2693,9 @@ def test_lri_balanced_player_game_manyValues_CORRECTION_DIV_ZERO():
     m_players = 3; num_periods = 5; n_steps = 4
     m_players = 10; num_periods = 10; n_steps = 10
     m_players = 20; num_periods = 20; n_steps = 20
+    m_players = 30; num_periods = 10; n_steps = 30
     # m_players = 50; num_periods = 40; n_steps = 30
-    Ci_low = 10; Ci_high = 30
+    Ci_low = fct_aux.Ci_LOW; Ci_high = fct_aux.Ci_HIGH
     path_to_save = "tests"
     
     path_to_save = os.path.join(path_to_save, 
@@ -2713,7 +2714,8 @@ def test_lri_balanced_player_game_manyValues_CORRECTION_DIV_ZERO():
     scenarios = ["scenario1", "scenario2", "scenario3"]
     
     # learning rate and probs_mode
-    learning_rates = list(np.arange(start=0.01,stop=0.04,step=0.005))
+    learning_rates = list(np.around(np.arange(start=0.01,stop=0.04,step=0.005),
+                                    3))
     probs_modes = [[0.5, 0.5, 0.5],[0.25, 0.5, 0.75],[0.75, 0.5, 0.25]]
     
     cpt = 0
