@@ -18,75 +18,75 @@ import visu_bkh as bkh
 from datetime import datetime
 from pathlib import Path
 
-def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
-    diff_energy_cons_t = 0
-    diff_energy_prod_t = 0
-    for k in range(0, t+1):
-        energ_k_prod = \
-            fct_aux.fct_positive(
-            sum_list1=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]),
-            sum_list2=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]])
-                    )
-        energ_k_cons = \
-            fct_aux.fct_positive(
-            sum_list1=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]]),
-            sum_list2=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]])
-                    )
+# def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
+#     diff_energy_cons_t = 0
+#     diff_energy_prod_t = 0
+#     for k in range(0, t+1):
+#         energ_k_prod = \
+#             fct_aux.fct_positive(
+#             sum_list1=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]),
+#             sum_list2=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]])
+#                     )
+#         energ_k_cons = \
+#             fct_aux.fct_positive(
+#             sum_list1=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]]),
+#             sum_list2=sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]])
+#                     )
             
-        diff_energy_cons_t += energ_k_cons
-        diff_energy_prod_t += energ_k_prod
-        print("k={}, energ_k_prod={}, energ_k_cons={}".format(
-            t, energ_k_prod, energ_k_cons)) if dbg else None
-        # print("k={}, energ_k_prod={}, energ_k_cons={}".format(
-        #     t, energ_k_prod, energ_k_cons))
-        ## debug
-        bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
-        unique,counts=np.unique(bool_,return_counts=True)
-        sum_prod_k = round(np.sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]),2)
-        sum_cons_k = round(np.sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]]),2)
-        diff_sum_prod_cons_k = sum_prod_k - sum_cons_k
-        print("t={}, k={}, unique:{}, counts={}, sum_prod_k={}, sum_cons_k={}, diff_sum_k={}".format(
-                t,k,unique, counts, sum_prod_k, sum_cons_k, diff_sum_prod_cons_k)) \
-            if dbg==True else None
-        ## debug
+#         diff_energy_cons_t += energ_k_cons
+#         diff_energy_prod_t += energ_k_prod
+#         print("k={}, energ_k_prod={}, energ_k_cons={}".format(
+#             t, energ_k_prod, energ_k_cons)) if dbg else None
+#         # print("k={}, energ_k_prod={}, energ_k_cons={}".format(
+#         #     t, energ_k_prod, energ_k_cons))
+#         ## debug
+#         bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
+#         unique,counts=np.unique(bool_,return_counts=True)
+#         sum_prod_k = round(np.sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]),2)
+#         sum_cons_k = round(np.sum(arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["cons_i"]]),2)
+#         diff_sum_prod_cons_k = sum_prod_k - sum_cons_k
+#         print("t={}, k={}, unique:{}, counts={}, sum_prod_k={}, sum_cons_k={}, diff_sum_k={}".format(
+#                 t,k,unique, counts, sum_prod_k, sum_cons_k, diff_sum_prod_cons_k)) \
+#             if dbg==True else None
+#         ## debug
     
-    sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
-    sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
+#     sum_cons = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
+#     sum_prod = sum(sum(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
     
     
-    # for k in range(0, t+1):
-    #     bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
-    #     unique,counts=np.unique(bool_,return_counts=True)
-    #     print("t={}, k={}, unique:{}, counts={}".format(t,k,unique, counts))
-    # print("t={}, sum_diff_energy_cons_t={}, sum_diff_energy_prod_t={}, sum_cons={}, sum_prod={}".format(
-    #     t, round(diff_energy_cons_t,2), round(diff_energy_prod_t,2), 
-    #         round(sum_cons,2), round(sum_prod,2) ))
-    # # print("sum_cons={}, sum_prod={}".format(
-    # #         round(sum_cons,2), round(sum_prod,2))) \
-    # #         if t%20 == 0 \
-    # #         else None
-    print("NAN: cons={}, prod={}".format(
-            np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
-            np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
-        ) if dbg else None
-    arr_cons = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
-    arr_prod = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
-    # print("positions of nan cons:{}, prod={}".format(arr_cons, arr_prod))
-    # print("state")
-    if arr_cons.size != 0:
-        for arr in arr_cons:
-            print("{}-->state:{}, Pi={}, Ci={}, Si={}".format(
-                arr, arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["state_i"]],
-                arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Pi"]],
-                arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Ci"]],
-                arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Si"]]))
+#     # for k in range(0, t+1):
+#     #     bool_ = arr_pl_M_T[:, k, fct_aux.INDEX_ATTRS["prod_i"]]>0
+#     #     unique,counts=np.unique(bool_,return_counts=True)
+#     #     print("t={}, k={}, unique:{}, counts={}".format(t,k,unique, counts))
+#     # print("t={}, sum_diff_energy_cons_t={}, sum_diff_energy_prod_t={}, sum_cons={}, sum_prod={}".format(
+#     #     t, round(diff_energy_cons_t,2), round(diff_energy_prod_t,2), 
+#     #         round(sum_cons,2), round(sum_prod,2) ))
+#     # # print("sum_cons={}, sum_prod={}".format(
+#     # #         round(sum_cons,2), round(sum_prod,2))) \
+#     # #         if t%20 == 0 \
+#     # #         else None
+#     print("NAN: cons={}, prod={}".format(
+#             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
+#             np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
+#         ) if dbg else None
+#     arr_cons = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["cons_i"]].astype(np.float64)))
+#     arr_prod = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, fct_aux.INDEX_ATTRS["prod_i"]].astype(np.float64)))
+#     # print("positions of nan cons:{}, prod={}".format(arr_cons, arr_prod))
+#     # print("state")
+#     if arr_cons.size != 0:
+#         for arr in arr_cons:
+#             print("{}-->state:{}, Pi={}, Ci={}, Si={}".format(
+#                 arr, arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["state_i"]],
+#                 arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Pi"]],
+#                 arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Ci"]],
+#                 arr_pl_M_T[arr[0], arr[1], fct_aux.INDEX_ATTRS["Si"]]))
     
-    new_pi_sg_minus_t = round(pi_hp_minus*diff_energy_cons_t / sum_cons,2)  \
-                    if sum_cons != 0 else np.nan
-    new_pi_sg_plus_t = round(pi_hp_plus*diff_energy_prod_t / sum_prod,2) \
-                        if sum_prod != 0 else np.nan
+#     new_pi_sg_minus_t = round(pi_hp_minus*diff_energy_cons_t / sum_cons,2)  \
+#                     if sum_cons != 0 else np.nan
+#     new_pi_sg_plus_t = round(pi_hp_plus*diff_energy_prod_t / sum_prod,2) \
+#                         if sum_prod != 0 else np.nan
                             
-    return new_pi_sg_plus_t, new_pi_sg_minus_t
+#     return new_pi_sg_plus_t, new_pi_sg_minus_t
 
 ###############################################################################
 #           Nouvelle version 
@@ -328,7 +328,7 @@ def balance_player_game(pi_hp_plus = 0.10, pi_hp_minus = 0.15,
             
         # compute the new prices pi_sg_plus_t+1, pi_sg_minus_t+1 
         # from a pricing model in the document
-        pi_sg_plus_t_new, pi_sg_minus_t_new = determine_new_pricing_sg(
+        pi_sg_plus_t_new, pi_sg_minus_t_new = fct_aux.determine_new_pricing_sg(
                                                 arr_pl_M_T, 
                                                 pi_hp_plus, 
                                                 pi_hp_minus, 
@@ -513,7 +513,7 @@ def test_determine_new_pricing_sg_and_new():
     print("OLD: new_pi_sg_plus={}, new_pi_sg_minus={}".format(new_pi_sg_plus, new_pi_sg_minus))
  
     new_new_pi_sg_plus, new_new_pi_sg_minus = \
-        determine_new_pricing_sg(arrs, pi_hp_plus, pi_hp_minus, t)
+        fct_aux.determine_new_pricing_sg(arrs, pi_hp_plus, pi_hp_minus, t)
     print("NEW: new_pi_sg_plus={}, new_pi_sg_minus={}".format(
             new_new_pi_sg_plus, new_new_pi_sg_minus))
 
