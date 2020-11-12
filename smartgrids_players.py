@@ -427,12 +427,12 @@ class Player:
                 self.r_i = self.Si_max - self.Si
                 self.prod_i = 0
             else:
+                R_i = self.Si_max - self.Si
                 self.Si_old = (self.mode_i == "DIS")*self.Si \
                                 + (self.mode_i == "PROD")*self.Si_old
                 self.Si = (self.mode_i == "DIS") \
                                 *(min(self.Si_max, self.Si + (self.Pi - self.Ci))) \
                             + (self.mode_i == "PROD")*self.Si
-                R_i = self.Si_max - self.Si
                 self.r_i = min(R_i, self.Pi - self.Ci) \
                             if self.mode_i == "DIS" else 0
                 self.prod_i = (self.mode_i == "PROD")*(self.Pi - self.Ci)\
