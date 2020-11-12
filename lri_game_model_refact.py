@@ -642,7 +642,7 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
     # compute the new prices pi_sg_plus_t+1, pi_sg_minus_t+1 
     # from a pricing model in the document
     pi_sg_plus_t_k_new, pi_sg_minus_t_k_new = \
-        detGameModel.determine_new_pricing_sg(
+        fct_aux.determine_new_pricing_sg(
             arr_pl_M_T_K_vars[:,:,k,:], 
             pi_hp_plus, 
             pi_hp_minus, 
