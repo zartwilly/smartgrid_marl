@@ -101,7 +101,13 @@ def find_out_min_max_bg(arr_pl_M_T_K_vars, t, k):
     """
     
     # TODO A REFAIRE CAR FAUX
-    if k == 0:
+    if k == 0 \
+        and np.isnan(
+                np.array(
+                    arr_pl_M_T_K_vars[:,t,k,
+                        fct_aux.INDEX_ATTRS["bg_i_min"]], 
+                    dtype=np.float64)
+                ).all():
         bg_max_i_t_0_to_k \
         = arr_pl_M_T_K_vars[:,t, 0, fct_aux.INDEX_ATTRS["bg_i"]]
                   
@@ -110,63 +116,27 @@ def find_out_min_max_bg(arr_pl_M_T_K_vars, t, k):
                     
     else:
         bg_max_i_t_0_to_k \
-            = np.amax(arr_pl_M_T_K_vars[:,t, 0:k, fct_aux.INDEX_ATTRS["bg_i"]], 
-                      axis=1)
+            = np.amax(
+                arr_pl_M_T_K_vars[
+                    :,t,
+                    0:k+1, 
+                    [fct_aux.INDEX_ATTRS["bg_i"], 
+                     fct_aux.INDEX_ATTRS["bg_i_max"]]], 
+                axis=0)
         bg_min_i_t_0_to_k \
-            = np.amin(arr_pl_M_T_K_vars[:,t, 0:k, fct_aux.INDEX_ATTRS["bg_i"]], 
-                      axis=1)
-    
+            = np.amin(
+                arr_pl_M_T_K_vars[
+                        :,t, 
+                        0:k+1, 
+                        [fct_aux.INDEX_ATTRS["bg_i"], 
+                        fct_aux.INDEX_ATTRS["bg_i_min"]]], 
+                      axis=0)
+            
+        bg_max_i_t_0_to_k = np.amax(bg_max_i_t_0_to_k, axis=1)
+        bg_min_i_t_0_to_k = np.amin(bg_min_i_t_0_to_k, axis=1)
+        
     return bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
 
-def utility_function_version1_old(arr_pl_M_T_K_vars, 
-                              bens_t_k, csts_t_k,
-                              bg_min_i_t_0_to_k_minus_1, 
-                              bg_max_i_t_0_to_k_minus_1, 
-                              t, k, learning_rate):
-    # bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
-    #     = find_out_min_max_bg(arr_pl_M_T_K_vars, t, k)
-    for num_pl_i in range(0, arr_pl_M_T_K_vars.shape[0]):
-        state = arr_pl_M_T_K_vars[
-                    num_pl_i,
-                    t, k,
-                    fct_aux.INDEX_ATTRS["state_i"]]
-        p_i_t_k = arr_pl_M_T_K_vars[
-                        num_pl_i,
-                        t, k,
-                        fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
-        u_i_t_k = None
-        if state == fct_aux.STATES[2]:
-            arr_pl_M_T_K_vars[
-                num_pl_i,
-                t, k,
-                fct_aux.INDEX_ATTRS["bg_i"]] = bens_t_k[t,k]
-            bg_i_t_k = bens_t_k[t,k]
-            u_i_t_k = 1 - (bg_max_i_t_0_to_k_minus_1[num_pl_i] 
-                           - bg_i_t_k)/ \
-                        (bg_max_i_t_0_to_k_minus_1[num_pl_i] 
-                         - bg_min_i_t_0_to_k_minus_1[num_pl_i])  
-        else:
-            arr_pl_M_T_K_vars[
-                num_pl_i,
-                t, k,
-                fct_aux.INDEX_ATTRS["bg_i"]] = csts_t_k[t,k]
-            bg_i_t_k = csts_t_k[t,k]
-            u_i_t_k = (bg_max_i_t_0_to_k_minus_1[num_pl_i] 
-                           - bg_i_t_k) / \
-                      (bg_max_i_t_0_to_k_minus_1[num_pl_i] 
-                         - bg_min_i_t_0_to_k_minus_1[num_pl_i])
-        
-        p_i_t_k_new =  p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
-        arr_pl_M_T_K_vars[
-            num_pl_i,
-            t, k,
-            fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = p_i_t_k_new
-        arr_pl_M_T_K_vars[
-            num_pl_i,
-            t, k,
-            fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
-        
-    return arr_pl_M_T_K_vars
 
 def utility_function_version1(arr_pl_M_T_K_vars, 
                               bens_t_k, csts_t_k, 
@@ -202,6 +172,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
         False if bg_i_min not equal to bg_i_max
 
     """
+    # compute bg_i
     for num_pl_i in range(0, arr_pl_M_T_K_vars.shape[0]):
         state = arr_pl_M_T_K_vars[
                     num_pl_i,
@@ -212,12 +183,18 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                 num_pl_i,
                 t, k,
                 fct_aux.INDEX_ATTRS["bg_i"]] = bens_t_k[num_pl_i]
+            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, Pi={}, Ci={}, ben={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Pi"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Ci"]], bens_t_k[num_pl_i]))
         else:
             arr_pl_M_T_K_vars[
                 num_pl_i,
                 t, k,
                 fct_aux.INDEX_ATTRS["bg_i"]] = csts_t_k[num_pl_i]
-    
+            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, cst={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], csts_t_k[num_pl_i]))
+    # debug TO DELETE
+    print("modes= {}, state= {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["mode_i"]], arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["state_i"]]))
+    print("bg_i = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["bg_i"]]))
+    print("bg_i_min = {}, bg_i_max = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["bg_i_min"]], arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["bg_i_max"]]))
+
     # bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
     bool_bg_i_min_eq_max = False     # False -> any player doesn't have min == max bg
     bg_min_i_t_0_to_k, \
@@ -228,14 +205,40 @@ def utility_function_version1(arr_pl_M_T_K_vars,
         print("V1 bg_i min == max for players {} --->ERROR".format(
                 comp_min_max_bg[0]))
         bool_bg_i_min_eq_max = True
-        return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max
+        """
+        si tous les items de bg_i_min_{max} == np.nan
+            * maj colonne  bg_i_min et bg_i_max dans arr_pl_M_T_K_vars
+        si certains items de bg_i_min_{max} sont sup{inf} a bg_min_i_t_0_to_k{max}
+            * maj ces items
+        si certains items de bg_min_i_t_0_to_k{max} sont np.nan?
+        """
+        if np.isnan(
+                np.array(
+                    arr_pl_M_T_K_vars[:,t,k,
+                        fct_aux.INDEX_ATTRS["bg_i_min"]], 
+                    dtype=np.float64)
+                ).all() == True:
+            arr_pl_M_T_K_vars[:, 
+                      t, k, 
+                      fct_aux.INDEX_ATTRS["bg_i_min"]] = bg_min_i_t_0_to_k
+            arr_pl_M_T_K_vars[:, 
+                      t, k, 
+                      fct_aux.INDEX_ATTRS["bg_i_max"]] = bg_max_i_t_0_to_k
+            print("#### 1")
+        #elif  
+        return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
+    print("bg_min_i_t_0_to_k={}, bg_max_i_t_0_to_k={}".format(bg_min_i_t_0_to_k,
+                                                              bg_max_i_t_0_to_k))
+
     arr_pl_M_T_K_vars[:, 
                       t, k, 
                       fct_aux.INDEX_ATTRS["bg_i_min"]] = bg_min_i_t_0_to_k
     arr_pl_M_T_K_vars[:, 
                       t, k, 
                       fct_aux.INDEX_ATTRS["bg_i_max"]] = bg_max_i_t_0_to_k
-    
+    print("bg_min_i_t_0_to_k={}, bg_max_i_t_0_to_k={}".format(bg_min_i_t_0_to_k,
+                                                              bg_max_i_t_0_to_k))
         
     bg_i_t_k = arr_pl_M_T_K_vars[
                 :,
@@ -262,7 +265,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                         :,
                         t, k,
                         fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
-    p_i_t_k_new =  p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
+    p_i_t_k_new = p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
     arr_pl_M_T_K_vars[
             :,
             t, k,
@@ -272,7 +275,8 @@ def utility_function_version1(arr_pl_M_T_K_vars,
             t, k,
             fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
         
-    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max 
+    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
         
 def utility_function_version2(arr_pl_M_T_K_vars, 
                               b0_t_k, c0_t_k,
@@ -417,7 +421,8 @@ def utility_function_version2(arr_pl_M_T_K_vars,
         print("V2 bg_i min == max for players {} --->ERROR".format(
                 comp_min_max_bg[0]))
         bool_bg_i_min_eq_max = True
-        return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max
+        return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
     arr_pl_M_T_K_vars[:, 
                       t, k, 
                       fct_aux.INDEX_ATTRS["bg_i_min"]] = bg_min_i_t_0_to_k
@@ -444,8 +449,12 @@ def utility_function_version2(arr_pl_M_T_K_vars,
         t, k,
         fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
     
-    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max
+    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
 
+
+#__   new version of utility_function_version1,2 and find_out_min_max_bg ____
+#__   new version of utility_function_version1,2 and find_out_min_max_bg ____
 
 def update_probs_modes_states_by_defined_utility_funtion(
                 arr_pl_M_T_K_vars, 
@@ -460,9 +469,11 @@ def update_probs_modes_states_by_defined_utility_funtion(
                 utility_function_version=1):
     
     bool_bg_i_min_eq_max = False
+    bg_min_i_t_0_to_k, bg_max_i_t_0_to_k = None, None
     if utility_function_version==1:
         # version 1 of utility function 
-        arr_pl_M_T_K_vars, bool_bg_i_min_eq_max \
+        arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+        bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
             = utility_function_version1(
                               arr_pl_M_T_K_vars, 
                               bens_t_k, csts_t_k, 
@@ -470,7 +481,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
        
     else:
         # version 2 of utility function 
-        arr_pl_M_T_K_vars, bool_bg_i_min_eq_max \
+        arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+        bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
             = utility_function_version2(
                                 arr_pl_M_T_K_vars, 
                                 b0_t_k, c0_t_k,
@@ -478,7 +490,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
                                 pi_hp_minus, pi_0_minus_t_k,
                                 t, k, learning_rate)
         
-    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max
+    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+            bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
 
 def balanced_player_game_t(arr_pl_M_T_K_vars, t, k, 
                            pi_hp_plus, pi_hp_minus, 
@@ -590,6 +603,10 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             num_pl_i, 
             t, k, 
             fct_aux.INDEX_ATTRS["r_i"]] = pl_i.get_r_i()
+        arr_pl_M_T_K_vars[
+            num_pl_i, 
+            t, k, 
+            fct_aux.INDEX_ATTRS["R_i_old"]] = pl_i.get_R_i_old()
         arr_pl_M_T_K_vars[
             num_pl_i, 
             t, k, 
@@ -768,9 +785,11 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
         pi_sg_plus_t_k_minus_1 = None
         pi_sg_minus_t_k_minus_1 = None
         # for k in range(0, k_steps):
+        nb_repeat_k = 0
         k = 0
         while (k < k_steps):
-            print("------- t = {}, k = {} -------".format(t, k))
+            print("------- t = {}, k = {}, repeat_k = {} -------".format(
+                    t, k, nb_repeat_k))
             
             pi_sg_plus_t_k_minus_1 = pi_sg_plus_t_minus_1 \
                                         if k == 0 \
@@ -811,7 +830,8 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
             
             ## compute new strategies probabilities by using utility fonction
             print("bens_t_k={}, csts_t_k={}".format(bens_t_k.shape, csts_t_k.shape))
-            arr_pl_M_T_K_vars, bool_bg_i_min_eq_max \
+            arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+            bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
                 = update_probs_modes_states_by_defined_utility_funtion(
                     arr_pl_M_T_K_vars, 
                     t, k,
@@ -825,9 +845,16 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
                 
             if bool_bg_i_min_eq_max:
                 k = k
-                print("REPEAT t={}, k={} bg_i_min==bg_i_max".format(t, k))
+                nb_repeat_k += 1 
+                print("REPEAT t={}, k={}, repeat_k={}, bg_i_min==bg_i_max".format(
+                        t, k, nb_repeat_k))
             else:
                 k = k+1
+                nb_repeat_k = 0
+                
+            if nb_repeat_k == 4:
+                # TODO: A DELETE A THE END OF CODING
+                return arr_pl_M_T_K_vars
             
         # update pi_sg_plus_t_minus_1 and pi_sg_minus_t_minus_1
         pi_sg_plus_t_minus_1 = pi_sg_plus_T_K[t,k_steps-1]
