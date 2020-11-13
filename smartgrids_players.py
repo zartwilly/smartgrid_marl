@@ -38,6 +38,8 @@ class Player:
         self.cons_i = cons_i
         self.R_i_old = 0
         self.Si_old = 0
+        self.Si_minus = 0
+        self.Si_plus = 0
         self.r_i = r_i
         self.state_i = state_i
         self.mode_i = ""
@@ -170,6 +172,70 @@ class Player:
         """
         self.Si_old = (update==False)*new_Si_old \
                         + (update==True)*(self.Si_old + new_Si_old)
+                        
+    def get_Si_minus(self):
+        """
+        return the min battery storage amount between 2 modes of one state state_i
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        return self.Si_minus
+    
+    def set_Si_minus(self, new_Si_minus, update=False):
+        """
+        turn the old min battery storage amount into new_Si_minus if update=False else add 
+        new_Si_minus to the last value
+
+        Parameters
+        ----------
+        new_Si_minus : float
+            DESCRIPTION.
+        update : boolean, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        float.
+
+        """
+        self.Si_minus = (update==False)*new_Si_minus \
+                        + (update==True)*(self.Si_minus + new_Si_minus)
+                        
+    def get_Si_plus(self):
+        """
+        return the max battery storage amount between 2 modes of one state state_i
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        return self.Si_plus
+    
+    def set_Si_plus(self, new_Si_plus, update=False):
+        """
+        turn the old max battery storage amount into new_Si_plus if update=False else add 
+        new_Si_plus to the last value
+
+        Parameters
+        ----------
+        new_Si_plus : float
+            DESCRIPTION.
+        update : boolean, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        float.
+
+        """
+        self.Si_plus = (update==False)*new_Si_plus \
+                        + (update==True)*(self.Si_plus + new_Si_plus)
                         
     def get_gamma_i(self):
         """
@@ -522,6 +588,10 @@ class Player:
         else:
             Si_minus, Si_plus = np.inf, np.inf
             X, Y = np.inf, np.inf
+
+        self.Si_minus = Si_minus
+        self.Si_plus = Si_plus
+
 
         #print("gamma_i Si_minus={} < Si_plus={} {}".format(round(Si_minus,2), round(Si_plus,2), Si_minus <= Si_plus))
         if Si_minus > Si_plus:
