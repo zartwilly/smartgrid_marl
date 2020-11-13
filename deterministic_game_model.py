@@ -113,7 +113,6 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
         # get mode_i
         if t == 0 or random_determinist:
             pl_i.select_mode_i()
-            print("ICI1 mode_i={}".format(pl_i.get_mode_i()))
         else:
             # t in [1,num_periods]
             Pi_t_plus_1 = arr_pl_M_T_vars[num_pl_i, 
@@ -168,7 +167,6 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
                         Pi_t_plus_1) > Si_t_minus_1_minus:
                 mode_i = fct_aux.STATE2_STRATS[1]           # PROD, state3
             pl_i.set_mode_i(mode_i)
-            print("ICI2 mode_i={}".format(pl_i.get_mode_i()))
             
         
         # update prod, cons and r_i
