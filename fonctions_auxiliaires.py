@@ -13,6 +13,7 @@ import random
 import numpy as np
 import pandas as pd
 import itertools as it
+import smartgrids_players as players
 
 from datetime import datetime
 from pathlib import Path
@@ -547,6 +548,7 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
         Si_s = list( np.around(np.random.uniform(0,1,size=(num_periods,))*Si_max,
                                decimals=N_DECIMALS))
         Si_s[0] = 0; 
+        
         str_profili_s = ["_".join(map(str, profili))] * num_periods
         str_casei_s = ["_".join(map(str, profil_casei))] * num_periods
         
@@ -555,11 +557,35 @@ def generate_Pi_Ci_Si_Simax_by_profil_scenario(
         Si_max_s = [Si_max] * num_periods
         gamma_i_s, r_i_s = [0]*num_periods, [0]*num_periods
         prod_i_s, cons_i_s = [0]*num_periods, [0]*num_periods
-        state_i_s, mode_i_s = [""]*num_periods, [""]*num_periods
+        mode_i_s = [""]*num_periods
         R_i_old_s = [round(x - y, 2) for x, y in zip(Si_max_s, Si_s)]
         Si_old_s = [0]*num_periods
         balanced_pl_i_s = [False]*num_periods
         formules = [""]*num_periods
+        
+        state_i_s = []
+        for t, tu in enumerate(zip(Ci_s, Pi_s, Si_s, Si_max_s)):
+            gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
+            tu_Pi, tu_Ci, tu_Si, tu_Si_max = tu[1], tu[0], tu[2], tu[3]
+            pl_i = players.Player(tu_Pi, tu_Ci,tu_Si, tu_Si_max, gamma_i, 
+                            prod_i, cons_i, r_i, state_i)
+            state_i = pl_i.find_out_state_i()
+            if t == 0 and state_i == STATES[0]:
+                if tu_Ci-tu_Pi-1 == 0:
+                    tu_Pi -= 1
+                high = min(tu_Si_max, tu_Ci-tu_Pi-1)
+                tu_Si = np.random.uniform(low=1, high=high)
+            elif t==0 and state_i == STATES[1]:
+                low = min(tu_Ci-tu_Pi, tu_Si_max)
+                high = min(2*(tu_Ci-tu_Pi), tu_Si_max)
+                tu_Si = np.random.uniform(low=low, high=high)
+            elif t==0 and state_i == STATES[2]:
+                low = 1
+                high = tu_Si_max
+                tu_Si = np.random.uniform(low=low, high=high)
+            Si_s[t] = tu_Si
+            state_i_s.append(state_i)
+        
         init_values_i_s = list(zip(Ci_s, Pi_s, Si_s, Si_max_s, gamma_i_s, 
                                    prod_i_s, cons_i_s, r_i_s, state_i_s, 
                                    mode_i_s, str_profili_s, str_casei_s, 
