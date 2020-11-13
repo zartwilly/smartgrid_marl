@@ -18,6 +18,7 @@ import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 import game_model_period_T as gmpT
 import deterministic_game_model as detGameModel
+import lri_game_model as lriGameModel
 import visu_bkh as bkh
 
 from datetime import datetime
@@ -176,8 +177,140 @@ def execute_game_probCis_scenarios(
                             dbg = dbg
                             )
         
+# ____  new version with all algorithms (LRI1, LRI2, DETERM, RANDOM) : debut __  
+
+def execute_algos():
     
+    name_dir = 'tests'
+    # constances 
+    m_players = 3 # 10 # 100
+    num_periods = 5 # 50
+    k_steps = 5 # 10 # 50
+    fct_aux.N_DECIMALS = 4
+    fct_aux.NB_REPEAT_K_MAX = 3 #10
+    fct_aux.Ci_LOW = 10
+    fct_aux.Ci_HIGH = 60
+    probs_modes_states = [0.5, 0.5, 0.5]
+    
+    # list of algos
+    algos = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]
+    # list of pi_hp_plus, pi_hp_minus
+    pi_hp_plus = [5]
+    pi_hp_minus = [15]
+    # list of scenario
+    scenarios = ["scenario1"] # ["scenario1", "scenario2", "scenario3"]
+    # list of prob_Ci
+    prob_Cis = [0.3, 0.5, 0.7]
+    # learning rate 
+    learning_rates = [0.01] # list(np.arange(0.05, 0.15, step=0.05))
+    
+    # generation arrays 
+    date_hhmm = datetime.now().strftime("%d%m_%H%M")
+    
+    zip_pi_hp = zip(pi_hp_plus, pi_hp_minus)
+    
+    cpt = 0
+    for (prob_Ci, scenario) in it.product(prob_Cis, scenarios):
+        arr_pl_M_T_probCi_scen \
+            = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                m_players=m_players, 
+                num_periods=num_periods, 
+                scenario=scenario, prob_Ci=prob_Ci, 
+                Ci_low=fct_aux.Ci_LOW, Ci_high=fct_aux.Ci_HIGH)
+            
+        algo_piHpPlusMinus_learning_arrPlMT \
+            = it.product(algos, zip_pi_hp, learning_rates, 
+                         [arr_pl_M_T_probCi_scen])
+        for (algo, (pi_hp_plus_elt, pi_hp_minus_elt), 
+             learning_rate, arr_pl_M_T_probCi_scen) \
+            in algo_piHpPlusMinus_learning_arrPlMT:
+            
+            print("______ execution {}: {}, {}:{}______".format(cpt, 
+                    algo, scenario, prob_Ci))
+            cpt += 1
+            msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
+                       +"_pi_hp_minus_"+str(pi_hp_minus_elt)
+            if algo == algos[3]:
+                # RD-DETERMINIST
+                random_determinist = True
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = detGameModel.determinist_balanced_player_game(
+                                 arr_pl_M_T_probCi_scen.copy(),
+                                 pi_hp_plus=pi_hp_plus_elt, 
+                                 pi_hp_minus=pi_hp_minus_elt,
+                                 m_players=m_players, 
+                                 num_periods=num_periods,
+                                 prob_Ci=prob_Ci,
+                                 scenario=scenario,
+                                 random_determinist=random_determinist,
+                                 path_to_save=path_to_save, dbg=False)
+            elif algo == algos[2]:
+                # DETERMINIST
+                random_determinist = False
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = detGameModel.determinist_balanced_player_game(
+                                 arr_pl_M_T_probCi_scen.copy(),
+                                 pi_hp_plus=pi_hp_plus_elt, 
+                                 pi_hp_minus=pi_hp_minus_elt,
+                                 m_players=m_players, 
+                                 num_periods=num_periods,
+                                 prob_Ci=prob_Ci,
+                                 scenario=scenario,
+                                 random_determinist=random_determinist,
+                                 path_to_save=path_to_save, dbg=False)
+                
+            elif algo == algos[1]:
+                utility_function_version = 2
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo, str(learning_rate)
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_K_vars = lriGameModel.lri_balanced_player_game(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                num_periods=num_periods, 
+                                k_steps=k_steps, 
+                                prob_Ci=prob_Ci, 
+                                learning_rate=learning_rate,
+                                probs_modes_states=probs_modes_states,
+                                scenario=scenario,
+                                utility_function_version=utility_function_version,
+                                path_to_save=path_to_save, dbg=False)
+            elif algo == algos[0]:
+                utility_function_version = 1
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo, str(learning_rate)
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_K_vars = lriGameModel.lri_balanced_player_game(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                num_periods=num_periods, 
+                                k_steps=k_steps, 
+                                prob_Ci=prob_Ci, 
+                                learning_rate=learning_rate,
+                                probs_modes_states=probs_modes_states,
+                                scenario=scenario,
+                                utility_function_version=utility_function_version,
+                                path_to_save=path_to_save, dbg=False)
         
+# ____  new version with all algorithms (LRI1, LRI2, DETERM, RANDOM) : fin   __  
+       
         
 #------------------------------------------------------------------------------
 #           unit test of functions
@@ -347,7 +480,8 @@ if __name__ == "__main__":
     #df_bol, dico = test_balanced_player_all_time()
     # df_bol, df_res, dico_cases = test_balanced_player_all_time()
     
-    test_execute_game_probCis_scenarios()
+    #test_execute_game_probCis_scenarios()
+    execute_algos()
     
     print("runtime = {}".format(time.time() - ti))  
     
