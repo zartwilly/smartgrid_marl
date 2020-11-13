@@ -25,55 +25,8 @@ from pathlib import Path
 #                   definition  des fonctions
 #
 ###############################################################################
-def save_variables(path_to_save, arr_pl_M_T_K_vars, 
-                   b0_s_T_K, c0_s_T_K, B_is, C_is, BENs_M_T_K, CSTs_M_T_K, 
-                   BB_is, CC_is, RU_is, 
-                   pi_sg_minus_T_K, pi_sg_plus_T_K, 
-                   pi_0_minus_T_K, pi_0_plus_T_K,
-                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-                   algo="LRI"):
-    
-    if algo is None:
-        path_to_save = path_to_save \
-                        if path_to_save != "tests" \
-                        else os.path.join(
-                                    path_to_save, 
-                                    "simu_"+datetime.now()\
-                                        .strftime("%d%m_%H%M"))
-        Path(path_to_save).mkdir(parents=True, exist_ok=True)
-    elif algo == "LRI":
-        path_to_save = path_to_save \
-                        if path_to_save != "tests" \
-                        else os.path.join(
-                                    path_to_save, 
-                                    "LRI_simu_"+datetime.now()\
-                                        .strftime("%d%m_%H%M"))
-        Path(path_to_save).mkdir(parents=True, exist_ok=True)
-        
-        
-    np.save(os.path.join(path_to_save, "arr_pl_M_T_K_vars.npy"), 
-            arr_pl_M_T_K_vars)
-    np.save(os.path.join(path_to_save, "b0_s_T_K.npy"), b0_s_T_K)
-    np.save(os.path.join(path_to_save, "c0_s_T_K.npy"), c0_s_T_K)
-    np.save(os.path.join(path_to_save, "B_is.npy"), B_is)
-    np.save(os.path.join(path_to_save, "C_is.npy"), C_is)
-    np.save(os.path.join(path_to_save, "BENs_M_T_K.npy"), BENs_M_T_K)
-    np.save(os.path.join(path_to_save, "CSTs_M_T_K.npy"), CSTs_M_T_K)
-    np.save(os.path.join(path_to_save, "BB_is.npy"), BB_is)
-    np.save(os.path.join(path_to_save, "CC_is.npy"), CC_is)
-    np.save(os.path.join(path_to_save, "RU_is.npy"), RU_is)
-    np.save(os.path.join(path_to_save, "pi_sg_minus_T_K.npy"), pi_sg_minus_T_K)
-    np.save(os.path.join(path_to_save, "pi_sg_plus_T_K.npy"), pi_sg_plus_T_K)
-    np.save(os.path.join(path_to_save, "pi_0_minus_T_K.npy"), pi_0_minus_T_K)
-    np.save(os.path.join(path_to_save, "pi_0_plus_T_K.npy"), pi_0_plus_T_K)
-    np.save(os.path.join(path_to_save, "pi_hp_plus_s.npy"), pi_hp_plus_s)
-    np.save(os.path.join(path_to_save, "pi_hp_minus_s.npy"), pi_hp_minus_s)
-    pd.DataFrame.from_dict(dico_stats_res)\
-        .to_csv(os.path.join(path_to_save, "stats_res.csv"))
-        
-    print("saved computed variables *****")
 
-def find_out_min_max_bg(arr_pl_M_T_K_vars, t, k):
+def find_out_min_max_bg(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, t, k):
     """
     discover to min and max values of players' benefits bg at time t and 
     at step k
@@ -82,6 +35,9 @@ def find_out_min_max_bg(arr_pl_M_T_K_vars, t, k):
     ----------
     arr_pl_M_T_K_vars : array of shape (M_PLAYERS, NUM_PERIODS, K_STEPS, len(vars))
         DESCRIPTION.
+    arr_bg_i_nb_repeat_k : array of shape (M_PLAYERS, NB_REPEAT_K_MAX)
+        DESCRIPTION
+        array containing bg_i for all time when algo repeats at step k.
     t : integer
         DESCRIPTION.
         one time instant
@@ -99,48 +55,51 @@ def find_out_min_max_bg(arr_pl_M_T_K_vars, t, k):
         the maximum benefit of each player from 0 to k
 
     """
-    
-    # TODO A REFAIRE CAR FAUX
-    if k == 0 \
-        and np.isnan(
-                np.array(
-                    arr_pl_M_T_K_vars[:,t,k,
-                        fct_aux.INDEX_ATTRS["bg_i_min"]], 
-                    dtype=np.float64)
-                ).all():
+    if np.isnan(
+            np.array(
+                arr_bg_i_nb_repeat_k[:,:], 
+                dtype=np.float64)
+            ).all():
         bg_max_i_t_0_to_k \
-        = arr_pl_M_T_K_vars[:,t, 0, fct_aux.INDEX_ATTRS["bg_i"]]
-                  
-        bg_min_i_t_0_to_k \
-            = arr_pl_M_T_K_vars[:,t, 0, fct_aux.INDEX_ATTRS["bg_i"]]
-                    
-    else:
-        bg_max_i_t_0_to_k \
-            = np.amax(
+            = np.nanmax(
                 arr_pl_M_T_K_vars[
                     :,t,
                     0:k+1, 
-                    [fct_aux.INDEX_ATTRS["bg_i"], 
-                     fct_aux.INDEX_ATTRS["bg_i_max"]]], 
-                axis=0)
+                    fct_aux.INDEX_ATTRS["bg_i"]], 
+                axis=1)
         bg_min_i_t_0_to_k \
-            = np.amin(
+            = np.nanmin(
                 arr_pl_M_T_K_vars[
-                        :,t, 
-                        0:k+1, 
-                        [fct_aux.INDEX_ATTRS["bg_i"], 
-                        fct_aux.INDEX_ATTRS["bg_i_min"]]], 
-                      axis=0)
-            
-        bg_max_i_t_0_to_k = np.amax(bg_max_i_t_0_to_k, axis=1)
-        bg_min_i_t_0_to_k = np.amin(bg_min_i_t_0_to_k, axis=1)
-        
+                    :,t,
+                    0:k+1, 
+                    fct_aux.INDEX_ATTRS["bg_i"]], 
+                axis=1)
+    else:
+        bg_i = arr_pl_M_T_K_vars[
+                    :,t,
+                    k, 
+                    fct_aux.INDEX_ATTRS["bg_i"]]
+        bg_i = bg_i.reshape(-1, 1)
+        merge_bg_i_arr_bg_i_nb_repeat_k \
+            = np.concatenate( 
+                    (bg_i,arr_bg_i_nb_repeat_k), 
+                    axis=1)
+        bg_max_i_t_0_to_k \
+            = np.nanmax(
+                merge_bg_i_arr_bg_i_nb_repeat_k, 
+                axis=1)
+        bg_min_i_t_0_to_k \
+            = np.nanmin( 
+                merge_bg_i_arr_bg_i_nb_repeat_k, 
+                axis=1)
+    
     return bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
 
 
 def utility_function_version1(arr_pl_M_T_K_vars, 
+                              arr_bg_i_nb_repeat_k,
                               bens_t_k, csts_t_k, 
-                              t, k, learning_rate):
+                              t, k, m_players, learning_rate):
     """
     compute the utility of players following the version 1 in document
 
@@ -148,6 +107,9 @@ def utility_function_version1(arr_pl_M_T_K_vars,
     ----------
     arr_pl_M_T_K_vars : array of (M_PLAYERS, NUM_PERIODS, K_STEPS, len(vars))
         DESCRIPTION.
+    arr_bg_i_nb_repeat_k : array of shape (M_PLAYERS, NB_REPEAT_K_MAX)
+        DESCRIPTION
+        array containing bg_i for all time when algo repeats at step k.
     bens_t_k : array of shape (M_PLAYERS,)
         DESCRIPTION.
         benefit of players at time t and step k
@@ -169,7 +131,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
         DESCRIPTION.
     bool_bg_i_min_eq_max : boolean
         DESCRIPTION.
-        False if bg_i_min not equal to bg_i_max
+        False if min(bg_i) not equal to max(bg_i)
 
     """
     # compute bg_i
@@ -183,89 +145,76 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                 num_pl_i,
                 t, k,
                 fct_aux.INDEX_ATTRS["bg_i"]] = bens_t_k[num_pl_i]
-            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, Pi={}, Ci={}, ben={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Pi"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Ci"]], bens_t_k[num_pl_i]))
+            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, Pi={}, Ci={}, ben={}, cst={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Pi"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Ci"]], bens_t_k[num_pl_i], csts_t_k[num_pl_i]))
         else:
             arr_pl_M_T_K_vars[
                 num_pl_i,
                 t, k,
-                fct_aux.INDEX_ATTRS["bg_i"]] = csts_t_k[num_pl_i]
-            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, cst={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], csts_t_k[num_pl_i]))
+                fct_aux.INDEX_ATTRS["bg_i"]] \
+                = fct_aux.fct_positive(csts_t_k[num_pl_i] , 
+                                       bens_t_k[num_pl_i])
+            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, cst={}, ben={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], csts_t_k[num_pl_i], bens_t_k[num_pl_i]))
     # debug TO DELETE
     print("modes= {}, state= {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["mode_i"]], arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["state_i"]]))
     print("bg_i = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["bg_i"]]))
-    print("bg_i_min = {}, bg_i_max = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["bg_i_min"]], arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["bg_i_max"]]))
+    print("bg_i_0_k+1 = {},".format(
+        arr_pl_M_T_K_vars[:,t,0:k+1,fct_aux.INDEX_ATTRS["bg_i"]]))
+    print("arr_bg_i_nb_repeat_k={}".format(arr_bg_i_nb_repeat_k))
+
 
     # bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
     bool_bg_i_min_eq_max = False     # False -> any player doesn't have min == max bg
     bg_min_i_t_0_to_k, \
     bg_max_i_t_0_to_k \
-        = find_out_min_max_bg(arr_pl_M_T_K_vars, t, k)
-    comp_min_max_bg = np.where(bg_min_i_t_0_to_k == bg_max_i_t_0_to_k)
-    if comp_min_max_bg[0].size != 0:
-        print("V1 bg_i min == max for players {} --->ERROR".format(
-                comp_min_max_bg[0]))
-        bool_bg_i_min_eq_max = True
-        """
-        si tous les items de bg_i_min_{max} == np.nan
-            * maj colonne  bg_i_min et bg_i_max dans arr_pl_M_T_K_vars
-        si certains items de bg_i_min_{max} sont sup{inf} a bg_min_i_t_0_to_k{max}
-            * maj ces items
-        si certains items de bg_min_i_t_0_to_k{max} sont np.nan?
-        """
-        if np.isnan(
-                np.array(
-                    arr_pl_M_T_K_vars[:,t,k,
-                        fct_aux.INDEX_ATTRS["bg_i_min"]], 
-                    dtype=np.float64)
-                ).all() == True:
-            arr_pl_M_T_K_vars[:, 
-                      t, k, 
-                      fct_aux.INDEX_ATTRS["bg_i_min"]] = bg_min_i_t_0_to_k
-            arr_pl_M_T_K_vars[:, 
-                      t, k, 
-                      fct_aux.INDEX_ATTRS["bg_i_max"]] = bg_max_i_t_0_to_k
-            print("#### 1")
-        #elif  
-        return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
-                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
-    print("bg_min_i_t_0_to_k={}, bg_max_i_t_0_to_k={}".format(bg_min_i_t_0_to_k,
-                                                              bg_max_i_t_0_to_k))
+        = find_out_min_max_bg(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, t, k)
+    bg_min_i_t_0_to_k = np.array(bg_min_i_t_0_to_k, dtype=float)
+    bg_max_i_t_0_to_k = np.array(bg_max_i_t_0_to_k, dtype=float)
+    print("bg_min_i_t_0_to_k= {}, bg_max_i_t_0_to_k= {}".format(bg_min_i_t_0_to_k, bg_max_i_t_0_to_k))
 
-    arr_pl_M_T_K_vars[:, 
-                      t, k, 
-                      fct_aux.INDEX_ATTRS["bg_i_min"]] = bg_min_i_t_0_to_k
-    arr_pl_M_T_K_vars[:, 
-                      t, k, 
-                      fct_aux.INDEX_ATTRS["bg_i_max"]] = bg_max_i_t_0_to_k
-    print("bg_min_i_t_0_to_k={}, bg_max_i_t_0_to_k={}".format(bg_min_i_t_0_to_k,
-                                                              bg_max_i_t_0_to_k))
+    comp_min_max_bg = np.isclose(bg_min_i_t_0_to_k,
+                                  bg_max_i_t_0_to_k, 
+                                  equal_nan=True,
+                                  atol=pow(10,-fct_aux.N_DECIMALS))
+    if comp_min_max_bg.any() == True:
+        print("V1 bg_i min == max for players {} --->ERROR".format(
+                np.argwhere(comp_min_max_bg).reshape(-1)))
+        bool_bg_i_min_eq_max = True
+        print("#### 1")
+        return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+                bool_bg_i_min_eq_max, \
+                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
         
     bg_i_t_k = arr_pl_M_T_K_vars[
                 :,
                 t, k,
                 fct_aux.INDEX_ATTRS["bg_i"]]
         
+    u_i_t_k = np.empty(shape=(m_players,)); u_i_t_k.fill(np.nan)
     for num_pl_i in range(0, arr_pl_M_T_K_vars.shape[0]):
         state = arr_pl_M_T_K_vars[
                     num_pl_i,
                     t, k,
                     fct_aux.INDEX_ATTRS["state_i"]]
         if state == fct_aux.STATES[2]:
-            u_i_t_k = 1 - (bg_max_i_t_0_to_k[num_pl_i] 
-                           - bg_i_t_k[num_pl_i])/ \
-                        (bg_max_i_t_0_to_k[num_pl_i] 
-                         - bg_min_i_t_0_to_k[num_pl_i]) 
+            u_i_t_k[num_pl_i] = 1 - (bg_max_i_t_0_to_k[num_pl_i] 
+                                     - bg_i_t_k[num_pl_i])/ \
+                                (bg_max_i_t_0_to_k[num_pl_i] 
+                                 - bg_min_i_t_0_to_k[num_pl_i]) 
         else:
-            u_i_t_k = (bg_max_i_t_0_to_k[num_pl_i] 
-                           - bg_i_t_k[num_pl_i]) / \
-                      (bg_max_i_t_0_to_k[num_pl_i] 
-                         - bg_min_i_t_0_to_k[num_pl_i])
+            u_i_t_k[num_pl_i] = (bg_max_i_t_0_to_k[num_pl_i] 
+                                 - bg_i_t_k[num_pl_i]) / \
+                              (bg_max_i_t_0_to_k[num_pl_i] 
+                               - bg_min_i_t_0_to_k[num_pl_i])
         
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
                         t, k,
                         fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
+    print("p_i_t_k = {}".format(p_i_t_k))
+
     p_i_t_k_new = p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
+    p_i_t_k_new = np.around(np.array(p_i_t_k_new, dtype=float),
+                             fct_aux.N_DECIMALS)
     arr_pl_M_T_K_vars[
             :,
             t, k,
@@ -274,15 +223,19 @@ def utility_function_version1(arr_pl_M_T_K_vars,
             :,
             t, k,
             fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
-        
-    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
-                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
-        
-def utility_function_version2(arr_pl_M_T_K_vars, 
+    print("u_i_t_k = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["u_i"]]))
+    print("p_i_t_k = {}, p_i_t_k_new={}".format(p_i_t_k, arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["prob_mode_state_i"]]))
+
+    
+    return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+            bool_bg_i_min_eq_max, \
+            bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
+         
+def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                               b0_t_k, c0_t_k,
                               bens_t_k, csts_t_k, 
                               pi_hp_minus, pi_0_minus_t_k,
-                              t, k, learning_rate):
+                              t, k, m_players, learning_rate):
     """
     compute the utility of players following the version 1 in document
 
@@ -290,6 +243,9 @@ def utility_function_version2(arr_pl_M_T_K_vars,
     ----------
     arr_pl_M_T_K_vars : array of (M_PLAYERS, NUM_PERIODS, K_STEPS, len(vars))
         DESCRIPTION.
+    arr_bg_i_nb_repeat_k : array of shape (M_PLAYERS, NB_REPEAT_K_MAX)
+        DESCRIPTION
+        array containing bg_i for all time when algo repeats at step k.
     b0_t_k : float
         DESCRIPTION.
         unit energy price of benefit
@@ -323,7 +279,7 @@ def utility_function_version2(arr_pl_M_T_K_vars,
         DESCRIPTION.
     bool_bg_i_min_eq_max : boolean
         DESCRIPTION.
-        False if bg_i_min not equal to bg_i_max
+        False if min(bg_i) not equal to max(bg_i)
 
     """
     # I_m, I_M
@@ -406,7 +362,7 @@ def utility_function_version2(arr_pl_M_T_K_vars,
             bg_i = round(bens_t_k[num_pl_i], fct_aux.N_DECIMALS)
         arr_pl_M_T_K_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["bg_i"]] = bg_i
         
-    print("bg_i_s = {},  bens_t_k={}, csts_t_k={}, Ci={}, Pi={}".format(
+    print("bg_i_s={}, bens_t_k={}, csts_t_k={}, Ci={}, Pi={}".format(
         bg_i_s, bens_t_k, csts_t_k,
         arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["Ci"]], 
         arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["Pi"]]))
@@ -415,20 +371,23 @@ def utility_function_version2(arr_pl_M_T_K_vars,
     bool_bg_i_min_eq_max = False     # False -> any player doesn't have min == max bg
     bg_min_i_t_0_to_k, \
     bg_max_i_t_0_to_k \
-        = find_out_min_max_bg(arr_pl_M_T_K_vars, t, k)
-    comp_min_max_bg = np.where(bg_min_i_t_0_to_k == bg_max_i_t_0_to_k)
-    if comp_min_max_bg[0].size != 0:
-        print("V2 bg_i min == max for players {} --->ERROR".format(
-                comp_min_max_bg[0]))
+        = find_out_min_max_bg(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, t, k)
+    bg_min_i_t_0_to_k = np.array(bg_min_i_t_0_to_k, dtype=float)
+    bg_max_i_t_0_to_k = np.array(bg_max_i_t_0_to_k, dtype=float)
+    print("bg_min_i_t_0_to_k= {}, bg_max_i_t_0_to_k= {}".format(bg_min_i_t_0_to_k, bg_max_i_t_0_to_k))
+
+    comp_min_max_bg = np.isclose(bg_min_i_t_0_to_k,
+                                  bg_max_i_t_0_to_k, 
+                                  equal_nan=True,
+                                  atol=pow(10,-fct_aux.N_DECIMALS))
+    if comp_min_max_bg.any() == True:
+        print("V1 bg_i min == max for players {} --->ERROR".format(
+                np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
-        return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+        print("#### 1")
+        return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+                bool_bg_i_min_eq_max, \
                 bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
-    arr_pl_M_T_K_vars[:, 
-                      t, k, 
-                      fct_aux.INDEX_ATTRS["bg_i_min"]] = bg_min_i_t_0_to_k
-    arr_pl_M_T_K_vars[:, 
-                      t, k, 
-                      fct_aux.INDEX_ATTRS["bg_i_max"]] = bg_max_i_t_0_to_k
     
     # u_i_t_k on shape (M_PLAYERS,)
     bg_i_t_k = arr_pl_M_T_K_vars[:, t, k, fct_aux.INDEX_ATTRS["bg_i"]]
@@ -449,15 +408,13 @@ def utility_function_version2(arr_pl_M_T_K_vars,
         t, k,
         fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
     
-    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
-                bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
-
-
-#__   new version of utility_function_version1,2 and find_out_min_max_bg ____
-#__   new version of utility_function_version1,2 and find_out_min_max_bg ____
+    return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+            bool_bg_i_min_eq_max, \
+            bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
 
 def update_probs_modes_states_by_defined_utility_funtion(
                 arr_pl_M_T_K_vars, 
+                arr_bg_i_nb_repeat_k,
                 t, k,
                 b0_t_k, c0_t_k,
                 bens_t_k, csts_t_k,
@@ -472,31 +429,36 @@ def update_probs_modes_states_by_defined_utility_funtion(
     bg_min_i_t_0_to_k, bg_max_i_t_0_to_k = None, None
     if utility_function_version==1:
         # version 1 of utility function 
-        arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+        arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+        bool_bg_i_min_eq_max, \
         bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
             = utility_function_version1(
                               arr_pl_M_T_K_vars, 
+                              arr_bg_i_nb_repeat_k, 
                               bens_t_k, csts_t_k, 
-                              t, k, learning_rate)
+                              t, k, m_players, learning_rate)
        
     else:
         # version 2 of utility function 
-        arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+        arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+        bool_bg_i_min_eq_max, \
         bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
             = utility_function_version2(
                                 arr_pl_M_T_K_vars, 
+                                arr_bg_i_nb_repeat_k, 
                                 b0_t_k, c0_t_k,
                                 bens_t_k, csts_t_k, 
                                 pi_hp_minus, pi_0_minus_t_k,
-                                t, k, learning_rate)
+                                t, k, m_players, learning_rate)
         
-    return arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+    return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+            bool_bg_i_min_eq_max, \
             bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
 
 def balanced_player_game_t(arr_pl_M_T_K_vars, t, k, 
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_minus_1_k, pi_sg_minus_t_minus_1_k,
-                           m_players, num_periods, dbg=False):
+                           m_players, num_periods, nb_repeat_k, dbg=False):
     
     cpt_error_gamma = 0; cpt_balanced = 0;
     dico_state_mode_i_t_k = {}; dico_balanced_pl_i_t_k = {}
@@ -509,6 +471,11 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
                 fct_aux.N_DECIMALS)
         Si = round(
                 arr_pl_M_T_K_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Si"]],
+                fct_aux.N_DECIMALS)\
+            if k == 0 \
+            else \
+                round(
+                arr_pl_M_T_K_vars[num_pl_i, t, k-1, fct_aux.INDEX_ATTRS["Si"]],
                 fct_aux.N_DECIMALS)
         Si_max = round(
                     arr_pl_M_T_K_vars[num_pl_i, t, k, 
@@ -522,13 +489,38 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
         # get mode_i, state_i and update R_i_old
         pl_i.set_R_i_old(Si_max-Si)
         state_i = pl_i.find_out_state_i()
+        # ## update Si at t==0
+        # if t==0 and nb_repeat_k<1 and state_i == fct_aux.STATES[0]:
+        #     if Ci-Pi-1 == 0:
+        #         Pi -= 1
+        #     high = min(Si_max, Ci-Pi-1)
+        #     Si = np.random.uniform(low=1, high=high)
+        # elif t==0 and nb_repeat_k<1 and state_i == fct_aux.STATES[1]:
+        #     low = min(Ci-Pi, Si_max)
+        #     high = min(2*(Ci-Pi), Si_max)
+        #     Si = np.random.uniform(low=low, high=high)
+        # elif t==0 and nb_repeat_k<1 and state_i == fct_aux.STATES[2]:
+        #     low = 1
+        #     high = Si_max
+        #     Si = np.random.uniform(low=low, high=high)
+        # pl_i.set_Si(Si)
+        # arr_pl_M_T_K_vars[num_pl_i, 
+        #                   t, k, 
+        #                   fct_aux.INDEX_ATTRS["Si"]] = Si
+        
         p_i_t_k = arr_pl_M_T_K_vars[num_pl_i, 
                                     t, k, 
+                                    fct_aux.INDEX_ATTRS["prob_mode_state_i"]] \
+            if k == 0 \
+            else arr_pl_M_T_K_vars[num_pl_i, 
+                                    t, k-1, 
                                     fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
-
+                
+        print("Si={}, p_i_t_k={}".format(Si, p_i_t_k))
         pl_i.select_mode_i(p_i=p_i_t_k)
         
         pl_i.update_prod_cons_r_i()
+        print("Si={}, Si_pli={}".format(Si, pl_i.get_Si()))
         
         # balancing
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
@@ -570,7 +562,7 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             pi_hp_plus = pi_hp_plus, 
             pi_hp_minus = pi_hp_minus)
         gamma_i = pl_i.get_gamma_i()
-        if gamma_i >= min(pi_sg_minus_t_minus_1_k, pi_sg_plus_t_minus_1_k) -1 \
+        if gamma_i >= min(pi_sg_minus_t_minus_1_k, pi_sg_plus_t_minus_1_k)-1 \
             and gamma_i <= max(pi_hp_minus, pi_hp_plus):
             pass
         else :
@@ -625,6 +617,10 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             fct_aux.INDEX_ATTRS["mode_i"]] = pl_i.get_mode_i()
         arr_pl_M_T_K_vars[
             num_pl_i, 
+            t, k,
+            fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = p_i_t_k
+        arr_pl_M_T_K_vars[
+            num_pl_i, 
             t, k, 
             fct_aux.INDEX_ATTRS["balanced_pl_i"]] = boolean
         arr_pl_M_T_K_vars[
@@ -633,16 +629,16 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             fct_aux.INDEX_ATTRS["formule"]] = formule
         
     
-    dico_stats_res_t_k = (round(cpt_balanced/m_players,2),
-                         round(cpt_error_gamma/m_players,2), 
+    dico_stats_res_t_k = (round(cpt_balanced/m_players, fct_aux.N_DECIMALS),
+                         round(cpt_error_gamma/m_players, fct_aux.N_DECIMALS), 
                          dico_state_mode_i_t_k)
     dico_stats_res_t_k = {"balanced": dico_balanced_pl_i_t_k, 
                          "gamma_i": dico_state_mode_i_t_k}    
         
     # compute the new prices pi_sg_plus_t+1, pi_sg_minus_t+1 
     # from a pricing model in the document
-    pi_sg_plus_t_k_new, pi_sg_minus_t_k_new = \
-        fct_aux.determine_new_pricing_sg(
+    pi_sg_plus_t_k_new, pi_sg_minus_t_k_new \
+        = fct_aux.determine_new_pricing_sg(
             arr_pl_M_T_K_vars[:,:,k,:], 
             pi_hp_plus, 
             pi_hp_minus, 
@@ -662,8 +658,11 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
     pi_0_plus_t_k = round(pi_sg_minus_t_k*pi_hp_plus/pi_hp_minus, 2)
     pi_0_minus_t_k = pi_sg_minus_t_k
     """
-    pi_0_plus_t_k = round(pi_sg_minus_t_minus_1_k*pi_hp_plus/pi_hp_minus, 2)
+    pi_0_plus_t_k = round(pi_sg_minus_t_minus_1_k*pi_hp_plus/pi_hp_minus, 
+                          fct_aux.N_DECIMALS)
     pi_0_minus_t_k = pi_sg_minus_t_minus_1_k
+    print("pi_sg_minus_t_minus_1_k={}, pi_0_plus_t_k={}, pi_0_minus_t_k={},".format(
+        pi_sg_minus_t_minus_1_k, pi_0_plus_t_k, pi_0_minus_t_k))
     
     
     ## compute prices inside smart grids
@@ -684,6 +683,11 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
                             t, 
                             b0_t_k, 
                             c0_t_k)
+    print("b0_t_k={}, c0_t_k={}, prod_t_k={}, cons_t_k={}, r_t_k={}, gamma_is={}".format(
+        b0_t_k, c0_t_k, arr_pl_M_T_K_vars[:, t, k, fct_aux.INDEX_ATTRS["prod_i"]], 
+        arr_pl_M_T_K_vars[:, t, k, fct_aux.INDEX_ATTRS["cons_i"]],
+        arr_pl_M_T_K_vars[:, t, k, fct_aux.INDEX_ATTRS["r_i"]],
+        arr_pl_M_T_K_vars[:, t, k, fct_aux.INDEX_ATTRS["gamma_i"]]))
     print('#### bens_t_k={}, csts_t_k={}'.format(
             bens_t_k.shape, csts_t_k.shape)) \
         if dbg else None
@@ -696,13 +700,12 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             dico_stats_res_t_k
     
 
-def lri_balanced_player_game(pi_hp_plus=0.10, 
+def lri_balanced_player_game(arr_pl_M_T,
+                             pi_hp_plus=0.10, 
                              pi_hp_minus=0.15,
                              m_players=3, 
                              num_periods=4, 
-                             k_steps=5, 
-                             Ci_low=10, 
-                             Ci_high=60,
+                             k_steps=5,
                              prob_Ci=0.3, 
                              learning_rate=0.01,
                              probs_modes_states=[0.5, 0.5, 0.5],
@@ -736,17 +739,10 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
     fct_aux.INDEX_ATTRS["prob_mode_state_i"] = 16
     fct_aux.INDEX_ATTRS["u_i"] = 17
     fct_aux.INDEX_ATTRS["bg_i"] = 18
-    fct_aux.INDEX_ATTRS["bg_i_min"] = 19
-    fct_aux.INDEX_ATTRS["bg_i_max"] = 20
-    # fct_aux.INDEX_ATTRS[""] = 21
+    # fct_aux.INDEX_ATTRS[""] = 19
     # _______ variables' initialization --> fin   ________________
     
-    # ____   generation initial variables for all players at any time   ____
-    arr_pl_M_T = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
-                                    m_players=m_players, 
-                                    num_periods=num_periods, 
-                                    scenario=scenario, prob_Ci=prob_Ci, 
-                                    Ci_low=Ci_low, Ci_high=Ci_high)
+    # ____   turn arr_pl_M_T in a array of 4 dimensions   ____
     ## good time 21.3 ns for k_steps = 1000
     arrs = []
     for k in range(0, k_steps):
@@ -768,8 +764,6 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
     arr_pl_M_T_K_vars[:,:,:,:-5] = arrs
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["u_i"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
-    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["bg_i_min"]] = np.nan
-    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["bg_i_max"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] \
         = 0.5
     # return arr_pl_M_T_K_vars
@@ -787,9 +781,14 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
         # for k in range(0, k_steps):
         nb_repeat_k = 0
         k = 0
+        arr_bg_i_nb_repeat_k = np.empty(
+                                shape=(m_players,fct_aux.NB_REPEAT_K_MAX))
+        arr_bg_i_nb_repeat_k.fill(np.nan)
         while (k < k_steps):
             print("------- t = {}, k = {}, repeat_k = {} -------".format(
                     t, k, nb_repeat_k))
+            print("------- pi_sg_plus_t_k_minus_1={}, pi_sg_minus_t_k_minus_1={} -------".format(
+                    pi_sg_plus_t_k_minus_1, pi_sg_minus_t_k_minus_1))
             
             pi_sg_plus_t_k_minus_1 = pi_sg_plus_t_minus_1 \
                                         if k == 0 \
@@ -808,7 +807,7 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
                 = balanced_player_game_t(arr_pl_M_T_K_vars, t, k, 
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_k_minus_1, pi_sg_minus_t_k_minus_1,
-                           m_players, num_periods, dbg=False)
+                           m_players, num_periods, nb_repeat_k, dbg=False)
             
             ## update pi_sg_minus_t_k_minus_1 and pi_sg_plus_t_k_minus_1
             pi_sg_minus_t_k_minus_1 = pi_sg_minus_t_k
@@ -830,10 +829,12 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
             
             ## compute new strategies probabilities by using utility fonction
             print("bens_t_k={}, csts_t_k={}".format(bens_t_k.shape, csts_t_k.shape))
-            arr_pl_M_T_K_vars, bool_bg_i_min_eq_max, \
+            arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+            bool_bg_i_min_eq_max, \
             bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
                 = update_probs_modes_states_by_defined_utility_funtion(
                     arr_pl_M_T_K_vars, 
+                    arr_bg_i_nb_repeat_k,
                     t, k,
                     b0_t_k, c0_t_k,
                     bens_t_k, csts_t_k,
@@ -845,14 +846,23 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
                 
             if bool_bg_i_min_eq_max:
                 k = k
-                nb_repeat_k += 1 
-                print("REPEAT t={}, k={}, repeat_k={}, bg_i_min==bg_i_max".format(
+                arr_bg_i_nb_repeat_k[:,nb_repeat_k] \
+                    = arr_pl_M_T_K_vars[
+                        :,
+                        t, k,
+                        fct_aux.INDEX_ATTRS["bg_i"]]
+                nb_repeat_k += 1
+                print("REPEAT t={}, k={}, repeat_k={}, min(bg_i)==max(bg_i)".format(
                         t, k, nb_repeat_k))
             else:
                 k = k+1
                 nb_repeat_k = 0
-                
-            if nb_repeat_k == 4:
+                arr_bg_i_nb_repeat_k \
+                    = np.empty(
+                        shape=(m_players,fct_aux.NB_REPEAT_K_MAX)
+                        )
+                arr_bg_i_nb_repeat_k.fill(np.nan)
+            if nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
                 # TODO: A DELETE A THE END OF CODING
                 return arr_pl_M_T_K_vars
             
@@ -887,7 +897,7 @@ def lri_balanced_player_game(pi_hp_plus=0.10,
     pi_hp_minus_s = np.array([pi_hp_minus] * num_periods, dtype=object)
     
     #__________      save computed variables locally      _____________________
-    save_variables(path_to_save, arr_pl_M_T_K_vars, 
+    fct_aux.save_variables(path_to_save, arr_pl_M_T_K_vars, 
                    b0_s_T_K, c0_s_T_K, B_is, C_is, BENs_M_T_K, CSTs_M_T_K, 
                    BB_is, CC_is, RU_is, 
                    pi_sg_minus_T_K, pi_sg_plus_T_K, 
@@ -913,16 +923,23 @@ def test_lri_balanced_player_game():
     scenario = "scenario1"; 
     utility_function_version = 1 ; path_to_save = "tests"
     
-    fct_aux.N_DECIMALS = 4
+    fct_aux.N_DECIMALS = 3
+    fct_aux.NB_REPEAT_K_MAX = 7
+    
+    # ____   generation initial variables for all players at any time   ____
+    arr_pl_M_T = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                                    m_players=m_players, 
+                                    num_periods=num_periods, 
+                                    scenario=scenario, prob_Ci=prob_Ci, 
+                                    Ci_low=Ci_low, Ci_high=Ci_high)
     
     arr_M_T_K_vars = \
-    lri_balanced_player_game(pi_hp_plus=pi_hp_plus, 
+    lri_balanced_player_game(arr_pl_M_T,
+                             pi_hp_plus=pi_hp_plus, 
                              pi_hp_minus=pi_hp_minus,
                              m_players=m_players, 
                              num_periods=num_periods, 
                              k_steps=k_steps, 
-                             Ci_low=Ci_low, 
-                             Ci_high=Ci_high,
                              prob_Ci=prob_Ci, 
                              learning_rate=learning_rate,
                              probs_modes_states=probs_modes_states,
