@@ -264,7 +264,7 @@ def save_variables(path_to_save, arr_pl_M_T_K_vars,
                                     "simu_"+datetime.now()\
                                         .strftime("%d%m_%H%M"))
         Path(path_to_save).mkdir(parents=True, exist_ok=True)
-    elif algo in {"LRI", "DETERMINIST"}:
+    else:
         path_to_save = path_to_save \
                         if path_to_save != "tests" \
                         else os.path.join(
