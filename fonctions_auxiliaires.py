@@ -11,7 +11,11 @@ import json
 import string
 import random
 import numpy as np
+import pandas as pd
 import itertools as it
+
+from datetime import datetime
+from pathlib import Path
 
 #------------------------------------------------------------------------------
 #                       definition of constantes
@@ -21,6 +25,7 @@ NUM_PERIODS = 50
 
 CHOICE_RU = 1
 N_DECIMALS = 2
+NB_REPEAT_K_MAX = 4
 
 Ci_LOW = 10
 Ci_HIGH = 60
@@ -240,6 +245,54 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
                         if sum_prod != 0 else np.nan
                             
     return new_pi_sg_plus_t, new_pi_sg_minus_t
+
+
+def save_variables(path_to_save, arr_pl_M_T_K_vars, 
+                   b0_s_T_K, c0_s_T_K, B_is, C_is, BENs_M_T_K, CSTs_M_T_K, 
+                   BB_is, CC_is, RU_is, 
+                   pi_sg_minus_T_K, pi_sg_plus_T_K, 
+                   pi_0_minus_T_K, pi_0_plus_T_K,
+                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res,
+                   algo="LRI"):
+    
+    if algo is None:
+        path_to_save = path_to_save \
+                        if path_to_save != "tests" \
+                        else os.path.join(
+                                    path_to_save, 
+                                    "simu_"+datetime.now()\
+                                        .strftime("%d%m_%H%M"))
+        Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    elif algo in {"LRI", "DETERMINIST"}:
+        path_to_save = path_to_save \
+                        if path_to_save != "tests" \
+                        else os.path.join(
+                                    path_to_save, 
+                                    algo+"_simu_"+datetime.now()\
+                                        .strftime("%d%m_%H%M"))
+        Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    
+        
+    np.save(os.path.join(path_to_save, "arr_pl_M_T_K_vars.npy"), 
+            arr_pl_M_T_K_vars)
+    np.save(os.path.join(path_to_save, "b0_s_T_K.npy"), b0_s_T_K)
+    np.save(os.path.join(path_to_save, "c0_s_T_K.npy"), c0_s_T_K)
+    np.save(os.path.join(path_to_save, "B_is.npy"), B_is)
+    np.save(os.path.join(path_to_save, "C_is.npy"), C_is)
+    np.save(os.path.join(path_to_save, "BENs_M_T_K.npy"), BENs_M_T_K)
+    np.save(os.path.join(path_to_save, "CSTs_M_T_K.npy"), CSTs_M_T_K)
+    np.save(os.path.join(path_to_save, "BB_is.npy"), BB_is)
+    np.save(os.path.join(path_to_save, "CC_is.npy"), CC_is)
+    np.save(os.path.join(path_to_save, "RU_is.npy"), RU_is)
+    np.save(os.path.join(path_to_save, "pi_sg_minus_T_K.npy"), pi_sg_minus_T_K)
+    np.save(os.path.join(path_to_save, "pi_sg_plus_T_K.npy"), pi_sg_plus_T_K)
+    np.save(os.path.join(path_to_save, "pi_0_minus_T_K.npy"), pi_0_minus_T_K)
+    np.save(os.path.join(path_to_save, "pi_0_plus_T_K.npy"), pi_0_plus_T_K)
+    np.save(os.path.join(path_to_save, "pi_hp_plus_s.npy"), pi_hp_plus_s)
+    np.save(os.path.join(path_to_save, "pi_hp_minus_s.npy"), pi_hp_minus_s)
+    pd.DataFrame.from_dict(dico_stats_res)\
+        .to_csv(os.path.join(path_to_save, "stats_res.csv"))
+    
 
 # def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
 #     """
