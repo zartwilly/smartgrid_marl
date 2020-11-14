@@ -178,7 +178,7 @@ def execute_game_probCis_scenarios(
                             )
         
 # ____  new version with all algorithms (LRI1, LRI2, DETERM, RANDOM) : debut __  
-
+        
 def execute_algos():
     
     name_dir = 'tests'
@@ -198,7 +198,7 @@ def execute_algos():
     pi_hp_plus = [5]
     pi_hp_minus = [15]
     # list of scenario
-    scenarios = ["scenario1"] # ["scenario1", "scenario2", "scenario3"]
+    scenarios = ["scenario1", "scenario2", "scenario3"] # ["scenario1"] # ["scenario1", "scenario2", "scenario3"]
     # list of prob_Ci
     prob_Cis = [0.3, 0.5, 0.7]
     # learning rate 
@@ -207,7 +207,7 @@ def execute_algos():
     # generation arrays 
     date_hhmm = datetime.now().strftime("%d%m_%H%M")
     
-    zip_pi_hp = zip(pi_hp_plus, pi_hp_minus)
+    zip_pi_hp = list(zip(pi_hp_plus, pi_hp_minus))
     
     cpt = 0
     for (prob_Ci, scenario) in it.product(prob_Cis, scenarios):
@@ -232,6 +232,7 @@ def execute_algos():
                        +"_pi_hp_minus_"+str(pi_hp_minus_elt)
             if algo == algos[3]:
                 # RD-DETERMINIST
+                print("*** RD-DETERMINIST *** ")
                 random_determinist = True
                 
                 path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
@@ -249,8 +250,10 @@ def execute_algos():
                                  scenario=scenario,
                                  random_determinist=random_determinist,
                                  path_to_save=path_to_save, dbg=False)
+                
             elif algo == algos[2]:
                 # DETERMINIST
+                print("*** DETERMINIST *** ")
                 random_determinist = False
                 path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
                                     scenario, str(prob_Ci), 
@@ -269,6 +272,8 @@ def execute_algos():
                                  path_to_save=path_to_save, dbg=False)
                 
             elif algo == algos[1]:
+                # LRI2
+                print("*** LRI 2 *** ")
                 utility_function_version = 2
                 path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
                                     scenario, str(prob_Ci), 
@@ -288,7 +293,10 @@ def execute_algos():
                                 scenario=scenario,
                                 utility_function_version=utility_function_version,
                                 path_to_save=path_to_save, dbg=False)
+                
             elif algo == algos[0]:
+                # LRI1
+                print("*** LRI 1 *** ")
                 utility_function_version = 1
                 path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
                                     scenario, str(prob_Ci), 
@@ -309,6 +317,8 @@ def execute_algos():
                                 utility_function_version=utility_function_version,
                                 path_to_save=path_to_save, dbg=False)
         
+    print("NB_EXECUTION cpt={}".format(cpt))
+
 # ____  new version with all algorithms (LRI1, LRI2, DETERM, RANDOM) : fin   __  
        
         
@@ -479,8 +489,8 @@ if __name__ == "__main__":
     #test_execute_game_allcase()
     #df_bol, dico = test_balanced_player_all_time()
     # df_bol, df_res, dico_cases = test_balanced_player_all_time()
-    
     #test_execute_game_probCis_scenarios()
+    
     execute_algos()
     
     print("runtime = {}".format(time.time() - ti))  
