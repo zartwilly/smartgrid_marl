@@ -405,8 +405,6 @@ def determinist_balanced_player_game(arr_pl_M_T,
     # fct_aux.INDEX_ATTRS[""] = 19
     # _______ variables' initialization --> fin   ________________
         
-    print("determinist game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> end \n"\
-          .format(scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
     
     # ____      add initial values for the new attributs     _______
     nb_vars_2_add = 2
@@ -504,6 +502,10 @@ def determinist_balanced_player_game(arr_pl_M_T,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
                    algo=algo_name)
     
+    print("determinist game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> end \n"\
+          .format(scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
+        
+    return arr_pl_M_T_vars
         
 #------------------------------------------------------------------------------
 #                       definition of unittests 
