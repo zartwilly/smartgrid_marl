@@ -216,6 +216,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
     print("p_i_t_k = {}".format(p_i_t_k))
 
     p_i_t_k_new = p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
+    u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
     p_i_t_k_new = np.around(np.array(p_i_t_k_new, dtype=float),
                              fct_aux.N_DECIMALS)
     arr_pl_M_T_K_vars[
@@ -227,7 +228,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
             t, k,
             fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
     print("u_i_t_k = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["u_i"]]))
-    print("p_i_t_k = {}, p_i_t_k_new={}".format(p_i_t_k, arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["prob_mode_state_i"]]))
+    print("p_i_t_k_new={}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["prob_mode_state_i"]]))
 
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
@@ -401,7 +402,14 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                         :,
                         t, k,
                         fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
+    print("p_i_t_k = {}".format(p_i_t_k))
+    
     p_i_t_k_new =  p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
+    
+    u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
+    p_i_t_k_new = np.around(np.array(p_i_t_k_new, dtype=float),
+                             fct_aux.N_DECIMALS)
+    
     arr_pl_M_T_K_vars[
         :,
         t, k,
@@ -410,6 +418,9 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
         :,
         t, k,
         fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
+    print("u_i_t_k = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["u_i"]]))
+    print("p_i_t_k_new={}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["prob_mode_state_i"]]))
+
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
             bool_bg_i_min_eq_max, \
@@ -423,11 +434,9 @@ def update_probs_modes_states_by_defined_utility_funtion(
                 bens_t_k, csts_t_k,
                 pi_hp_minus,
                 pi_0_plus_t_k, pi_0_minus_t_k,
-                m_players, 
-                probs_modes_states,
+                m_players,
                 learning_rate,
                 utility_function_version=1):
-    
     bool_bg_i_min_eq_max = False
     bg_min_i_t_0_to_k, bg_max_i_t_0_to_k = None, None
     if utility_function_version==1:
@@ -440,7 +449,6 @@ def update_probs_modes_states_by_defined_utility_funtion(
                               arr_bg_i_nb_repeat_k, 
                               bens_t_k, csts_t_k, 
                               t, k, m_players, learning_rate)
-       
     else:
         # version 2 of utility function 
         arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
@@ -767,8 +775,7 @@ def lri_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_K_vars[:,:,:,:-5] = arrs
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["u_i"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
-    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] \
-        = 0.5
+    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
     # return arr_pl_M_T_K_vars
     
     # ____      run balanced sg for all num_periods at any k_step     ________
