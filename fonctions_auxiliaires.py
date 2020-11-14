@@ -294,7 +294,8 @@ def save_variables(path_to_save, arr_pl_M_T_K_vars,
     pd.DataFrame.from_dict(dico_stats_res)\
         .to_csv(os.path.join(path_to_save, "stats_res.csv"))
     
-
+    print("$$$$ saved variables. $$$$")
+    
 # def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
 #     """
 #     generate Cis, Pis, Sis and Si_maxs.
