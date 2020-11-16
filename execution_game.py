@@ -384,6 +384,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                            prob_Cis=None,
                                            date_hhmm=None,
                                            algos=None,
+                                           pi_hp_plus=None,
+                                           pi_hp_minus=None,
                                            used_instances=True):
     """
     execute algos by used generated instances if there exists or 
@@ -406,8 +408,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
     algos = ALGOS if algos is None \
                     else algos
     # list of pi_hp_plus, pi_hp_minus
-    pi_hp_plus = [5]
-    pi_hp_minus = [15]
+    pi_hp_plus = [5] if pi_hp_plus is None else pi_hp_plus
+    pi_hp_minus = [15] if pi_hp_minus is None else pi_hp_minus
     # list of scenario
     scenarios = ["scenario1", "scenario2", "scenario3"] \
             if scenarios is None \
@@ -777,14 +779,18 @@ if __name__ == "__main__":
     
     scenarios=["scenario1"]
     prob_Cis=[0.3]
-    date_hhmm=None # "1041"
+    date_hhmm="1611_1041"
     algos=["LRI1","LRI2"]
+    pi_hp_plus = [5, 15]
+    pi_hp_minus = [15, 5]
     execute_algos_used_Generated_instances(game_dir, 
                                            name_dir, 
                                            scenarios=scenarios,
                                            prob_Cis=prob_Cis,
                                            date_hhmm=date_hhmm,
                                            algos=algos,
+                                           pi_hp_plus=pi_hp_plus,
+                                           pi_hp_minus=pi_hp_minus,
                                            used_instances=True)
     
     #test_execute_game_onecase(fct_aux.CASE2)
