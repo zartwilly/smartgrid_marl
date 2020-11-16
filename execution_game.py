@@ -319,10 +319,213 @@ def execute_algos():
         
     print("NB_EXECUTION cpt={}".format(cpt))
 
+def get_or_create_instance(m_players, num_periods, prob_Ci, 
+                          scenario, path_to_arr_pl_M_T, used_instances):
+    """
+    get instance if it exists else create instance.
+
+    Parameters
+    ----------
+    m_players : integer
+        DESCRIPTION.
+    num_periods : integer
+        DESCRIPTION.
+    prob_Ci : float
+        DESCRIPTION.
+    scenario : string
+        DESCRIPTION.
+    path_to_arr_pl_M_T : string
+        DESCRIPTION.
+        path to array arr_pl_M_T
+        example: tests/INSTANCES_GAMES/scenario{1,2,3}/prob_Ci/\
+                    arr_pl_M_T_players_{m_players}_periods_{num_periods}.npy
+    used_instances : boolean
+        DESCRIPTION.
+
+    Returns
+    -------
+    arr_pl_M_T_probCi_scen : array of 
+        DESCRIPTION.
+
+    """
+    arr_pl_M_T_probCi_scen = None
+    if os.path.exists(path_to_arr_pl_M_T):
+        # read arr_pl_M_T
+        if used_instances:
+            arr_pl_M_T_probCi_scen \
+                = np.load(path_to_arr_pl_M_T,
+                          allow_pickle=True)
+            
+        else:
+            # create arr_pl_M_T when used_instances = False
+            arr_pl_M_T_probCi_scen \
+                = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                    m_players=m_players, 
+                    num_periods=num_periods, 
+                    scenario=scenario, prob_Ci=prob_Ci, 
+                    Ci_low=fct_aux.Ci_LOW, Ci_high=fct_aux.Ci_HIGH)
+            print("CREATE INSTANCE used_instance={}".format(used_instances))
+    else:
+        # create arr_pl_M_T
+        arr_pl_M_T_probCi_scen \
+            = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                m_players=m_players, 
+                num_periods=num_periods, 
+                scenario=scenario, prob_Ci=prob_Ci, 
+                Ci_low=fct_aux.Ci_LOW, Ci_high=fct_aux.Ci_HIGH)
+        print("NO INSTANCE: CREATE")
+            
+    return arr_pl_M_T_probCi_scen
+
+def execute_algos_used_Generated_instances(game_dir='tests', 
+                                           name_dir='INSTANCES_GAMES', 
+                                           used_instances=True):
+    
+    # constances 
+    m_players = 3 # 10 # 100
+    num_periods = 5 # 50
+    k_steps = 5 # 10 # 50
+    fct_aux.NB_REPEAT_K_MAX = 3 #10
+    probs_modes_states = [0.5, 0.5, 0.5]
+    
+    # list of algos
+    algos = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]
+    # list of pi_hp_plus, pi_hp_minus
+    pi_hp_plus = [5]
+    pi_hp_minus = [15]
+    # list of scenario
+    scenarios = ["scenario1", "scenario2", "scenario3"] # ["scenario1"] # ["scenario1", "scenario2", "scenario3"]
+    # list of prob_Ci
+    prob_Cis = [0.3, 0.5, 0.7]
+    # learning rate 
+    learning_rates = [0.01] # list(np.arange(0.05, 0.15, step=0.05))
+    
+    # generation arrays 
+    date_hhmm = datetime.now().strftime("%d%m_%H%M")
+    
+    zip_pi_hp = list(zip(pi_hp_plus, pi_hp_minus))
+    
+    cpt = 0
+    for (prob_Ci, scenario) in it.product(prob_Cis, scenarios):
+        
+        name_file_arr_pl = "arr_pl_M_T_players_{}_periods_{}.npy".format(
+                                m_players, num_periods)
+        path_to_arr_pl_M_T = os.path.join(
+                                name_dir, game_dir,
+                                scenario, str(prob_Ci), 
+                                name_file_arr_pl)
+         
+        arr_pl_M_T_probCi_scen \
+            = get_or_create_instance(m_players, num_periods, 
+                                    prob_Cis, scenarios, 
+                                    path_to_arr_pl_M_T,
+                                    used_instances)
+            
+        algo_piHpPlusMinus_learning_arrPlMT \
+            = it.product(algos, zip_pi_hp, learning_rates, 
+                         [arr_pl_M_T_probCi_scen])
+        for (algo, (pi_hp_plus_elt, pi_hp_minus_elt), 
+             learning_rate, arr_pl_M_T_probCi_scen) \
+            in algo_piHpPlusMinus_learning_arrPlMT:
+            
+            print("______ execution {}: {}, {}:{}______".format(cpt, 
+                    algo, scenario, prob_Ci))
+            cpt += 1
+            msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
+                       +"_pi_hp_minus_"+str(pi_hp_minus_elt)
+            if algo == algos[3]:
+                # RD-DETERMINIST
+                print("*** RD-DETERMINIST *** ")
+                random_determinist = True
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = detGameModel.determinist_balanced_player_game(
+                                 arr_pl_M_T_probCi_scen.copy(),
+                                 pi_hp_plus=pi_hp_plus_elt, 
+                                 pi_hp_minus=pi_hp_minus_elt,
+                                 m_players=m_players, 
+                                 num_periods=num_periods,
+                                 prob_Ci=prob_Ci,
+                                 scenario=scenario,
+                                 random_determinist=random_determinist,
+                                 path_to_save=path_to_save, dbg=False)
+                
+            elif algo == algos[2]:
+                # DETERMINIST
+                print("*** DETERMINIST *** ")
+                random_determinist = False
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = detGameModel.determinist_balanced_player_game(
+                                 arr_pl_M_T_probCi_scen.copy(),
+                                 pi_hp_plus=pi_hp_plus_elt, 
+                                 pi_hp_minus=pi_hp_minus_elt,
+                                 m_players=m_players, 
+                                 num_periods=num_periods,
+                                 prob_Ci=prob_Ci,
+                                 scenario=scenario,
+                                 random_determinist=random_determinist,
+                                 path_to_save=path_to_save, dbg=False)
+                
+            elif algo == algos[1]:
+                # LRI2
+                print("*** LRI 2 *** ")
+                utility_function_version = 2
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo, str(learning_rate)
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_K_vars = lriGameModel.lri_balanced_player_game(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                num_periods=num_periods, 
+                                k_steps=k_steps, 
+                                prob_Ci=prob_Ci, 
+                                learning_rate=learning_rate,
+                                probs_modes_states=probs_modes_states,
+                                scenario=scenario,
+                                utility_function_version=utility_function_version,
+                                path_to_save=path_to_save, dbg=False)
+                
+            elif algo == algos[0]:
+                # LRI1
+                print("*** LRI 1 *** ")
+                utility_function_version = 1
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo, str(learning_rate)
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_K_vars = lriGameModel.lri_balanced_player_game(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                num_periods=num_periods, 
+                                k_steps=k_steps, 
+                                prob_Ci=prob_Ci, 
+                                learning_rate=learning_rate,
+                                probs_modes_states=probs_modes_states,
+                                scenario=scenario,
+                                utility_function_version=utility_function_version,
+                                path_to_save=path_to_save, dbg=False)
+        
+    print("NB_EXECUTION cpt={}".format(cpt))
+
 # ____  new version with all algorithms (LRI1, LRI2, DETERM, RANDOM) : fin   __  
        
 # ____          Generation of instances of players : Debut          _________
-def generation_instances():
+def generation_instances(name_dir, game_dir):
     """
     Generation instances of players for various players' numbers and periods'
     numbers
@@ -540,11 +743,18 @@ def test_execute_game_probCis_scenarios():
 if __name__ == "__main__":
     ti = time.time()
     
+    name_dir = 'tests'
+    game_dir = 'INSTANCES_GAMES'
+    
     fct_aux.N_DECIMALS = 4
     fct_aux.Ci_LOW = 10
     fct_aux.Ci_HIGH = 60
     
-    generation_instances()
+    
+    generation_instances(name_dir, game_dir)
+    
+    execute_algos_used_Generated_instances(game_dir, name_dir, 
+                                           used_instances=True)
     
     #test_execute_game_onecase(fct_aux.CASE2)
     #test_execute_game_allcase()
