@@ -355,6 +355,7 @@ def get_or_create_instance(m_players, num_periods, prob_Ci,
             arr_pl_M_T_probCi_scen \
                 = np.load(path_to_arr_pl_M_T,
                           allow_pickle=True)
+            print("READ INSTANCE GENERATED")
             
         else:
             # create arr_pl_M_T when used_instances = False
@@ -373,14 +374,26 @@ def get_or_create_instance(m_players, num_periods, prob_Ci,
                 num_periods=num_periods, 
                 scenario=scenario, prob_Ci=prob_Ci, 
                 Ci_low=fct_aux.Ci_LOW, Ci_high=fct_aux.Ci_HIGH)
-        print("NO INSTANCE: CREATE")
+        print("NO INSTANCE CREATED")
             
     return arr_pl_M_T_probCi_scen
 
 def execute_algos_used_Generated_instances(game_dir='tests', 
                                            name_dir='INSTANCES_GAMES', 
+                                           scenarios=None,
+                                           prob_Cis=None,
+                                           date_hhmm=None,
+                                           algos=None,
                                            used_instances=True):
+    """
+    execute algos by used generated instances if there exists or 
+        by generated new instances
     
+    scenarios = ["scenario1"]
+    prob_Cis=[0.3]
+    date_hhmm="1041"
+    algos=["LRI1"]
+    """
     # constances 
     m_players = 3 # 10 # 100
     num_periods = 5 # 50
@@ -389,19 +402,27 @@ def execute_algos_used_Generated_instances(game_dir='tests',
     probs_modes_states = [0.5, 0.5, 0.5]
     
     # list of algos
-    algos = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]
+    ALGOS = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]
+    algos = ALGOS if algos is None \
+                    else algos
     # list of pi_hp_plus, pi_hp_minus
     pi_hp_plus = [5]
     pi_hp_minus = [15]
     # list of scenario
-    scenarios = ["scenario1", "scenario2", "scenario3"] # ["scenario1"] # ["scenario1", "scenario2", "scenario3"]
+    scenarios = ["scenario1", "scenario2", "scenario3"] \
+            if scenarios is None \
+            else scenarios
     # list of prob_Ci
-    prob_Cis = [0.3, 0.5, 0.7]
+    prob_Cis = [0.3, 0.5, 0.7] \
+            if prob_Cis is None \
+            else prob_Cis
     # learning rate 
     learning_rates = [0.01] # list(np.arange(0.05, 0.15, step=0.05))
     
     # generation arrays 
-    date_hhmm = datetime.now().strftime("%d%m_%H%M")
+    date_hhmm = datetime.now().strftime("%d%m_%H%M") \
+            if date_hhmm is None \
+            else date_hhmm
     
     zip_pi_hp = list(zip(pi_hp_plus, pi_hp_minus))
     
@@ -433,7 +454,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
             cpt += 1
             msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
                        +"_pi_hp_minus_"+str(pi_hp_minus_elt)
-            if algo == algos[3]:
+            if algo == ALGOS[3]:
                 # RD-DETERMINIST
                 print("*** RD-DETERMINIST *** ")
                 random_determinist = True
@@ -454,7 +475,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                  random_determinist=random_determinist,
                                  path_to_save=path_to_save, dbg=False)
                 
-            elif algo == algos[2]:
+            elif algo == ALGOS[2]:
                 # DETERMINIST
                 print("*** DETERMINIST *** ")
                 random_determinist = False
@@ -474,7 +495,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                  random_determinist=random_determinist,
                                  path_to_save=path_to_save, dbg=False)
                 
-            elif algo == algos[1]:
+            elif algo == ALGOS[1]:
                 # LRI2
                 print("*** LRI 2 *** ")
                 utility_function_version = 2
@@ -497,7 +518,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 utility_function_version=utility_function_version,
                                 path_to_save=path_to_save, dbg=False)
                 
-            elif algo == algos[0]:
+            elif algo == ALGOS[0]:
                 # LRI1
                 print("*** LRI 1 *** ")
                 utility_function_version = 1
@@ -521,6 +542,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 path_to_save=path_to_save, dbg=False)
         
     print("NB_EXECUTION cpt={}".format(cpt))
+
 
 # ____  new version with all algorithms (LRI1, LRI2, DETERM, RANDOM) : fin   __  
        
@@ -753,7 +775,16 @@ if __name__ == "__main__":
     
     generation_instances(name_dir, game_dir)
     
-    execute_algos_used_Generated_instances(game_dir, name_dir, 
+    scenarios=["scenario1"]
+    prob_Cis=[0.3]
+    date_hhmm=None # "1041"
+    algos=["LRI1","LRI2"]
+    execute_algos_used_Generated_instances(game_dir, 
+                                           name_dir, 
+                                           scenarios=scenarios,
+                                           prob_Cis=prob_Cis,
+                                           date_hhmm=date_hhmm,
+                                           algos=algos,
                                            used_instances=True)
     
     #test_execute_game_onecase(fct_aux.CASE2)
