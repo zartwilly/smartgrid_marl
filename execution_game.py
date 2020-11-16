@@ -186,10 +186,10 @@ def execute_algos():
     m_players = 3 # 10 # 100
     num_periods = 5 # 50
     k_steps = 5 # 10 # 50
-    fct_aux.N_DECIMALS = 4
+    # fct_aux.N_DECIMALS = 4
     fct_aux.NB_REPEAT_K_MAX = 3 #10
-    fct_aux.Ci_LOW = 10
-    fct_aux.Ci_HIGH = 60
+    # fct_aux.Ci_LOW = 10
+    # fct_aux.Ci_HIGH = 60
     probs_modes_states = [0.5, 0.5, 0.5]
     
     # list of algos
@@ -321,6 +321,60 @@ def execute_algos():
 
 # ____  new version with all algorithms (LRI1, LRI2, DETERM, RANDOM) : fin   __  
        
+# ____          Generation of instances of players : Debut          _________
+def generation_instances():
+    """
+    Generation instances of players for various players' numbers and periods'
+    numbers
+
+    Returns
+    -------
+    None.
+
+    """
+    name_dir = 'tests'
+    game_dir = 'INSTANCES_GAMES'
+    
+    nb_players = [3, 10, 20, 50, 300]
+    nb_periods = [5, 15, 25, 50, 50]
+    zip_player_period = zip(nb_players, nb_periods)
+    
+    # list of scenario
+    scenarios = ["scenario1", "scenario2", "scenario3"] # ["scenario1"] # ["scenario1", "scenario2", "scenario3"]
+    # list of prob_Ci
+    prob_Cis = [0.3, 0.5, 0.7]
+    
+    for (prob_Ci, scenario, (m_players, num_periods)) in \
+        it.product(prob_Cis, scenarios, zip_player_period):
+        
+        path_to_save = os.path.join(
+                            name_dir, game_dir,
+                            scenario, str(prob_Ci)
+                            )    
+        
+        name_file_arr_pl = "arr_pl_M_T_players_{}_periods_{}.npy".format(
+                                m_players, num_periods)
+        if os.path.exists(os.path.join(path_to_save, name_file_arr_pl)):
+            print("file {} already EXISTS".format(name_file_arr_pl))
+        else:
+            arr_pl_M_T_probCi_scen \
+                = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
+                    m_players=m_players, 
+                    num_periods=num_periods, 
+                    scenario=scenario, prob_Ci=prob_Ci, 
+                    Ci_low=fct_aux.Ci_LOW, Ci_high=fct_aux.Ci_HIGH)
+                
+            fct_aux.save_instances_games(
+                        arr_pl_M_T_probCi_scen, 
+                        name_file_arr_pl,  
+                        path_to_save)
+        
+            print("Generation instances players={}, periods={}, {}, prob_Ci={} ---> OK".format(
+                    m_players, num_periods, scenario, prob_Ci))
+        
+    print("Generation instances TERMINEE")
+    
+# ____          Generation of instances of players : Fin            _________
         
 #------------------------------------------------------------------------------
 #           unit test of functions
@@ -485,13 +539,20 @@ def test_execute_game_probCis_scenarios():
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
+    
+    fct_aux.N_DECIMALS = 4
+    fct_aux.Ci_LOW = 10
+    fct_aux.Ci_HIGH = 60
+    
+    generation_instances()
+    
     #test_execute_game_onecase(fct_aux.CASE2)
     #test_execute_game_allcase()
     #df_bol, dico = test_balanced_player_all_time()
     # df_bol, df_res, dico_cases = test_balanced_player_all_time()
     #test_execute_game_probCis_scenarios()
     
-    execute_algos()
+    #execute_algos()
     
     print("runtime = {}".format(time.time() - ti))  
     
