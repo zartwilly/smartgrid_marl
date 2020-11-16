@@ -296,6 +296,29 @@ def save_variables(path_to_save, arr_pl_M_T_K_vars,
     
     print("$$$$ saved variables. $$$$")
     
+def save_instances_games(arr_pl_M_T, name_file_arr_pl, path_to_save):
+    """
+    Store players instances of the game so that:
+        the players' numbers, the periods' numbers, the scenario and the prob_Ci
+        define a game.
+        
+    Parameters:
+        ----------
+    arr_pl_M_T : array of shape (M_PLAYERS,NUM_PERIODS,len(INDEX_ATTRS))
+        DESCRIPTION.
+    name_file_arr_pl : string 
+        DESCRIPTION.
+        Name of file saving arr_pl_M_T
+    path_to_save : string
+        DESCRIPTION.
+        path to save instances
+        
+    """
+    
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    np.save(os.path.join(path_to_save, name_file_arr_pl), 
+            arr_pl_M_T)
+    
 # def generate_Cis_Pis_Sis(n_items, low_1, high_1, low_2, high_2):
 #     """
 #     generate Cis, Pis, Sis and Si_maxs.
