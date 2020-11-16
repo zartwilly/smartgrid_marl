@@ -379,7 +379,11 @@ def get_or_create_instance(m_players, num_periods, prob_Ci,
     return arr_pl_M_T_probCi_scen
 
 def execute_algos_used_Generated_instances(game_dir='tests', 
-                                           name_dir='INSTANCES_GAMES', 
+                                           name_dir='INSTANCES_GAMES',
+                                           m_players=None,
+                                           num_periods=None,
+                                           k_steps=None,
+                                           NB_REPEAT_K_MAX=None,
                                            scenarios=None,
                                            prob_Cis=None,
                                            date_hhmm=None,
@@ -397,10 +401,10 @@ def execute_algos_used_Generated_instances(game_dir='tests',
     algos=["LRI1"]
     """
     # constances 
-    m_players = 3 # 10 # 100
-    num_periods = 5 # 50
-    k_steps = 5 # 10 # 50
-    fct_aux.NB_REPEAT_K_MAX = 3 #10
+    m_players = 3 if m_players is None else m_players
+    num_periods = 5 if num_periods is None else num_periods
+    k_steps = 5 if k_steps is None else k_steps
+    fct_aux.NB_REPEAT_K_MAX = 3 if NB_REPEAT_K_MAX is None else NB_REPEAT_K_MAX
     probs_modes_states = [0.5, 0.5, 0.5]
     
     # list of algos
@@ -440,7 +444,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
          
         arr_pl_M_T_probCi_scen \
             = get_or_create_instance(m_players, num_periods, 
-                                    prob_Cis, scenarios, 
+                                    prob_Ci, scenario, 
                                     path_to_arr_pl_M_T,
                                     used_instances)
             
