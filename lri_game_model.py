@@ -932,12 +932,12 @@ def lri_balanced_player_game(arr_pl_M_T,
     B_is_M = np.sum(b0_s_T_K[:,k_steps-1] * prod_i_T, axis=1)
     C_is_M = np.sum(c0_s_T_K[:,k_steps-1] * cons_i_T, axis=1)
     ## BB_is, CC_is, RU_is of shape (M_PLAYERS, )
-    BB_is = pi_sg_plus_T_K[-1,-1] * PROD_is #np.sum(PROD_is)
-    for num_pl, bb_i in enumerate(BB_is):
+    BB_is_M = pi_sg_plus_T_K[-1,-1] * PROD_is #np.sum(PROD_is)
+    for num_pl, bb_i in enumerate(BB_is_M):
         if bb_i != 0:
             print("player {}, BB_i={}".format(num_pl, bb_i))
-    CC_is = pi_sg_minus_T_K[-1,-1] * CONS_is #np.sum(CONS_is)
-    RU_is = BB_is - CC_is
+    CC_is_M = pi_sg_minus_T_K[-1,-1] * CONS_is #np.sum(CONS_is)
+    RU_is_M = BB_is_M - CC_is_M
     
     pi_hp_plus_s = np.array([pi_hp_plus] * num_periods, dtype=object)
     pi_hp_minus_s = np.array([pi_hp_minus] * num_periods, dtype=object)
@@ -945,7 +945,7 @@ def lri_balanced_player_game(arr_pl_M_T,
     #__________      save computed variables locally      _____________________
     fct_aux.save_variables(path_to_save, arr_pl_M_T_K_vars, 
                    b0_s_T_K, c0_s_T_K, B_is_M, C_is_M, BENs_M_T_K, CSTs_M_T_K, 
-                   BB_is, CC_is, RU_is, 
+                   BB_is_M, CC_is_M, RU_is_M, 
                    pi_sg_minus_T_K, pi_sg_plus_T_K, 
                    pi_0_minus_T_K, pi_0_plus_T_K,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
