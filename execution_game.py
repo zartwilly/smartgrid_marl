@@ -388,6 +388,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                            prob_Cis=None,
                                            date_hhmm=None,
                                            algos=None,
+                                           learning_rates=None,
                                            pi_hp_plus=None,
                                            pi_hp_minus=None,
                                            used_instances=True):
@@ -423,7 +424,9 @@ def execute_algos_used_Generated_instances(game_dir='tests',
             if prob_Cis is None \
             else prob_Cis
     # learning rate 
-    learning_rates = [0.01] # list(np.arange(0.05, 0.15, step=0.05))
+    learning_rates = [0.01] \
+            if learning_rates is None \
+            else learning_rates # list(np.arange(0.05, 0.15, step=0.05))
     
     # generation arrays 
     date_hhmm = datetime.now().strftime("%d%m_%H%M") \
@@ -785,6 +788,7 @@ if __name__ == "__main__":
     prob_Cis=[0.3]
     date_hhmm="1611_1041"
     algos=["LRI1","LRI2"]
+    learning_rates = [0.01] # list(np.arange(0.05, 0.15, step=0.05))
     pi_hp_plus = [5, 15]
     pi_hp_minus = [15, 5]
     execute_algos_used_Generated_instances(game_dir, 
@@ -793,6 +797,7 @@ if __name__ == "__main__":
                                            prob_Cis=prob_Cis,
                                            date_hhmm=date_hhmm,
                                            algos=algos,
+                                           learning_rates=learning_rates,
                                            pi_hp_plus=pi_hp_plus,
                                            pi_hp_minus=pi_hp_minus,
                                            used_instances=True)
