@@ -774,9 +774,9 @@ def lri_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_K_vars = np.zeros((arrs.shape[0],
                              arrs.shape[1],
                              arrs.shape[2],
-                             arrs.shape[3]+5), 
+                             arrs.shape[3]+3), 
                             dtype=object)
-    arr_pl_M_T_K_vars[:,:,:,:-5] = arrs
+    arr_pl_M_T_K_vars[:,:,:,:-3] = arrs
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["u_i"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
