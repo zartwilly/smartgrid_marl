@@ -192,10 +192,10 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
             
         diff_energy_cons_t += energ_k_cons
         diff_energy_prod_t += energ_k_prod
-        print("k={}, energ_k_prod={}, energ_k_cons={}".format(
-            t, energ_k_prod, energ_k_cons)) if dbg else None
-        # print("k={}, energ_k_prod={}, energ_k_cons={}".format(
-        #     t, energ_k_prod, energ_k_cons))
+        print("Price t={}, energ_k_prod={}, energ_k_cons={}".format(
+            k, energ_k_prod, energ_k_cons)) if dbg else None
+        print("Price t={}, energ_k_prod={}, energ_k_cons={}".format(
+            k, energ_k_prod, energ_k_cons))
         ## debug
         bool_ = arr_pl_M_T[:, k, INDEX_ATTRS["prod_i"]]>0
         unique,counts=np.unique(bool_,return_counts=True)
@@ -240,6 +240,10 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
                 arr_pl_M_T[arr[0], arr[1], INDEX_ATTRS["Ci"]],
                 arr_pl_M_T[arr[0], arr[1], INDEX_ATTRS["Si"]]))
     
+    print("Price pi_hp_minus={}, diff_energy_cons_t={}, sum_cons={}".format(
+        pi_hp_minus, diff_energy_cons_t, sum_cons))
+    print("Price pi_hp_plus={}, diff_energy_prod_t={}, sum_prod={}".format(
+        pi_hp_plus, diff_energy_prod_t, sum_prod))
     new_pi_sg_minus_t = round(pi_hp_minus*diff_energy_cons_t / sum_cons, N_DECIMALS)  \
                     if sum_cons != 0 else np.nan
     new_pi_sg_plus_t = round(pi_hp_plus*diff_energy_prod_t / sum_prod, N_DECIMALS) \
