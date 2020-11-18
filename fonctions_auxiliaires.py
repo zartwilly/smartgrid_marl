@@ -253,8 +253,10 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
 
 
 def save_variables(path_to_save, arr_pl_M_T_K_vars, 
-                   b0_s_T_K, c0_s_T_K, B_is, C_is, BENs_M_T_K, CSTs_M_T_K, 
-                   BB_is, CC_is, RU_is, 
+                   b0_s_T_K, c0_s_T_K,
+                   B_is_M, C_is_M, 
+                   BENs_M_T_K, CSTs_M_T_K, 
+                   BB_is_M, CC_is_M, RU_is_M, 
                    pi_sg_minus_T_K, pi_sg_plus_T_K, 
                    pi_0_minus_T_K, pi_0_plus_T_K,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res,
@@ -282,13 +284,13 @@ def save_variables(path_to_save, arr_pl_M_T_K_vars,
             arr_pl_M_T_K_vars)
     np.save(os.path.join(path_to_save, "b0_s_T_K.npy"), b0_s_T_K)
     np.save(os.path.join(path_to_save, "c0_s_T_K.npy"), c0_s_T_K)
-    np.save(os.path.join(path_to_save, "B_is.npy"), B_is)
-    np.save(os.path.join(path_to_save, "C_is.npy"), C_is)
+    np.save(os.path.join(path_to_save, "B_is_M.npy"), B_is_M)
+    np.save(os.path.join(path_to_save, "C_is_M.npy"), C_is_M)
     np.save(os.path.join(path_to_save, "BENs_M_T_K.npy"), BENs_M_T_K)
     np.save(os.path.join(path_to_save, "CSTs_M_T_K.npy"), CSTs_M_T_K)
-    np.save(os.path.join(path_to_save, "BB_is.npy"), BB_is)
-    np.save(os.path.join(path_to_save, "CC_is.npy"), CC_is)
-    np.save(os.path.join(path_to_save, "RU_is.npy"), RU_is)
+    np.save(os.path.join(path_to_save, "BB_is_M.npy"), BB_is_M)
+    np.save(os.path.join(path_to_save, "CC_is_M.npy"), CC_is_M)
+    np.save(os.path.join(path_to_save, "RU_is_M.npy"), RU_is_M)
     np.save(os.path.join(path_to_save, "pi_sg_minus_T_K.npy"), pi_sg_minus_T_K)
     np.save(os.path.join(path_to_save, "pi_sg_plus_T_K.npy"), pi_sg_plus_T_K)
     np.save(os.path.join(path_to_save, "pi_0_minus_T_K.npy"), pi_0_minus_T_K)
