@@ -656,7 +656,9 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             t, 
             dbg=dbg)
     print("pi_sg_plus_{}_{}_new={}, pi_sg_minus_{}_{}_new={}".format(
-        t, k, pi_sg_plus_t_k_new, t, k, pi_sg_minus_t_k_new)) if dbg else None               
+        t, k, pi_sg_plus_t_k_new, t, k, pi_sg_minus_t_k_new)) if dbg else None
+    print("pi_sg_plus_t_k_new={}, pi_sg_minus_t_k_new={} \n".format(
+            pi_sg_plus_t_k_new, pi_sg_minus_t_k_new))               
     pi_sg_plus_t_k = pi_sg_plus_t_minus_1_k \
                             if pi_sg_plus_t_k_new is np.nan \
                             else pi_sg_plus_t_k_new
@@ -674,6 +676,8 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
     pi_0_minus_t_k = pi_sg_minus_t_minus_1_k
     print("pi_sg_minus_t_minus_1_k={}, pi_0_plus_t_k={}, pi_0_minus_t_k={},".format(
         pi_sg_minus_t_minus_1_k, pi_0_plus_t_k, pi_0_minus_t_k))
+    print("pi_sg_plus_t_k={}, pi_sg_minus_t_k={} \n".format(pi_sg_plus_t_k, 
+                                                            pi_sg_minus_t_k))
     
     
     ## compute prices inside smart grids
@@ -776,6 +780,8 @@ def lri_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["u_i"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
+    
+    arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
     # return arr_pl_M_T_K_vars
     
     # ____      run balanced sg for all num_periods at any k_step     ________
@@ -808,13 +814,13 @@ def lri_balanced_player_game(arr_pl_M_T,
                                         else pi_sg_minus_t_k_minus_1
                                             
             ## balanced_player_game_t
-            arr_pl_M_T_K_vars, \
+            arr_pl_M_T_K_vars_modif, \
             b0_t_k, c0_t_k, \
             bens_t_k, csts_t_k, \
             pi_sg_plus_t_k, pi_sg_minus_t_k, \
             pi_0_plus_t_k, pi_0_minus_t_k, \
             dico_stats_res_t_k \
-                = balanced_player_game_t(arr_pl_M_T_K_vars, t, k, 
+                = balanced_player_game_t(arr_pl_M_T_K_vars_modif, t, k, 
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_k_minus_1, pi_sg_minus_t_k_minus_1,
                            m_players, num_periods, nb_repeat_k, dbg=False)
@@ -839,11 +845,11 @@ def lri_balanced_player_game(arr_pl_M_T,
             
             ## compute new strategies probabilities by using utility fonction
             print("bens_t_k={}, csts_t_k={}".format(bens_t_k.shape, csts_t_k.shape))
-            arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
+            arr_pl_M_T_K_vars_modif, arr_bg_i_nb_repeat_k, \
             bool_bg_i_min_eq_max, \
             bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
                 = update_probs_modes_states_by_defined_utility_funtion(
-                    arr_pl_M_T_K_vars, 
+                    arr_pl_M_T_K_vars_modif, 
                     arr_bg_i_nb_repeat_k,
                     t, k,
                     b0_t_k, c0_t_k,
@@ -857,14 +863,17 @@ def lri_balanced_player_game(arr_pl_M_T,
             if bool_bg_i_min_eq_max:
                 k = k
                 arr_bg_i_nb_repeat_k[:,nb_repeat_k] \
-                    = arr_pl_M_T_K_vars[
+                    = arr_pl_M_T_K_vars_modif[
                         :,
                         t, k,
                         fct_aux.INDEX_ATTRS["bg_i"]]
                 nb_repeat_k += 1
+                arr_pl_M_T_K_vars_modif[:,t,k,:] = arr_pl_M_T_K_vars[:,t,k,:]
                 print("REPEAT t={}, k={}, repeat_k={}, min(bg_i)==max(bg_i)".format(
                         t, k, nb_repeat_k))
             else:
+                arr_pl_M_T_K_vars[:,t,k,:] = arr_pl_M_T_K_vars_modif[:,t,k,:]
+                
                 k = k+1
                 nb_repeat_k = 0
                 arr_bg_i_nb_repeat_k \
@@ -874,7 +883,34 @@ def lri_balanced_player_game(arr_pl_M_T,
                 arr_bg_i_nb_repeat_k.fill(np.nan)
             if nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
                 # TODO: A DELETE A THE END OF CODING
+                arr_pl_M_T_K_vars[:,t,k,:] = arr_pl_M_T_K_vars_modif[:,t,k,:]
+                
+                # B_is, C_is
+                B_is_M.fill(2.306)
+                C_is_M.fill(2.306)
+                # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
+                BB_is_M = np.empty(shape=(m_players,)); BB_is_M.fill(2.306)
+                CC_is_M = np.empty(shape=(m_players,)); CC_is_M.fill(2.306) 
+                RU_is_M = np.empty(shape=(m_players,)); RU_is_M.fill(2.306)
+                # pi_hp_plus_s, pi_hp_minus_s of shape (NUM_PERIODS,)
+                pi_hp_plus_s = np.empty(shape=(num_periods,)); 
+                pi_hp_plus_s.fill(2.306)
+                pi_hp_minus_s = np.empty(shape=(num_periods,)); 
+                pi_hp_minus_s.fill(2.306)
+                
+                fct_aux.save_variables(
+                    path_to_save, arr_pl_M_T_K_vars, 
+                    b0_s_T_K, c0_s_T_K, 
+                    B_is_M, C_is_M, 
+                    BENs_M_T_K, CSTs_M_T_K, 
+                    BB_is_M, CC_is_M, RU_is_M, 
+                    pi_sg_minus_T_K, pi_sg_plus_T_K, 
+                    pi_0_minus_T_K, pi_0_plus_T_K,
+                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+                    algo="LRI")
                 return arr_pl_M_T_K_vars
+            
+            
             
         # update pi_sg_plus_t_minus_1 and pi_sg_minus_t_minus_1
         pi_sg_plus_t_minus_1 = pi_sg_plus_T_K[t,k_steps-1]
@@ -893,8 +929,8 @@ def lri_balanced_player_game(arr_pl_M_T,
                      axis=1)
     prod_i_T = arr_pl_M_T_K_vars[:,:, k_steps-1, fct_aux.INDEX_ATTRS["prod_i"]]
     cons_i_T = arr_pl_M_T_K_vars[:,:, k_steps-1, fct_aux.INDEX_ATTRS["cons_i"]]
-    B_is = np.sum(b0_s_T_K[:,k_steps-1] * prod_i_T, axis=1)
-    C_is = np.sum(c0_s_T_K[:,k_steps-1] * cons_i_T, axis=1)
+    B_is_M = np.sum(b0_s_T_K[:,k_steps-1] * prod_i_T, axis=1)
+    C_is_M = np.sum(c0_s_T_K[:,k_steps-1] * cons_i_T, axis=1)
     ## BB_is, CC_is, RU_is of shape (M_PLAYERS, )
     BB_is = pi_sg_plus_T_K[-1,-1] * PROD_is #np.sum(PROD_is)
     for num_pl, bb_i in enumerate(BB_is):
@@ -908,7 +944,7 @@ def lri_balanced_player_game(arr_pl_M_T,
     
     #__________      save computed variables locally      _____________________
     fct_aux.save_variables(path_to_save, arr_pl_M_T_K_vars, 
-                   b0_s_T_K, c0_s_T_K, B_is, C_is, BENs_M_T_K, CSTs_M_T_K, 
+                   b0_s_T_K, c0_s_T_K, B_is_M, C_is_M, BENs_M_T_K, CSTs_M_T_K, 
                    BB_is, CC_is, RU_is, 
                    pi_sg_minus_T_K, pi_sg_plus_T_K, 
                    pi_0_minus_T_K, pi_0_plus_T_K,
@@ -934,7 +970,7 @@ def test_lri_balanced_player_game():
     utility_function_version = 1 ; path_to_save = "tests"
     
     fct_aux.N_DECIMALS = 3
-    fct_aux.NB_REPEAT_K_MAX = 7
+    fct_aux.NB_REPEAT_K_MAX = 10# 7
     
     # ____   generation initial variables for all players at any time   ____
     arr_pl_M_T = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
