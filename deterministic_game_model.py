@@ -165,7 +165,7 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
                 and fct_aux.fct_positive(
                         Ci_t_plus_1, 
                         Pi_t_plus_1) > Si_t_minus_1_minus:
-                mode_i = fct_aux.STATE2_STRATS[1]           # PROD, state3
+                mode_i = fct_aux.STATE3_STRATS[1]           # PROD, state3
             pl_i.set_mode_i(mode_i)
             
         
