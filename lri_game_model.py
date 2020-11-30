@@ -148,7 +148,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                 num_pl_i,
                 t, k,
                 fct_aux.INDEX_ATTRS["bg_i"]] = bens_t_k[num_pl_i]
-            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, Pi={}, Ci={}, ben={}, cst={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Pi"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Ci"]], bens_t_k[num_pl_i], csts_t_k[num_pl_i]))
+            print("pl_{}, prod={}, cons={}, r_i={}, gamma_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, Pi={}, Ci={}, ben={}, cst={}".format(num_pl_i, round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["gamma_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]],3), arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Pi"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Ci"]], bens_t_k[num_pl_i], csts_t_k[num_pl_i]))
         else:
             arr_pl_M_T_K_vars[
                 num_pl_i,
@@ -156,7 +156,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                 fct_aux.INDEX_ATTRS["bg_i"]] \
                 = fct_aux.fct_positive(csts_t_k[num_pl_i] , 
                                        bens_t_k[num_pl_i])
-            print("pl_{}, prod={}, cons={}, r_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, cst={}, ben={}".format(num_pl_i, arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], csts_t_k[num_pl_i], bens_t_k[num_pl_i]))
+            print("pl_{}, prod={}, cons={}, r_i={}, gamma_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, cst={}, ben={}".format(num_pl_i, round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["gamma_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]],3), arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], csts_t_k[num_pl_i], bens_t_k[num_pl_i]))
     # debug TO DELETE
     print("modes= {}, state= {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["mode_i"]], arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["state_i"]]))
     print("bg_i = {}".format(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["bg_i"]]))
@@ -787,7 +787,9 @@ def lri_balanced_player_game(arr_pl_M_T,
     # ____      run balanced sg for all num_periods at any k_step     ________
     pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
     for t in range(0, num_periods):
-        print("******* t = {} *******".format(t))
+        print("******* t = {}, p1p2p3={} *******".format(t, 
+                np.unique(arr_pl_M_T_K_vars_modif[:,t,:,
+                            fct_aux.INDEX_ATTRS["prob_mode_state_i"]])))
         pi_sg_plus_t_minus_1 = pi_hp_plus-1 if t == 0 \
                                             else pi_sg_plus_t_minus_1
         pi_sg_minus_t_minus_1 = pi_hp_minus-1 if t == 0 \
@@ -801,8 +803,10 @@ def lri_balanced_player_game(arr_pl_M_T,
                                 shape=(m_players,fct_aux.NB_REPEAT_K_MAX))
         arr_bg_i_nb_repeat_k.fill(np.nan)
         while (k < k_steps):
-            print("------- t = {}, k = {}, repeat_k = {} -------".format(
-                    t, k, nb_repeat_k))
+            print("------- t = {}, k = {}, repeat_k = {}, p1p2p3={} -------".format(
+                    t, k, nb_repeat_k,
+                    np.unique(arr_pl_M_T_K_vars_modif[:,t,:,
+                            fct_aux.INDEX_ATTRS["prob_mode_state_i"]])))
             print("------- pi_sg_plus_t_k_minus_1={}, pi_sg_minus_t_k_minus_1={} -------".format(
                     pi_sg_plus_t_k_minus_1, pi_sg_minus_t_k_minus_1))
             
@@ -970,7 +974,7 @@ def test_lri_balanced_player_game():
     utility_function_version = 1 ; path_to_save = "tests"
     
     fct_aux.N_DECIMALS = 3
-    fct_aux.NB_REPEAT_K_MAX = 10# 7
+    fct_aux.NB_REPEAT_K_MAX = 5#3#10# 7
     
     # ____   generation initial variables for all players at any time   ____
     arr_pl_M_T = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
