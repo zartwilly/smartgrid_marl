@@ -196,6 +196,8 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
             k, energ_k_prod, energ_k_cons)) if dbg else None
         print("Price t={}, energ_k_prod={}, energ_k_cons={}".format(
             k, energ_k_prod, energ_k_cons))
+        print("cons={}, prod={}".format(arr_pl_M_T[:, k, INDEX_ATTRS["cons_i"]],
+                                        arr_pl_M_T[:, k, INDEX_ATTRS["prod_i"]]))
         ## debug
         bool_ = arr_pl_M_T[:, k, INDEX_ATTRS["prod_i"]]>0
         unique,counts=np.unique(bool_,return_counts=True)
