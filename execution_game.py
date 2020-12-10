@@ -18,7 +18,7 @@ import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 import game_model_period_T as gmpT
 import deterministic_game_model as detGameModel
-import lri_game_model as lriGameModel
+import lri_game_model_refact as lriGameModel
 import visu_bkh as bkh
 
 from datetime import datetime
