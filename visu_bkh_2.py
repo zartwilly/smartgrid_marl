@@ -1057,7 +1057,11 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
                 line_dash=[5,5])
         
         nb_k_steps = len(list(df_al['k'].unique()))
-        ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        ls = None
+        if int(nb_k_steps*10/250) > 0:
+            ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        else:
+            ls = range(0,nb_k_steps,1)
         df_al_slice = df_al[df_al.index.isin(ls)]
         source_slice = ColumnDataSource(data = df_al_slice)
         if algo == "LRI1":
@@ -1584,6 +1588,8 @@ if __name__ == "__main__":
     #name_simu = "simu_0412_1129"; k_steps_args = 250 # --> all t
     
     name_simu = "simu_0412_1726"; k_steps_args = 1000 # for t integer (t=1) or t list (t=[1,2])
+    
+    name_simu = "simu_1012_2102"; k_steps_args = 10
     ###----    SCENARIO BASE ---> debut  --------------------------------------
     # name_simu = "SCENARIO_BASE"; k_steps_args = 15
     ###----     SCENARIO BASE ---> fin-----------------------------------------
