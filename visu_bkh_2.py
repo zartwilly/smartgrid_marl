@@ -1293,7 +1293,7 @@ def plot_mean_ben_cst_players_all_states_for_scenarios(df_ben_cst_M_T_K, t):
     rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
     prices = df_ben_cst_M_T_K["prices"].unique()
     states = df_ben_cst_M_T_K["state_i"].unique()
-    scenarios = df_arr_M_T_Ks["scenario"].unique()
+    scenarios = df_ben_cst_M_T_K["scenario"].unique()
     
     dico_pxs = dict()
     cpt = 0
