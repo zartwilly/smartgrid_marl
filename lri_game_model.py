@@ -225,6 +225,11 @@ def utility_function_version1(arr_pl_M_T_K_vars,
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
                         t, k,
+                        fct_aux.INDEX_ATTRS["prob_mode_state_i"]]\
+            if k == 0 \
+            else arr_pl_M_T_K_vars[
+                        :,
+                        t, k-1,
                         fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
 
     # p_i_t_k_new = p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
@@ -439,6 +444,11 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
                         t, k,
+                        fct_aux.INDEX_ATTRS["prob_mode_state_i"]] \
+            if k == 0 \
+            else arr_pl_M_T_K_vars[
+                        :,
+                        t, k-1,
                         fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
     
     p_i_t_k_new =  p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
@@ -446,7 +456,7 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
     u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
     p_i_t_k_new = np.around(np.array(p_i_t_k_new, dtype=float),
                              fct_aux.N_DECIMALS)
-    
+     
     arr_pl_M_T_K_vars[
         :,
         t, k,
