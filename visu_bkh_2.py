@@ -15,13 +15,14 @@ import fonctions_auxiliaires as fct_aux
 
 from bokeh.models.tools import HoverTool, PanTool, BoxZoomTool, WheelZoomTool 
 from bokeh.models.tools import RedoTool, ResetTool, SaveTool, UndoTool
-from bokeh.models import ColumnDataSource, Range1d
+from bokeh.models import ColumnDataSource, FactorRange
 from bokeh.plotting import figure, show, output_file, save
 from bokeh.layouts import row, column
 from bokeh.models import Panel, Tabs, Legend, Select
 from bokeh.io import curdoc
 from bokeh.plotting import reset_output
 from bokeh.models.widgets import Slider
+from bokeh.transform import factor_cmap
 #Importing a pallette
 from bokeh.palettes import Category20, Spectral5, Viridis256
 
@@ -124,7 +125,8 @@ def get_tuple_paths_of_arrays(name_dir="tests", name_simu="simu_1811_1754",
                    scenarios=None, prob_Cis=None, prices=None, 
                    algos=None, learning_rates=None, 
                    algos_not_learning=["DETERMINIST","RD-DETERMINIST"], 
-                   ext=".npy", exclude_html_files=[NAME_RESULT_SHOW_VARS]):
+                   ext=".npy", 
+                   exclude_html_files=[NAME_RESULT_SHOW_VARS,"html"]):
     
     tuple_paths = []
     rep_dir_simu = os.path.join(name_dir, name_simu)
@@ -134,7 +136,8 @@ def get_tuple_paths_of_arrays(name_dir="tests", name_simu="simu_1811_1754",
     else: 
         scenarios_new = scenarios
     # path_scens = []
-    scenarios_new = [x for x in scenarios_new if x not in exclude_html_files]
+    scenarios_new = [x for x in scenarios_new 
+                     if x.split('.')[-1] not in exclude_html_files]
     for scenario in scenarios_new:
         path_scen = os.path.join(name_dir, name_simu, scenario)
         # path_scens.append(os.path.join(rep_dir_simu, scenario))
@@ -1247,6 +1250,10 @@ def plot_mean_ben_cst_all_states_for_scenarios(
         #             if nb_k_steps < interval \
         #             else range(0, nb_k_steps) 
         # ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        if int(nb_k_steps*10/250) > 0:
+            ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        else:
+            ls = range(0,nb_k_steps,1)
         df_al_slice = df_al[df_al.index.isin(ls)]
         source_slice = ColumnDataSource(data = df_al_slice)
         
@@ -1270,7 +1277,7 @@ def plot_mean_ben_cst_all_states_for_scenarios(
             # tup_legends.append((label, [r2] ))
         elif algo == "RD_DETERMINIST":
             ind_color = 4
-            r2 = px.triangle(x="k", y=ylabel, size=7, source=source, 
+            r2 = px.triangle(x="k", y=ylabel, size=7, source=source_slice, 
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
@@ -1446,6 +1453,14 @@ def plot_max_proba_mode_onestate_for_scenarios(df_pro_ra_pri_scen_st,
                      line_width=2, color=COLORS[ind_color], 
                      line_dash=[5,5])
         
+        nb_k_steps = len(list(df_al_k['k'].unique()))
+        if int(nb_k_steps*10/250) > 0:
+            ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        else:
+            ls = range(0,nb_k_steps,1)
+        df_al_slice = df_al[df_al.index.isin(ls)]
+        source_slice = ColumnDataSource(data = df_al_slice)
+        
         if algo == "LRI1":
             ind_color = 3
             r4 = px.asterisk(x="k", y=ylabel_moyS1, size=7, source=source, 
@@ -1540,8 +1555,432 @@ def plot_max_proba_mode(df_arr_M_T_Ks, t, algos=['LRI1','LRI2']):
 #
 ###############################################################################
 
+###############################################################################
+#
+#                       histogramme de states  ---> debut
+#
+###############################################################################
+def plot_histo_state_for_scenarios(df_pro_ra_pri_scen, 
+                                    prob_Ci, rate, price, scenario,
+                                    t, last_k):
+    
+    cols = ["state_i","algo"]
+    
+    df_al_cnt = df_pro_ra_pri_scen\
+                    .groupby(cols)[["scenario"]].count()
+    df_al_cnt.rename(columns={"scenario":"nb_players"}, inplace=True)
+    df_al_cnt = df_al_cnt.reset_index()
+    
+    
+    x = list(map(tuple,list(df_al_cnt[cols].values)))
+    nb_players = list(df_al_cnt["nb_players"])
+    
+    print("x:{}, nb_players={}".format(len(x), nb_players))
+                 
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("nb_players", "@nb_players")
+                            ]
+                        )
+    px= figure(x_range=FactorRange(*x), plot_height=250, 
+                title="number of players by {}, t={},k={} (prob_Ci={}, rate={}, price={})".format(
+                 scenario, t, last_k, prob_Ci, rate, price),
+                toolbar_location=None, tools=TOOLS)
 
+    data = dict(x=x, nb_players=nb_players)
+    
+    source = ColumnDataSource(data=data)
+    px.vbar(x='x', top='nb_players', width=0.9, source=source, 
+            fill_color=factor_cmap('x', palette=Spectral5, 
+                                   factors=list(df_al_cnt["algo"].unique()), 
+                                   start=1, end=2))
+    
+    px.y_range.start = 0
+    px.x_range.range_padding = 0.1
+    px.xaxis.major_label_orientation = 1
+    px.xgrid.grid_line_color = None
+    
+    return px
+    
+def histo_states(df_arr_M_T_Ks, t):
+    """
+    plot the histogram showing the number of players by states
+    """
+    
+    scenarios = df_arr_M_T_Ks["scenario"].unique()
+    prob_Cis = df_arr_M_T_Ks["prob_Ci"].unique()
+    rates = df_arr_M_T_Ks["rate"].unique(); rates = rates[rates!=0]
+    prices = df_arr_M_T_Ks["prices"].unique()
 
+    last_k = list(df_arr_M_T_Ks["k"].unique())[-1]
+    dico_pxs = dict()
+    cpt = 0
+    for prob_Ci,scenario,price,rate in it.product(prob_Cis, scenarios, 
+                                                  prices, rates):
+        mask_pro_ra_pri_scen = (df_arr_M_T_Ks.prob_Ci == prob_Ci) \
+                                    & ((df_arr_M_T_Ks.rate == rate) 
+                                         | (df_arr_M_T_Ks.rate == 0)) \
+                                    & (df_arr_M_T_Ks.prices == price) \
+                                    & (df_arr_M_T_Ks.t == t) \
+                                    & (df_arr_M_T_Ks.k == last_k) \
+                                    & (df_arr_M_T_Ks.scenario == scenario)  
+        df_pro_ra_pri_scen = df_arr_M_T_Ks[mask_pro_ra_pri_scen].copy()
+        
+        if df_pro_ra_pri_scen.shape[0] != 0:
+        
+            px_scen_st_mode = plot_histo_state_for_scenarios(
+                                    df_pro_ra_pri_scen, 
+                                    prob_Ci, rate, price, scenario,
+                                    t, last_k)
+            px_scen_st_mode.legend.click_policy="hide"
+    
+            if (prob_Ci, rate, price, scenario) not in dico_pxs.keys():
+                dico_pxs[(prob_Ci, rate, price, scenario)] \
+                    = [px_scen_st_mode]
+            else:
+                dico_pxs[(prob_Ci, rate, price, scenario)].append(px_scen_st_mode)
+            cpt += 1
+    
+    # aggregate by state_i i.e each state_i is on new column.
+    col_px_scen_sts = []
+    for key, px_scen_st in dico_pxs.items():
+        row_px_scen_st = row(px_scen_st)
+        col_px_scen_sts.append(row_px_scen_st)
+    col_px_scen_sts=column(children=col_px_scen_sts, 
+                           sizing_mode='stretch_both')  
+    # show(col_px_scen_sts)
+    
+    return col_px_scen_sts
+    
+    
+##############################################################################
+#
+#                       histogramme de states  ---> fin
+#
+###############################################################################
+
+###############################################################################
+#
+#                       histogramme de strategies  ---> debut
+#
+###############################################################################
+def plot_histo_strategy_onestate_for_scenarios_old(
+                                    df_pro_ra_pri_scen, 
+                                    prob_Ci, rate, price, scenario, state_i, 
+                                    t):
+    """
+    """
+    S1, S2 = None, None
+    if state_i == "state1":
+        S1 = fct_aux.STATE1_STRATS[0]
+        S2 = fct_aux.STATE1_STRATS[1]
+    elif state_i == "state2":
+        S1 = fct_aux.STATE2_STRATS[0]
+        S2 = fct_aux.STATE2_STRATS[1]
+    elif state_i == "state3":
+        S1 = fct_aux.STATE3_STRATS[0]
+        S2 = fct_aux.STATE3_STRATS[1]
+    
+    dfs = []        
+    algos = df_pro_ra_pri_scen["algo"].unique()
+    for algo in algos:
+        df_al = df_pro_ra_pri_scen[(df_pro_ra_pri_scen.algo == algo)]
+        
+        label_S1 = "{}_{}".format(S1, algo)
+        label_S2 = "{}_{}".format(S2, algo)
+        
+        df_S1 = df_al[(df_al.mode_i == fct_aux.STATE1_STRATS[0])].copy()
+        df_S2 = df_al[(df_al.mode_i == fct_aux.STATE1_STRATS[1])].copy()
+        
+        df_S1_cnt = df_S1.groupby("pl_i")[["k"]].count()
+        df_S2_cnt = df_S2.groupby("pl_i")[["k"]].count()
+        df_S1_cnt.rename(columns={"k":label_S1}, inplace=True)
+        df_S2_cnt.rename(columns={"k":label_S2}, inplace=True)
+        
+        dfs.append(df_S1_cnt); dfs.append(df_S2_cnt); 
+     
+    df_st_cnt_merge = None
+    df_st_cnt_merge = pd.concat( dfs, join="outer", axis=1)
+    
+    # plot nested categories' bars
+    title = "histo of strategies for each mode at {},{}, t={} (prob_Ci={}, rate={}, price={})".format(
+                state_i, scenario, t, prob_Ci, rate, price)
+    xlabel = "strategies" 
+    ylabel = "number" 
+    
+    tooltips = [("scenario", "@scenario"),("algo", "@algo"),("pl_i", "@pl_i")]
+    cols = list(df_st_cnt_merge.columns)
+    for col in df_st_cnt_merge.columns:
+        new_tool = (str(col), "@"+str(col))
+        tooltips.append(new_tool)
+    
+    tup_legends = []
+    
+    px = figure(plot_height = int(HEIGHT*MULT_HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    px.title.text = title
+    px.xaxis.axis_label = xlabel
+    px.yaxis.axis_label = ylabel
+    TOOLS[7] = HoverTool(tooltips=tooltips)
+    px.tools = TOOLS
+    
+    df_st_cnt_merge.loc[:,"scenario"] = scenario
+    df_st_cnt_merge.loc[:,"t"] = t
+    df_st_cnt_merge.reset_index(inplace=True)
+    pl_is = df_st_cnt_merge["pl_i"].unique()
+    
+    path_ = "C:\\Users\\jwehounou\\Desktop\\Post_doctoral\\codes\\smartgrid_marl\\p"; 
+    df_st_cnt_merge.to_csv(os.path.join(path_, "df_st_cnt_merge.csv"))
+    
+
+    x = [(str(pl_i), col) for pl_i in pl_is for col in cols]
+    #counts = sum(zip(list(map(list,list(df_st_cnt_merge[cols].values)))),())
+    counts = [l for sublist in list(map(list,list(df_st_cnt_merge[cols].values))) 
+              for l in sublist]
+    counts = list(df_st_cnt_merge['pl_i'])
+    x = list(map(tuple,list(df_st_cnt_merge[cols].values)))
+    
+    print("x:{}, counts={}".format(len(x), len(counts)))
+    print("x:{}, counts={}".format(x, counts))
+
+    source = ColumnDataSource(data=dict(x=x, counts=counts))
+    
+    px.x_range.factors = FactorRange(*x)
+
+    px.vbar(x='x', top='counts', width=0.9, source=source,
+            fill_color=factor_cmap('x', palette=Spectral5, factors=cols, 
+                                   start=1, end=2))
+    
+    return px
+        
+def plot_histo_strategy_onestate_for_scenarios(
+                                    df_pro_ra_pri_scen_al, 
+                                    prob_Ci, rate, price, scenario, state_i, 
+                                    algo, t):
+    """
+    """
+    
+    df_pro_ra_pri_scen_al["mode_i"][(df_pro_ra_pri_scen_al.mode_i == '')] \
+        = 'UNDEF'
+    
+    cols = ["mode_i","pl_i"]
+    df_mode = df_pro_ra_pri_scen_al\
+                .groupby(cols)[["scenario"]].count()
+    df_mode.rename(columns={"scenario":"nb_players"}, inplace=True)
+    df_mode = df_mode.reset_index()
+    df_mode["pl_i"] = df_mode["pl_i"].astype(str)
+    
+    x = list(map(tuple,list(df_mode[cols].values)))
+    nb_players = list(df_mode["nb_players"])
+                     
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("nb_players", "@nb_players")
+                            ]
+                        )
+    px= figure(x_range=FactorRange(*x), plot_height=250, 
+               title="number of players by mode, t={}, {} ({}, {}, prob_Ci={}, rate={}, price={})".format(
+                  t, state_i, scenario, algo, prob_Ci, rate, price),
+                toolbar_location=None, tools=TOOLS)
+
+    data = dict(x=x, nb_players=nb_players)
+    
+    source = ColumnDataSource(data=data)
+    px.vbar(x='x', top='nb_players', width=0.9, source=source, 
+            fill_color=factor_cmap('x', palette=Category20[10], 
+                                   factors=list(df_mode["pl_i"].unique()), 
+                                   start=1, end=2))
+    
+    px.y_range.start = 0
+    px.x_range.range_padding = 0.1
+    px.xaxis.major_label_orientation = 1
+    px.xgrid.grid_line_color = None
+    
+    return px
+    
+    
+
+def plot_histo_strategies(df_arr_M_T_Ks, t):
+    """
+    plot the strategies' histogram  for each state
+
+    x-axis : strategies
+    y-axis : number of cases having one strategy
+    
+    Returns
+    -------
+    None.
+
+    """
+    prob_Cis = df_arr_M_T_Ks["prob_Ci"].unique()
+    rates = df_arr_M_T_Ks["rate"].unique(); rates = rates[rates!=0]
+    prices = df_arr_M_T_Ks["prices"].unique()
+    states = df_arr_M_T_Ks["state_i"].unique()
+    scenarios = df_arr_M_T_Ks["scenario"].unique()
+    algos = df_arr_M_T_Ks["algo"].unique()
+    
+    dico_pxs = dict()
+    cpt = 0
+    for prob_Ci, rate, price, scenario, state_i, algo\
+        in it.product(prob_Cis, rates,prices, scenarios, states, algos):
+        
+        mask_pro_ra_pri_scen = (df_arr_M_T_Ks.prob_Ci == prob_Ci) \
+                                    & ((df_arr_M_T_Ks.rate == rate) 
+                                         | (df_arr_M_T_Ks.rate == 0)) \
+                                    & (df_arr_M_T_Ks.prices == price) \
+                                    & (df_arr_M_T_Ks.t == t) \
+                                    & (df_arr_M_T_Ks.scenario == scenario) \
+                                    & (df_arr_M_T_Ks.state_i == state_i) \
+                                    & (df_arr_M_T_Ks.algo == algo)    
+        df_pro_ra_pri_scen_al = df_arr_M_T_Ks[mask_pro_ra_pri_scen].copy()
+        
+        if df_pro_ra_pri_scen_al.shape[0] != 0:
+        
+            px_scen_st = plot_histo_strategy_onestate_for_scenarios(
+                                    df_pro_ra_pri_scen_al, 
+                                    prob_Ci, rate, price, scenario, state_i, 
+                                    algo, t)
+            px_scen_st.legend.click_policy="hide"
+    
+            if (prob_Ci, rate, price, state_i, scenario, algo) \
+                not in dico_pxs.keys():
+                dico_pxs[(prob_Ci, rate, price, state_i, scenario, algo)] \
+                    = [px_scen_st]
+            else:
+                dico_pxs[(prob_Ci, rate, price, state_i, scenario, algo)] \
+                    .append(px_scen_st)
+            cpt += 1
+        
+    # aggregate by state_i i.e each state_i is on new column.
+    col_mode_S1S2_nbplayers = []
+    for key, px_scen_st in dico_pxs.items():
+        row_px_scens = row(px_scen_st)
+        col_mode_S1S2_nbplayers.append(row_px_scens)
+    col_mode_S1S2_nbplayers=column(children=col_mode_S1S2_nbplayers, 
+                           sizing_mode='stretch_both')  
+    #show(col_mode_S1S2_nbplayers)
+    
+    return col_mode_S1S2_nbplayers
+
+###############################################################################
+#
+#                       histogramme de strategies  ---> fin
+#
+###############################################################################
+
+###############################################################################
+#
+#              histogramme de players jouant/ne jouant pas  ---> debut
+#
+###############################################################################
+def plot_histo_playing_onestate_for_scenarios(
+                                    df_pro_ra_pri_scen_al, 
+                                    prob_Ci, rate, price, scenario, state_i, 
+                                    algo, t):
+    cols = ["non_playing_players", "pl_i"]
+    df_mode = df_pro_ra_pri_scen_al\
+                .groupby(cols)[["scenario"]].count()
+    df_mode.rename(columns={"scenario":"nb_players"}, inplace=True)
+    df_mode = df_mode.reset_index()
+    df_mode["pl_i"] = df_mode["pl_i"].astype(str)
+    
+    x = list(map(tuple,list(df_mode[cols].values)))
+    nb_players = list(df_mode["nb_players"])
+                     
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("nb_players", "@nb_players")
+                            ]
+                        )
+    px= figure(x_range=FactorRange(*x), plot_height=250, 
+               title="number of players, t={}, {} ({}, {}, prob_Ci={}, rate={}, price={})".format(
+                  t, state_i, scenario, algo, prob_Ci, rate, price),
+                toolbar_location=None, tools=TOOLS)
+
+    data = dict(x=x, nb_players=nb_players)
+    
+    source = ColumnDataSource(data=data)
+    px.vbar(x='x', top='nb_players', width=0.9, source=source, 
+            fill_color=factor_cmap('x', palette=Category20[10], 
+                                   factors=list(df_mode["pl_i"].unique()), 
+                                   start=1, end=2))
+    
+    px.y_range.start = 0
+    px.x_range.range_padding = 0.1
+    px.xaxis.major_label_orientation = 1
+    px.xgrid.grid_line_color = None
+    
+    return px
+    
+
+def plot_histo_playing(df_arr_M_T_Ks, t):
+    """
+    plot the histogram of players playing or not the game 
+
+    x-axis : players
+    y-axis : number of k_step playing or not 
+    
+    Returns
+    -------
+    None.
+
+    """
+    prob_Cis = df_arr_M_T_Ks["prob_Ci"].unique()
+    rates = df_arr_M_T_Ks["rate"].unique(); rates = rates[rates!=0]
+    prices = df_arr_M_T_Ks["prices"].unique()
+    states = df_arr_M_T_Ks["state_i"].unique()
+    scenarios = df_arr_M_T_Ks["scenario"].unique()
+    algos = df_arr_M_T_Ks["algo"].unique()
+    
+    df_arr_M_T_Ks['non_playing_players'][
+            df_arr_M_T_Ks['non_playing_players']==1] = "PLAY"
+    df_arr_M_T_Ks['non_playing_players'][
+            df_arr_M_T_Ks['non_playing_players']==0] = "NOT_PLAY"
+    dico_pxs = dict()
+    cpt = 0
+    for prob_Ci, rate, price, scenario, state_i, algo\
+        in it.product(prob_Cis, rates,prices, scenarios, states, algos):
+        
+        mask_pro_ra_pri_scen = (df_arr_M_T_Ks.prob_Ci == prob_Ci) \
+                                    & ((df_arr_M_T_Ks.rate == rate) 
+                                         | (df_arr_M_T_Ks.rate == 0)) \
+                                    & (df_arr_M_T_Ks.prices == price) \
+                                    & (df_arr_M_T_Ks.t == t) \
+                                    & (df_arr_M_T_Ks.scenario == scenario) \
+                                    & (df_arr_M_T_Ks.state_i == state_i) \
+                                    & (df_arr_M_T_Ks.algo == algo)    
+        df_pro_ra_pri_scen_al = df_arr_M_T_Ks[mask_pro_ra_pri_scen].copy()
+        
+        if df_pro_ra_pri_scen_al.shape[0] != 0:
+        
+            px_scen_st = plot_histo_playing_onestate_for_scenarios(
+                                    df_pro_ra_pri_scen_al, 
+                                    prob_Ci, rate, price, scenario, state_i, 
+                                    algo, t)
+    
+            if (prob_Ci, rate, price, state_i, scenario, algo) \
+                not in dico_pxs.keys():
+                dico_pxs[(prob_Ci, rate, price, state_i, scenario, algo)] \
+                    = [px_scen_st]
+            else:
+                dico_pxs[(prob_Ci, rate, price, state_i, scenario, algo)] \
+                    .append(px_scen_st)
+            cpt += 1
+        
+    # aggregate by state_i i.e each state_i is on new column.
+    col_playing_players = []
+    for key, px_scen_st in dico_pxs.items():
+        row_px_scens = row(px_scen_st)
+        col_playing_players.append(row_px_scens)
+    col_playing_players=column(children=col_playing_players, 
+                           sizing_mode='stretch_both')  
+    #show(col_playing_players)
+    
+    return col_playing_players
+
+###############################################################################
+#
+#              histogramme de players jouant/ne jouant pas  ---> fin
+#
+###############################################################################
 
 ###############################################################################
 #
@@ -1555,13 +1994,37 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
     col_pxs_ben_cst = plot_mean_ben_cst_players_all_states_for_scenarios(
                         df_ben_cst_M_T_K, t)
     col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
-                                               algos=['LRI1','LRI2'])
+                                                algos=['LRI1','LRI2'])
+    col_px_scen_sts = histo_states(df_arr_M_T_Ks, t)
+    col_px_scen_mode_S1S2_nbplayers = plot_histo_strategies(df_arr_M_T_Ks, t)
+    col_playing_players = plot_histo_playing(df_arr_M_T_Ks, t)
     
     tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
     tab_bencst=Panel(child=col_pxs_ben_cst, title="mean(ben-cst)")
     tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
-    tabs = Tabs(tabs= [tab_inout, tab_bencst, tab_S1S2])
+    tab_sts=Panel(child=col_px_scen_sts, title="number players")
+    tab_mode_S1S2_nbplayers=Panel(child=col_px_scen_mode_S1S2_nbplayers, 
+                                  title="number players by strategies")
+    tab_playing=Panel(child=col_playing_players, 
+                  title="number players playing/not_playing")
     
+    tabs = Tabs(tabs= [tab_inout, tab_bencst, tab_S1S2, tab_sts, 
+                        tab_mode_S1S2_nbplayers, tab_playing])
+    
+    
+    # ## debug ---> debut
+    # col_px_scen_sts = histo_states(df_arr_M_T_Ks, t)
+    # tab_sts=Panel(child=col_px_scen_sts, title="number players")
+    # tabs = Tabs(tabs= [tab_sts])
+    # col_px_scen_mode_S1S2_nbplayers = plot_histo_strategies(df_arr_M_T_Ks, t)
+    # tab_mode_S1S2_nbplayers=Panel(child=col_px_scen_mode_S1S2_nbplayers, 
+    #               title="number players by strategies")
+    # tabs = Tabs(tabs= [tab_mode_S1S2_nbplayers])
+    # col_playing_players = plot_histo_playing(df_arr_M_T_Ks, t)
+    # tab_playing=Panel(child=col_playing_players, 
+    #               title="number players playing/not_playing")
+    # tabs = Tabs(tabs= [tab_playing])
+    # ## debug ---> fin
     
     output_file( os.path.join(name_dir,NAME_RESULT_SHOW_VARS)  )
     save(tabs)
