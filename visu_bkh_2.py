@@ -2225,15 +2225,15 @@ def plot_histo_playing_onestate_for_scenarios(
     cols = ["non_playing_players", "pl_i"]
     df_mode = df_pro_ra_pri_scen_al\
                 .groupby(cols)[["scenario"]].count()
-    df_mode.rename(columns={"scenario":"nb_players"}, inplace=True)
+    df_mode.rename(columns={"scenario":"nb_k_steps"}, inplace=True)
     df_mode = df_mode.reset_index()
     df_mode["pl_i"] = df_mode["pl_i"].astype(str)
     
     x = list(map(tuple,list(df_mode[cols].values)))
-    nb_players = list(df_mode["nb_players"])
+    nb_k_steps = list(df_mode["nb_k_steps"])
                      
     TOOLS[7] = HoverTool(tooltips=[
-                            ("nb_players", "@nb_players")
+                            ("nb_k_steps", "@nb_k_steps")
                             ]
                         )
     px= figure(x_range=FactorRange(*x), plot_height=250, 
@@ -2241,10 +2241,10 @@ def plot_histo_playing_onestate_for_scenarios(
                   t, state_i, scenario, algo, prob_Ci, rate, price),
                 toolbar_location=None, tools=TOOLS)
 
-    data = dict(x=x, nb_players=nb_players)
+    data = dict(x=x, nb_k_steps=nb_k_steps)
     
     source = ColumnDataSource(data=data)
-    px.vbar(x='x', top='nb_players', width=0.9, source=source, 
+    px.vbar(x='x', top='nb_k_steps', width=0.9, source=source, 
             fill_color=factor_cmap('x', palette=Category20[10], 
                                    factors=list(df_mode["pl_i"].unique()), 
                                    start=1, end=2))
