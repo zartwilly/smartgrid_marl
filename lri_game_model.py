@@ -950,7 +950,8 @@ def lri_balanced_player_game(arr_pl_M_T,
         # update pi_sg_plus_t_minus_1 and pi_sg_minus_t_minus_1
         pi_sg_plus_t_minus_1 = pi_sg_plus_T_K[t,k_steps-1]
         pi_sg_minus_t_minus_1 = pi_sg_minus_T_K[t,k_steps-1]
-        
+     
+    arr_pl_M_T_K_vars = arr_pl_M_T_K_vars_modif.copy()
        
     # __________        compute prices variables         ______________________
     ## B_is, C_is of shape (M_PLAYERS, )
