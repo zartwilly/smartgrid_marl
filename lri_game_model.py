@@ -513,6 +513,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
             bool_bg_i_min_eq_max, indices_non_playing_players, \
             bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
 
+
+            
 def balanced_player_game_t(arr_pl_M_T_K_vars, t, k, 
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_minus_1_k, pi_sg_minus_t_minus_1_k,
@@ -627,7 +629,8 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
                 ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
                 ("Si_old", pl_i.get_Si_old()), ("state_i", pl_i.get_state_i()),
                 ("mode_i", pl_i.get_mode_i()), ("prob_mode_state_i", p_i_t_k),
-                ("balanced_pl_i", boolean), ("formule", formule)]
+                ("balanced_pl_i", boolean), ("formule", formule),
+                ("Si_minus", 0),("Si_plus", 0)]
         for col,val in tup_cols_values:
             arr_pl_M_T_K_vars[num_pl_i, t, k,
                               fct_aux.INDEX_ATTRS[col]] = val
@@ -702,7 +705,7 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             pi_0_plus_t_k, pi_0_minus_t_k, \
             dico_stats_res_t_k
     
-# ______________            debug LRI   ---> debut      _______________________
+# ______________            main function of LRI   ---> debut      _______________________
 def lri_balanced_player_game(arr_pl_M_T,
                              pi_hp_plus=0.10, 
                              pi_hp_minus=0.15,
@@ -742,12 +745,15 @@ def lri_balanced_player_game(arr_pl_M_T,
     
     dico_stats_res = dict()
     
-    fct_aux.INDEX_ATTRS["prob_mode_state_i"] = 16
-    fct_aux.INDEX_ATTRS["u_i"] = 17
-    fct_aux.INDEX_ATTRS["bg_i"] = 18
-    fct_aux.INDEX_ATTRS["non_playing_players"] = 19
+    fct_aux.INDEX_ATTRS["Si_minus"] = 16
+    fct_aux.INDEX_ATTRS["Si_plus"] = 17
+    fct_aux.INDEX_ATTRS["prob_mode_state_i"] = 18
+    fct_aux.INDEX_ATTRS["u_i"] = 19
+    fct_aux.INDEX_ATTRS["bg_i"] = 20
+    fct_aux.INDEX_ATTRS["non_playing_players"] = 21
     # fct_aux.INDEX_ATTRS[""] = 20
-    nb_vars_2_add = 4
+    print("Si_minus={}".format(fct_aux.INDEX_ATTRS["Si_minus"]))
+    nb_vars_2_add = 6
     # _______ variables' initialization --> fin   ________________
     
     # ____   turn arr_pl_M_T in a array of 4 dimensions   ____
@@ -770,10 +776,12 @@ def lri_balanced_player_game(arr_pl_M_T,
                              arrs.shape[3]+nb_vars_2_add), 
                             dtype=object)
     arr_pl_M_T_K_vars[:,:,:,:-nb_vars_2_add] = arrs
-    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["u_i"]] = np.nan
-    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
-    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
-    arr_pl_M_T_K_vars[:,:,:, fct_aux.INDEX_ATTRS["non_playing_players"]] \
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["Si_minus"]] = 0
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["Si_plus"]] = 0
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["u_i"]] = np.nan
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["non_playing_players"]] \
         = NON_PLAYING_PLAYERS["PLAY"]
     
     arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
@@ -888,7 +896,8 @@ def lri_balanced_player_game(arr_pl_M_T,
                             = NON_PLAYING_PLAYERS["NOT_PLAY"]
                 ### update bg_i, mode_i, u_i_t_k, p_i_t_k for not playing players from k+1 to k_steps 
                 for var in ["bg_i", "mode_i", "prod_i", "cons_i",
-                            "u_i", "prob_mode_state_i"]:
+                            "u_i", "prob_mode_state_i", "r_i", 
+                            "gamma_i", "state_i"]:
                     # TODO change prob_mode_state_i by p_i_t_k
                     # print("SHAPE NON_PLAYING: t={},k={},k_steps={} var_modifs_non_players={}, k:k_steps={}".format(
                     #     t,k,k_steps,
@@ -952,6 +961,18 @@ def lri_balanced_player_game(arr_pl_M_T,
         pi_sg_minus_t_minus_1 = pi_sg_minus_T_K[t,k_steps-1]
      
     arr_pl_M_T_K_vars = arr_pl_M_T_K_vars_modif.copy()
+    
+    #### recompute BENs, CSTs of shape (M_PLAYERS,NUM_PERIODS,K_STEPS)
+    BENs_M_T_K[:,t,:] = 1 + b0_s_T_K[t,:] \
+                        * arr_pl_M_T_K_vars[:,t,
+                                            :,fct_aux.INDEX_ATTRS["prod_i"]] \
+                        + arr_pl_M_T_K_vars[:,t,
+                                            :,fct_aux.INDEX_ATTRS["gamma_i"]] \
+                        * arr_pl_M_T_K_vars[:,t,
+                                            :,fct_aux.INDEX_ATTRS["r_i"]] 
+    CSTs_M_T_K[:,t,:] =  c0_s_T_K[t,:] \
+                        * arr_pl_M_T_K_vars[:,t,
+                                            :,fct_aux.INDEX_ATTRS["cons_i"]]
        
     # __________        compute prices variables         ______________________
     ## B_is, C_is of shape (M_PLAYERS, )
@@ -992,7 +1013,8 @@ def lri_balanced_player_game(arr_pl_M_T,
             scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_modes_states))
     
     return arr_pl_M_T_K_vars
-# ______________            debug LRI   ---> fin        _______________________
+
+# ______________            main function of LRI   ---> fin        _______________________
 
 ###############################################################################
 #                   definition  des unittests
