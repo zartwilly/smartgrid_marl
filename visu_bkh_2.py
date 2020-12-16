@@ -2218,11 +2218,12 @@ def plot_histo_strategies(df_arr_M_T_Ks, t):
 #              histogramme de players jouant/ne jouant pas  ---> debut
 #
 ###############################################################################
-def plot_histo_playing_onestate_for_scenarios(
+
+def plot_histo_playing_allstates_for_scenarios(
                                     df_pro_ra_pri_scen_al, 
-                                    prob_Ci, rate, price, scenario, state_i, 
+                                    prob_Ci, rate, price, scenario, 
                                     algo, t):
-    cols = ["non_playing_players", "pl_i"]
+    cols = ["state_i", "non_playing_players", "pl_i"] #["non_playing_players", "pl_i"]
     df_mode = df_pro_ra_pri_scen_al\
                 .groupby(cols)[["scenario"]].count()
     df_mode.rename(columns={"scenario":"nb_k_steps"}, inplace=True)
@@ -2236,18 +2237,18 @@ def plot_histo_playing_onestate_for_scenarios(
                             ("nb_k_steps", "@nb_k_steps")
                             ]
                         )
-    px= figure(x_range=FactorRange(*x), plot_height=250, 
-               title="number of players, t={}, {} ({}, {}, prob_Ci={}, rate={}, price={})".format(
-                  t, state_i, scenario, algo, prob_Ci, rate, price),
+    px= figure(x_range=FactorRange(*x), plot_height=350, 
+               title="number of players, t={}, ({}, {}, prob_Ci={}, rate={}, price={})".format(
+                  t, scenario, algo, prob_Ci, rate, price),
                 toolbar_location=None, tools=TOOLS)
 
     data = dict(x=x, nb_k_steps=nb_k_steps)
     
     source = ColumnDataSource(data=data)
     px.vbar(x='x', top='nb_k_steps', width=0.9, source=source, 
-            fill_color=factor_cmap('x', palette=Category20[10], 
+            fill_color=factor_cmap('x', palette=Category20[20], 
                                    factors=list(df_mode["pl_i"].unique()), 
-                                   start=1, end=2))
+                                   start=2, end=3))
     
     px.y_range.start = 0
     px.x_range.range_padding = 0.1
@@ -2255,7 +2256,6 @@ def plot_histo_playing_onestate_for_scenarios(
     px.xgrid.grid_line_color = None
     
     return px
-    
 
 def plot_histo_playing(df_arr_M_T_Ks, t):
     """
@@ -2269,10 +2269,10 @@ def plot_histo_playing(df_arr_M_T_Ks, t):
     None.
 
     """
+
     prob_Cis = df_arr_M_T_Ks["prob_Ci"].unique()
     rates = df_arr_M_T_Ks["rate"].unique(); rates = rates[rates!=0]
     prices = df_arr_M_T_Ks["prices"].unique()
-    states = df_arr_M_T_Ks["state_i"].unique()
     scenarios = df_arr_M_T_Ks["scenario"].unique()
     algos = df_arr_M_T_Ks["algo"].unique()
     
@@ -2280,10 +2280,12 @@ def plot_histo_playing(df_arr_M_T_Ks, t):
             df_arr_M_T_Ks['non_playing_players']==1] = "PLAY"
     df_arr_M_T_Ks['non_playing_players'][
             df_arr_M_T_Ks['non_playing_players']==0] = "NOT_PLAY"
+    df_arr_M_T_Ks["pl_i"] = df_arr_M_T_Ks["pl_i"].astype(str)
+    
     dico_pxs = dict()
     cpt = 0
-    for prob_Ci, rate, price, scenario, state_i, algo\
-        in it.product(prob_Cis, rates,prices, scenarios, states, algos):
+    for prob_Ci, rate, price, scenario, algo\
+        in it.product(prob_Cis, rates,prices, scenarios, algos):
         
         mask_pro_ra_pri_scen = (df_arr_M_T_Ks.prob_Ci == prob_Ci) \
                                     & ((df_arr_M_T_Ks.rate == rate) 
@@ -2291,23 +2293,23 @@ def plot_histo_playing(df_arr_M_T_Ks, t):
                                     & (df_arr_M_T_Ks.prices == price) \
                                     & (df_arr_M_T_Ks.t == t) \
                                     & (df_arr_M_T_Ks.scenario == scenario) \
-                                    & (df_arr_M_T_Ks.state_i == state_i) \
                                     & (df_arr_M_T_Ks.algo == algo)    
         df_pro_ra_pri_scen_al = df_arr_M_T_Ks[mask_pro_ra_pri_scen].copy()
         
+        # return df_pro_ra_pri_scen_al
         if df_pro_ra_pri_scen_al.shape[0] != 0:
         
-            px_scen_st = plot_histo_playing_onestate_for_scenarios(
+            px_scen_st = plot_histo_playing_allstates_for_scenarios(
                                     df_pro_ra_pri_scen_al, 
-                                    prob_Ci, rate, price, scenario, state_i, 
+                                    prob_Ci, rate, price, scenario, 
                                     algo, t)
     
-            if (prob_Ci, rate, price, state_i, scenario, algo) \
+            if (prob_Ci, rate, price, scenario, algo) \
                 not in dico_pxs.keys():
-                dico_pxs[(prob_Ci, rate, price, state_i, scenario, algo)] \
+                dico_pxs[(prob_Ci, rate, price, scenario, algo)] \
                     = [px_scen_st]
             else:
-                dico_pxs[(prob_Ci, rate, price, state_i, scenario, algo)] \
+                dico_pxs[(prob_Ci, rate, price, scenario, algo)] \
                     .append(px_scen_st)
             cpt += 1
         
@@ -2321,7 +2323,6 @@ def plot_histo_playing(df_arr_M_T_Ks, t):
     #show(col_playing_players)
     
     return col_playing_players
-
 ###############################################################################
 #
 #              histogramme de players jouant/ne jouant pas  ---> fin
