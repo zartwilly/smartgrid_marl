@@ -569,8 +569,8 @@ def generation_instances(name_dir, game_dir):
     name_dir = 'tests'
     game_dir = 'INSTANCES_GAMES'
     
-    nb_players = [3, 10, 20, 50, 300]
-    nb_periods = [5, 15, 25, 50, 50]
+    nb_players = [3, 10, 10, 20, 50, 300]
+    nb_periods = [5, 5, 15, 25, 50, 50]
     zip_player_period = zip(nb_players, nb_periods)
     
     # list of scenario
@@ -792,15 +792,15 @@ if __name__ == "__main__":
     pi_hp_plus = [5, 15]
     pi_hp_minus = [15, 5]
     execute_algos_used_Generated_instances(game_dir, 
-                                           name_dir, 
-                                           scenarios=scenarios,
-                                           prob_Cis=prob_Cis,
-                                           date_hhmm=date_hhmm,
-                                           algos=algos,
-                                           learning_rates=learning_rates,
-                                           pi_hp_plus=pi_hp_plus,
-                                           pi_hp_minus=pi_hp_minus,
-                                           used_instances=True)
+                                            name_dir, 
+                                            scenarios=scenarios,
+                                            prob_Cis=prob_Cis,
+                                            date_hhmm=date_hhmm,
+                                            algos=algos,
+                                            learning_rates=learning_rates,
+                                            pi_hp_plus=pi_hp_plus,
+                                            pi_hp_minus=pi_hp_minus,
+                                            used_instances=True)
     
     #test_execute_game_onecase(fct_aux.CASE2)
     #test_execute_game_allcase()
