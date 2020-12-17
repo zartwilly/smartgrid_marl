@@ -784,6 +784,8 @@ def lri_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["non_playing_players"]] \
         = NON_PLAYING_PLAYERS["PLAY"]
     
+    arr_pl_M_T_K_vars = fct_aux.reupdate_state_players(arr_pl_M_T_K_vars)
+    
     arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
     
     # ____      run balanced sg for all num_periods at any k_step     ________
@@ -961,6 +963,7 @@ def lri_balanced_player_game(arr_pl_M_T,
         pi_sg_minus_t_minus_1 = pi_sg_minus_T_K[t,k_steps-1]
      
     arr_pl_M_T_K_vars = arr_pl_M_T_K_vars_modif.copy()
+    arr_pl_M_T_K_vars = fct_aux.reupdate_state_players(arr_pl_M_T_K_vars.copy())
     
     #### recompute BENs, CSTs of shape (M_PLAYERS,NUM_PERIODS,K_STEPS)
     BENs_M_T_K[:,t,:] = 1 + b0_s_T_K[t,:] \
