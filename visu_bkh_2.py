@@ -1710,6 +1710,9 @@ def plot_max_proba_mode_onestate_for_scenarios(df_pro_ra_pri_scen_st,
                 plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
                 toolbar_location="above")
     
+    algo_df = set(df_pro_ra_pri_scen_st["algo"].unique())
+    algos = set(algos).intersection(algo_df)
+    
     for algo in algos:
         df_al = df_pro_ra_pri_scen_st[(df_pro_ra_pri_scen_st.algo == algo)]
         
