@@ -576,6 +576,71 @@ def balanced_player(pl_i, thres=0.1, dbg=False):
 
 # __________    look for whether pli is balanced or not --> fin  ____________
 
+def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
+    """
+    after remarking that some players have 2 states during the game, 
+    I decide to write this function to set uniformly the players' state for all
+    periods and all learning step
+
+    Parameters
+    ----------
+    arr_pl_M_T_K_vars : TYPE, optional
+        DESCRIPTION. The default is None.
+    t : TYPE, optional
+        DESCRIPTION. The default is 0.
+    k : TYPE, optional
+        DESCRIPTION. The default is 0.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    m_players = arr_pl_M_T_K_vars.shape[0]
+    
+    # print("AVANT MODIFICATION")
+    # for num_pl_i in range(0, m_players):
+    #     res = np.array(
+    #             np.unique(
+    #                 arr_pl_M_T_K_vars_dbg[1,t,:,fct_aux.INDEX_ATTRS["state_i"]], 
+    #                 return_counts=True)).T
+    #     print("num_pl_i={} res={}".format(num_pl_i, res))
+        
+    
+    for num_pl_i in range(0, m_players):
+        Ci = round(
+                arr_pl_M_T_K_vars[num_pl_i, t, k, INDEX_ATTRS["Ci"]], 
+                N_DECIMALS)
+        Pi = round(
+                arr_pl_M_T_K_vars[num_pl_i, t, k, INDEX_ATTRS["Pi"]],
+                N_DECIMALS)
+        Si = round(
+                arr_pl_M_T_K_vars[num_pl_i, t, k, INDEX_ATTRS["Si"]],
+                N_DECIMALS)
+        Si_max = round(
+                    arr_pl_M_T_K_vars[num_pl_i, t, k, 
+                                      INDEX_ATTRS["Si_max"]],
+                    N_DECIMALS)
+        gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
+        pl_i = None
+        pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                            prod_i, cons_i, r_i, state_i)
+        
+        # get mode_i, state_i and update R_i_old
+        state_i = pl_i.find_out_state_i()
+        col = "state_i"
+        arr_pl_M_T_K_vars[num_pl_i,:,:,INDEX_ATTRS[col]] = state_i
+        
+    # print("AVANT MODIFICATION")
+    # for num_pl_i in range(0, m_players):
+    #     res = np.array(
+    #             np.unique(
+    #                 arr_pl_M_T_K_vars[1,t,:,INDEX_ATTRS["state_i"]], 
+    #                 return_counts=True)).T
+    #     print("num_pl_i={} res={}".format(num_pl_i, res))
+        
+    return arr_pl_M_T_K_vars
 
 def compute_real_money_SG(arr_pls_M_T, pi_sg_plus_s, pi_sg_minus_s, 
                           INDEX_ATTRS):
