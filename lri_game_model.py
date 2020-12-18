@@ -782,7 +782,7 @@ def lri_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
     arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
     arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["non_playing_players"]] \
-        = NON_PLAYING_PLAYERS["PLAY"]
+        = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
     
     arr_pl_M_T_K_vars = fct_aux.reupdate_state_players(arr_pl_M_T_K_vars)
     
@@ -895,7 +895,7 @@ def lri_balanced_player_game(arr_pl_M_T,
                         indices_non_playing_players,
                         t,k+1:k_steps,
                         fct_aux.INDEX_ATTRS["non_playing_players"]] \
-                            = NON_PLAYING_PLAYERS["NOT_PLAY"]
+                            = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
                 ### update bg_i, mode_i, u_i_t_k, p_i_t_k for not playing players from k+1 to k_steps 
                 # for var in ["bg_i", "mode_i", "prod_i", "cons_i",
                 #             "u_i", "prob_mode_state_i", "r_i", 
