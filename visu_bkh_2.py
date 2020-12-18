@@ -893,9 +893,7 @@ def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=5,
         pi_0_plus_T_K, pi_0_minus_T_K, \
         pi_hp_plus_s, pi_hp_minus_s \
             = get_local_storage_variables(path_to_variable)
-         
-        # print("path_to_variables = {}".format(path_to_variable))
-        
+          
         # print("shapes: b0_s_T_K={}, BENs_M_T_K={}, pi_sg_plus_T_K={}, pi_hp_plus_s={}, BB_is_M={}".format(
         #     b0_s_T_K.shape, BENs_M_T_K.shape, pi_sg_plus_T_K.shape, 
         #     pi_hp_plus_s.shape, BB_is_M.shape))
@@ -910,11 +908,11 @@ def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=5,
         price = tuple_path[4].split("_")[3]+"_"+tuple_path[4].split("_")[-1]
         rate = tuple_path[6] if algo in algos_for_learning else 0
         
-        
         m_players = arr_pl_M_T_K_vars.shape[0]
         t_periods = arr_pl_M_T_K_vars.shape[1]
         k_steps = arr_pl_M_T_K_vars.shape[2] if arr_pl_M_T_K_vars.shape == 4 \
                                             else k_steps_args
+                                                    
         t_periods = None; tu_mtk = None; tu_tk = None; tu_m = None
         if t is None:
             t_periods = arr_pl_M_T_K_vars.shape[1]
