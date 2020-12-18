@@ -50,6 +50,8 @@ INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4,
                "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
                "balanced_pl_i": 14, "formule":15}
 
+NON_PLAYING_PLAYERS = {"PLAY":1, "NOT_PLAY":0}
+
 #------------------------------------------------------------------------------
 #           definitions of class
 #------------------------------------------------------------------------------
