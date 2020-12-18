@@ -897,9 +897,12 @@ def lri_balanced_player_game(arr_pl_M_T,
                         fct_aux.INDEX_ATTRS["non_playing_players"]] \
                             = NON_PLAYING_PLAYERS["NOT_PLAY"]
                 ### update bg_i, mode_i, u_i_t_k, p_i_t_k for not playing players from k+1 to k_steps 
+                # for var in ["bg_i", "mode_i", "prod_i", "cons_i",
+                #             "u_i", "prob_mode_state_i", "r_i", 
+                #             "gamma_i", "state_i"]:
                 for var in ["bg_i", "mode_i", "prod_i", "cons_i",
                             "u_i", "prob_mode_state_i", "r_i", 
-                            "gamma_i", "state_i"]:
+                            "gamma_i"]:
                     # TODO change prob_mode_state_i by p_i_t_k
                     # print("SHAPE NON_PLAYING: t={},k={},k_steps={} var_modifs_non_players={}, k:k_steps={}".format(
                     #     t,k,k_steps,
