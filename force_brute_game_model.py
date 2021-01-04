@@ -247,7 +247,7 @@ def bf_balanced_player_game(arr_pl_M_T,
     C_is_M = np.empty(shape=(m_players,)) #   shape (M_PLAYERS, )
     C_is_M.fill(np.nan)
     b0_ts_T = np.empty(shape=(t_periods,)) #   shape (t_periods,)
-    b0_ts_T.fil_Tl(np.nan)
+    b0_ts_T.fill(np.nan)
     c0_ts_T = np.empty(shape=(t_periods,))
     c0_ts_T.fill(np.nan)
     BENs_M_T = np.empty(shape=(m_players, t_periods)) #   shape (M_PLAYERS, t_periods)
