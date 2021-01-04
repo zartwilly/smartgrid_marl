@@ -495,8 +495,11 @@ def test_brute_force_game():
     
     name_file_arr_pl = "arr_pl_M_T_players_{}_periods_{}.npy".format(
                             m_players, t_periods)
-    if os.path.exists(os.path.join(path_to_save, name_file_arr_pl)):
+    path_to_arr_pl_M_T = os.path.join(path_to_save, name_file_arr_pl)
+    if os.path.exists(path_to_arr_pl_M_T):
         print("file {} already EXISTS".format(name_file_arr_pl))
+        arr_pl_M_T_probCi_scen = np.load(path_to_arr_pl_M_T, allow_pickle=True)
+        print("READ INSTANCE --> OK")
     else:
         arr_pl_M_T_probCi_scen \
             = fct_aux.generate_Pi_Ci_Si_Simax_by_profil_scenario(
