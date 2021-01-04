@@ -12,6 +12,8 @@ import itertools as it
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 
+from datetime import datetime
+
 #------------------------------------------------------------------------------
 #                       definition of functions --> debut
 #
@@ -478,7 +480,8 @@ def test_brute_force_game():
         
     date_hhmm=None
     Visualisation = False
-    date_hhmm="2306_2206" if Visualisation else None
+    date_hhmm="2306_2206" if Visualisation \
+                            else datetime.now().strftime("%d%m_%H%M") 
     
     scenario = "scenario1"
     prob_Ci = 0.3
