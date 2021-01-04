@@ -43,7 +43,7 @@ def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
     possibles_modes = list()
     
     arr_pl_vars = None
-    if arr_pl_M_T_K_vars.shape == 3:
+    if len(arr_pl_M_T_K_vars.shape) == 3:
         arr_pl_vars = arr_pl_M_T_K_vars
         for num_pl_i in range(0, m_players):
             Ci = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]], 
@@ -69,7 +69,9 @@ def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
                 possibles_modes.append(fct_aux.STATE2_STRATS)
             elif state_i == "state3":
                 possibles_modes.append(fct_aux.STATE3_STRATS)
-    elif arr_pl_M_T_K_vars.shape == 4:
+            print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+                
+    elif len(arr_pl_M_T_K_vars.shape) == 4:
         arr_pl_vars = arr_pl_M_T_K_vars
         for num_pl_i in range(0, m_players):
             Ci = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Ci"]], 
@@ -95,8 +97,9 @@ def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
                 possibles_modes.append(fct_aux.STATE2_STRATS)
             elif state_i == "state3":
                 possibles_modes.append(fct_aux.STATE3_STRATS)
-        else:
-            print("STATE_i: NOTHING TO UPDATE.")
+            print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+    else:
+        print("STATE_i: NOTHING TO UPDATE.")
         
     return arr_pl_vars, possibles_modes
 
@@ -228,7 +231,7 @@ def bf_balanced_player_game(arr_pl_M_T,
 
     """
     
-    print("determinist game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> debut \n"\
+    print("\n \n brute force game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> debut \n"\
           .format(scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
         
     # _______ variables' initialization --> debut ________________
@@ -278,6 +281,9 @@ def bf_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
     arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["non_playing_players"]] \
         = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
+        
+    print("SHAPE: arr_pl_M_T={}, arr_pl_M_T_vars={}".format(
+            arr_pl_M_T.shape, arr_pl_M_T_vars.shape))
     
     # ____      add initial values for the new attributs ---> fin    _______
     
@@ -286,6 +292,9 @@ def bf_balanced_player_game(arr_pl_M_T,
     
     arr_pl_M_T_vars, possibles_modes = reupdate_state_players(
                                         arr_pl_M_T_vars.copy(), 0, None)
+    
+    print("m_players={}, possibles_modes={}".format(m_players, 
+                                                   len(possibles_modes)))
     
     for t in range(0, t_periods):
         print("******* t = {} *******".format(t)) if dbg else None
@@ -523,7 +532,8 @@ def test_brute_force_game():
                                     scenario, str(prob_Ci), 
                                     msg)
     
-    arr_pl_M_T_probCi_scen = bf_balanced_player_game(arr_pl_M_T_probCi_scen,
+    arr_pl_M_T_probCi_scen = bf_balanced_player_game(
+                             arr_pl_M_T_probCi_scen.copy(),
                              pi_hp_plus, 
                              pi_hp_minus,
                              m_players, 
