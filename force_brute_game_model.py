@@ -412,9 +412,9 @@ def bf_balanced_player_game(arr_pl_M_T,
         In_sg, Out_sg = fct_aux.compute_prod_cons_SG(
                         arr_pl_M_T_vars_mode_prof_best, t)
         diff = np.abs(best_key_In_Out_sg-(In_sg-Out_sg))
-        print("best_key==In_sg-Out_sg --> OK (diff={})".format(diff)) \
+        print("best_key==In_sg-Out_sg --> OK (diff={}) \n".format(diff)) \
             if diff < 0.1 \
-            else print("best_key==In_sg-Out_sg --> NOK (diff={})".format(diff))
+            else print("best_key==In_sg-Out_sg --> NOK (diff={}) \n".format(diff))
         # compute prices of an energy unit price for cost and benefit players
         b0_t, c0_t = fct_aux.compute_energy_unit_price(
                         pi_0_plus_t, pi_0_minus_t, 
@@ -496,6 +496,8 @@ def bf_balanced_player_game(arr_pl_M_T,
 #
 #------------------------------------------------------------------------------
 def test_brute_force_game():
+    fct_aux.N_DECIMALS = 6
+    
     pi_hp_plus = 0.2*pow(10,-3) #[5, 15]
     pi_hp_minus = 0.33 #[15, 5]
     m_players = 10            #100 # 10 # 1001000
