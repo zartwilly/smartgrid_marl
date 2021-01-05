@@ -198,9 +198,8 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars,
             ("gamma_i", pl_i.get_gamma_i()), ("r_i", pl_i.get_r_i()),
             ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
             ("Si_old", pl_i.get_Si_old()), ("state_i", pl_i.get_state_i()),
-            ("mode_i", mode_i), ("prob_mode_state_i", 0),
-            ("balanced_pl_i", boolean), ("formule", formule),
-            ("Si_minus", 0),("Si_plus", 0)]
+            ("mode_i", mode_i), ("balanced_pl_i", boolean), 
+            ("formule", formule), ("Si_minus", 0),("Si_plus", 0)]
         for col,val in tup_cols_values:
             arr_pl_M_T_vars[num_pl_i, t,
                             fct_aux.INDEX_ATTRS[col]] = val
@@ -261,13 +260,33 @@ def bf_balanced_player_game(arr_pl_M_T,
     
     
     # ____      add initial values for the new attributs ---> debut    _______
-    nb_vars_2_add = 6
+    # nb_vars_2_add = 6
+    # fct_aux.INDEX_ATTRS["Si_minus"] = 16
+    # fct_aux.INDEX_ATTRS["Si_plus"] = 17
+    # fct_aux.INDEX_ATTRS["prob_mode_state_i"] = 18
+    # fct_aux.INDEX_ATTRS["u_i"] = 19
+    # fct_aux.INDEX_ATTRS["bg_i"] = 20
+    # fct_aux.INDEX_ATTRS["non_playing_players"] = 21
+    
+    # arr_pl_M_T_vars = np.zeros((arr_pl_M_T.shape[0],
+    #                             arr_pl_M_T.shape[1],
+    #                             arr_pl_M_T.shape[2]+nb_vars_2_add), 
+    #                            dtype=object)
+    # arr_pl_M_T_vars[:,:,:-nb_vars_2_add] = arr_pl_M_T
+    # arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["Si_minus"]] = np.nan
+    # arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["Si_plus"]] = np.nan
+    # arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["u_i"]] = np.nan
+    # arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
+    # arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
+    # arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["non_playing_players"]] \
+    #     = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
+        
+    # print("SHAPE: arr_pl_M_T={}, arr_pl_M_T_vars={}".format(
+    #         arr_pl_M_T.shape, arr_pl_M_T_vars.shape))
+    
+    nb_vars_2_add = 2
     fct_aux.INDEX_ATTRS["Si_minus"] = 16
     fct_aux.INDEX_ATTRS["Si_plus"] = 17
-    fct_aux.INDEX_ATTRS["prob_mode_state_i"] = 18
-    fct_aux.INDEX_ATTRS["u_i"] = 19
-    fct_aux.INDEX_ATTRS["bg_i"] = 20
-    fct_aux.INDEX_ATTRS["non_playing_players"] = 21
     
     arr_pl_M_T_vars = np.zeros((arr_pl_M_T.shape[0],
                                 arr_pl_M_T.shape[1],
@@ -276,11 +295,6 @@ def bf_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_vars[:,:,:-nb_vars_2_add] = arr_pl_M_T
     arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["Si_minus"]] = np.nan
     arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["Si_plus"]] = np.nan
-    arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["u_i"]] = np.nan
-    arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["bg_i"]] = np.nan
-    arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["prob_mode_state_i"]] = 0.5
-    arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["non_playing_players"]] \
-        = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
         
     print("SHAPE: arr_pl_M_T={}, arr_pl_M_T_vars={}".format(
             arr_pl_M_T.shape, arr_pl_M_T_vars.shape))
