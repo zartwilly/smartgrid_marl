@@ -19,6 +19,7 @@ import fonctions_auxiliaires as fct_aux
 import game_model_period_T as gmpT
 import deterministic_game_model as detGameModel
 import lri_game_model as lriGameModel
+import force_brute_game_model as bfGameModel
 import visu_bkh as bkh
 
 from datetime import datetime
@@ -409,7 +410,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
     probs_modes_states = [0.5, 0.5, 0.5]
     
     # list of algos
-    ALGOS = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]
+    ALGOS = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"]
     algos = ALGOS if algos is None \
                     else algos
     # list of pi_hp_plus, pi_hp_minus
@@ -463,7 +464,26 @@ def execute_algos_used_Generated_instances(game_dir='tests',
             cpt += 1
             msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
                        +"_pi_hp_minus_"+str(pi_hp_minus_elt)
-            if algo == ALGOS[3]:
+            if algo == ALGOS[4]:
+                # BRUTE-FORCE
+                print("*** BRUTE-FORCE *** ")
+                random_determinist = True
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = bfGameModel.bf_balanced_player_game(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                t_periods=num_periods,
+                                prob_Ci=prob_Ci, 
+                                scenario=scenario,
+                                path_to_save=path_to_save, dbg=False)
+            elif algo == ALGOS[3]:
                 # RD-DETERMINIST
                 print("*** RD-DETERMINIST *** ")
                 random_determinist = True
@@ -777,7 +797,7 @@ if __name__ == "__main__":
     name_dir = 'tests'
     game_dir = 'INSTANCES_GAMES'
     
-    fct_aux.N_DECIMALS = 4
+    fct_aux.N_DECIMALS = 6
     fct_aux.Ci_LOW = 10
     fct_aux.Ci_HIGH = 60
     
@@ -786,11 +806,11 @@ if __name__ == "__main__":
     
     scenarios=["scenario1"]
     prob_Cis=[0.3]
-    date_hhmm="1611_1041"
-    algos=["LRI1","LRI2"]
+    date_hhmm=None; #"1611_1041"
+    algos=["LRI1","LRI2","BRUTE-FORCE","DETERMINIST"] 
     learning_rates = [0.01] # list(np.arange(0.05, 0.15, step=0.05))
-    pi_hp_plus = [5, 15]
-    pi_hp_minus = [15, 5]
+    pi_hp_plus = [5, 15, 0.2*pow(10,-3)]
+    pi_hp_minus = [15, 5, 0.33]
     execute_algos_used_Generated_instances(game_dir, 
                                             name_dir, 
                                             scenarios=scenarios,
