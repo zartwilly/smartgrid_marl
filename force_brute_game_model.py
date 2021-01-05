@@ -346,7 +346,7 @@ def bf_balanced_player_game(arr_pl_M_T,
             cpt_xxx += 1
         
         # find the best key in dico_mode_profs and the best mode_profile
-        best_key_In_Out_sg = max(dico_mode_profs.keys())
+        best_key_In_Out_sg = min(dico_mode_profs.keys())
         best_mode_profiles = dico_mode_profs[best_key_In_Out_sg]
         best_mode_profile = None
         if len(best_mode_profiles) == 1:
@@ -354,8 +354,19 @@ def bf_balanced_player_game(arr_pl_M_T,
         else:
             rd = np.random.randint(0, len(best_mode_profiles))
             best_mode_profile = best_mode_profiles[rd]
+        ### ____ best 5 keys and values: debut ____
+        # import collections
+        # od = collections.OrderedDict(sorted(dico_mode_profs.items()))
+        # cpt_od = 0
+        # for k, profil in od.items(): 
+        #     print('*** key={}, profil={}'.format(k, profil))
+        #     cpt_od += 1
+        #     if cpt_od > 5:
+        #         break
+        ### ____ best 5 keys and values: fin ____
         
-        print("cpt_xxx={}, best_mode_profile={}".format(cpt_xxx, best_mode_profile))
+        print("cpt_xxx={}, best_key_In_Out_sg={}, best_mode_profile={}".format(
+                cpt_xxx, best_key_In_Out_sg, best_mode_profile))
         
         arr_pl_M_T_vars_mode_prof_best, \
         dico_balanced_pl_i, dico_state_mode_i, \
@@ -392,7 +403,8 @@ def bf_balanced_player_game(arr_pl_M_T,
                                     else pi_sg_plus_t_new
         pi_sg_minus_t = pi_sg_minus_t if pi_sg_minus_t_new is np.nan \
                                     else pi_sg_minus_t_new
-        pi_0_plus_t = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 2)
+        pi_0_plus_t = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 
+                            fct_aux.N_DECIMALS)
         pi_0_minus_t = pi_sg_minus_t
         
         ## compute prices inside smart grids
