@@ -205,7 +205,7 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars,
             arr_pl_M_T_vars[num_pl_i, t,
                             fct_aux.INDEX_ATTRS[col]] = val
             
-    return arr_pl_M_T_vars, dico_balanced_pl_i, cpt_balanced
+    return arr_pl_M_T_vars, dico_balanced_pl_i, dico_state_mode_i, cpt_balanced
 #------------------------------------------------------------------------------
 #                       definition of functions --> fin
 #
@@ -313,12 +313,14 @@ def bf_balanced_player_game(arr_pl_M_T,
         mode_profiles = it.product(*possibles_modes)
         
         dico_mode_profs = dict()
+        cpt_xxx = 0
         for mode_profile in mode_profiles:
             dico_balanced_pl_i_mode_prof, cpt_balanced_mode_prof = dict(), 0
             dico_state_mode_i_mode_prof = dict()
             
             arr_pl_M_T_vars_mode_prof, \
             dico_balanced_pl_i_mode_prof, \
+            dico_state_mode_i_mode_prof, \
             cpt_balanced_mode_prof \
                 = balanced_player_game_4_mode_profil(
                     arr_pl_M_T_vars.copy(),
@@ -340,7 +342,8 @@ def bf_balanced_player_game(arr_pl_M_T,
                 dico_mode_profs[diff_In_Out_sg].append(mode_profile)
             else:
                 dico_mode_profs[diff_In_Out_sg] = [mode_profile]
-                
+             
+            cpt_xxx += 1
         
         # find the best key in dico_mode_profs and the best mode_profile
         best_key_In_Out_sg = max(dico_mode_profs.keys())
@@ -352,9 +355,11 @@ def bf_balanced_player_game(arr_pl_M_T,
             rd = np.random.randint(0, len(best_mode_profiles))
             best_mode_profile = best_mode_profiles[rd]
         
+        print("cpt_xxx={}, best_mode_profile={}".format(cpt_xxx, best_mode_profile))
+        
         arr_pl_M_T_vars_mode_prof_best, \
         dico_balanced_pl_i, dico_state_mode_i, \
-        cpt_balanced\
+        cpt_balanced \
             = balanced_player_game_4_mode_profil(
                 arr_pl_M_T_vars.copy(),
                 best_mode_profile, t,
