@@ -69,7 +69,7 @@ def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
                 possibles_modes.append(fct_aux.STATE2_STRATS)
             elif state_i == "state3":
                 possibles_modes.append(fct_aux.STATE3_STRATS)
-            print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+            # print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
                 
     elif len(arr_pl_M_T_K_vars.shape) == 4:
         arr_pl_vars = arr_pl_M_T_K_vars
@@ -97,7 +97,7 @@ def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
                 possibles_modes.append(fct_aux.STATE2_STRATS)
             elif state_i == "state3":
                 possibles_modes.append(fct_aux.STATE3_STRATS)
-            print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+            # print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
     else:
         print("STATE_i: NOTHING TO UPDATE.")
         
