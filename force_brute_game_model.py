@@ -305,7 +305,7 @@ def bf_balanced_player_game(arr_pl_M_T,
     dico_stats_res={}
     
     arr_pl_M_T_vars, possibles_modes = reupdate_state_players(
-                                        arr_pl_M_T_vars.copy(), 0, None)
+                                        arr_pl_M_T_vars.copy(), 0, 0)
     
     print("m_players={}, possibles_modes={}".format(m_players, 
                                                    len(possibles_modes)))
