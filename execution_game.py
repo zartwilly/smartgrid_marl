@@ -392,7 +392,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                            learning_rates=None,
                                            pi_hp_plus=None,
                                            pi_hp_minus=None,
-                                           used_instances=True):
+                                           used_instances=True,
+                                           used_storage_det=True):
     """
     execute algos by used generated instances if there exists or 
         by generated new instances
@@ -502,6 +503,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                  prob_Ci=prob_Ci,
                                  scenario=scenario,
                                  random_determinist=random_determinist,
+                                 used_storage=used_storage_det,
                                  path_to_save=path_to_save, dbg=False)
                 
             elif algo == ALGOS[2]:
@@ -522,6 +524,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                  prob_Ci=prob_Ci,
                                  scenario=scenario,
                                  random_determinist=random_determinist,
+                                 used_storage=used_storage_det,
                                  path_to_save=path_to_save, dbg=False)
                 
             elif algo == ALGOS[1]:
@@ -811,6 +814,7 @@ if __name__ == "__main__":
     learning_rates = [0.01] # list(np.arange(0.05, 0.15, step=0.05))
     pi_hp_plus = [5, 15, 0.2*pow(10,-3)]
     pi_hp_minus = [15, 5, 0.33]
+    used_storage_det = True
     execute_algos_used_Generated_instances(game_dir, 
                                             name_dir, 
                                             scenarios=scenarios,
@@ -820,7 +824,8 @@ if __name__ == "__main__":
                                             learning_rates=learning_rates,
                                             pi_hp_plus=pi_hp_plus,
                                             pi_hp_minus=pi_hp_minus,
-                                            used_instances=True)
+                                            used_instances=True, 
+                                            used_storage_det=used_storage_det)
     
     #test_execute_game_onecase(fct_aux.CASE2)
     #test_execute_game_allcase()
