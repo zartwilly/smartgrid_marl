@@ -19,7 +19,7 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
                            pi_hp_plus, pi_hp_minus,
                            pi_sg_plus_t, pi_sg_minus_t, 
                            m_players, num_periods, 
-                           random_determinist,
+                           random_determinist, bool_use_storage,
                            dico_stats_res, dbg):
     """
     balance the player game at time t
@@ -135,37 +135,46 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
                                      fct_aux.INDEX_ATTRS["Si_plus"]] \
                             if t-1 > 0 \
                             else 0
-            mode_i = None              
-            if state_i == fct_aux.STATES[0] \
-                and fct_aux.fct_positive(
-                        Ci_t_plus_1, 
-                        Pi_t_plus_1) <= Si_t_minus_1_minus:
-                mode_i = fct_aux.STATE1_STRATS[0]           # CONS+, state1
-            elif state_i == fct_aux.STATES[0] \
-                and fct_aux.fct_positive(
-                        Ci_t_plus_1, 
-                        Pi_t_plus_1) > Si_t_minus_1_minus:
-                mode_i = fct_aux.STATE1_STRATS[1]           # CONS-, state1
-            elif state_i == fct_aux.STATES[1] \
-                and fct_aux.fct_positive(
-                        Ci_t_plus_1, 
-                        Pi_t_plus_1) <= Si_t_minus_1_minus:
-                mode_i = fct_aux.STATE2_STRATS[1]           # CONS-, state2
-            elif state_i == fct_aux.STATES[1] \
-                and fct_aux.fct_positive(
-                        Ci_t_plus_1, 
-                        Pi_t_plus_1) > Si_t_minus_1_minus:
-                mode_i = fct_aux.STATE2_STRATS[0]           # DIS, state2
-            elif state_i == fct_aux.STATES[2] \
-                and fct_aux.fct_positive(
-                        Ci_t_plus_1, 
-                        Pi_t_plus_1) <= Si_t_minus_1_minus:
-                mode_i = fct_aux.STATE3_STRATS[0]           # DIS, state3
-            elif state_i == fct_aux.STATES[2] \
-                and fct_aux.fct_positive(
-                        Ci_t_plus_1, 
-                        Pi_t_plus_1) > Si_t_minus_1_minus:
-                mode_i = fct_aux.STATE3_STRATS[1]           # PROD, state3
+            mode_i = None
+            if bool_use_storage:
+                if state_i == fct_aux.STATES[0] \
+                    and fct_aux.fct_positive(
+                            Ci_t_plus_1, 
+                            Pi_t_plus_1) <= Si_t_minus_1_minus:
+                    mode_i = fct_aux.STATE1_STRATS[0]           # CONS+, state1
+                elif state_i == fct_aux.STATES[0] \
+                    and fct_aux.fct_positive(
+                            Ci_t_plus_1, 
+                            Pi_t_plus_1) > Si_t_minus_1_minus:
+                    mode_i = fct_aux.STATE1_STRATS[1]           # CONS-, state1
+                elif state_i == fct_aux.STATES[1] \
+                    and fct_aux.fct_positive(
+                            Ci_t_plus_1, 
+                            Pi_t_plus_1) <= Si_t_minus_1_minus:
+                    mode_i = fct_aux.STATE2_STRATS[1]           # CONS-, state2
+                elif state_i == fct_aux.STATES[1] \
+                    and fct_aux.fct_positive(
+                            Ci_t_plus_1, 
+                            Pi_t_plus_1) > Si_t_minus_1_minus:
+                    mode_i = fct_aux.STATE2_STRATS[0]           # DIS, state2
+                elif state_i == fct_aux.STATES[2] \
+                    and fct_aux.fct_positive(
+                            Ci_t_plus_1, 
+                            Pi_t_plus_1) <= Si_t_minus_1_minus:
+                    mode_i = fct_aux.STATE3_STRATS[0]           # DIS, state3
+                elif state_i == fct_aux.STATES[2] \
+                    and fct_aux.fct_positive(
+                            Ci_t_plus_1, 
+                            Pi_t_plus_1) > Si_t_minus_1_minus:
+                    mode_i = fct_aux.STATE3_STRATS[1]           # PROD, state3
+            else:
+                if state_i == fct_aux.STATES[0]:
+                    mode_i = fct_aux.STATE1_STRATS[1]           # CONS-, state1
+                elif state_i == fct_aux.STATES[1]:
+                    mode_i = fct_aux.STATE2_STRATS[0]           # DIS, state2
+                elif state_i == fct_aux.STATES[2]:
+                    mode_i = fct_aux.STATE3_STRATS[1]           # PROD, state3
+                    
             pl_i.set_mode_i(mode_i)
             
         
@@ -328,6 +337,7 @@ def determinist_balanced_player_game(arr_pl_M_T,
                                      prob_Ci=0.3, 
                                      scenario="scenario1", 
                                      random_determinist=False,
+                                     bool_use_storage=True,
                                      path_to_save="tests", 
                                      dbg=False):
     """
@@ -443,7 +453,7 @@ def determinist_balanced_player_game(arr_pl_M_T,
                                        pi_hp_plus, pi_hp_minus,
                                        pi_sg_plus_t, pi_sg_minus_t, 
                                        m_players, num_periods, 
-                                       random_determinist,
+                                       random_determinist, bool_use_storage,
                                        dico_stats_res, dbg)
         
         dico_stats_res[t] = (round(cpt_balanced/m_players,2),
@@ -519,6 +529,7 @@ def test_DETERMINIST_balanced_player_game():
     prob_Ci = 0.3;
     scenario = "scenario1"; 
     random_determinist = False ; 
+    bool_use_storage = False #True;
     path_to_save = "tests"
     
     fct_aux.N_DECIMALS = 3
@@ -540,6 +551,7 @@ def test_DETERMINIST_balanced_player_game():
                              prob_Ci=prob_Ci,
                              scenario=scenario,
                              random_determinist=random_determinist,
+                             bool_use_storage=bool_use_storage,
                              path_to_save=path_to_save, dbg=False)
     
     return arr_M_T_vars
