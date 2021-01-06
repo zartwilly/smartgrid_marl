@@ -108,7 +108,11 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
         
         # get state_i and update R_i_old
         pl_i.set_R_i_old(Si_max-Si)
-        state_i = pl_i.find_out_state_i()
+        state_i = arr_pl_M_T_vars[
+                        num_pl_i, 
+                        t, 
+                        fct_aux.INDEX_ATTRS["state_i"]]
+        pl_i.set_state_i(state_i)
         
         # get mode_i
         if t == 0 or random_determinist:
@@ -263,9 +267,6 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
         arr_pl_M_T_vars[num_pl_i, 
                         t, 
                         fct_aux.INDEX_ATTRS["Si_old"]] = pl_i.get_Si_old()
-        arr_pl_M_T_vars[num_pl_i, 
-                        t, 
-                        fct_aux.INDEX_ATTRS["state_i"]] = pl_i.get_state_i()
         arr_pl_M_T_vars[num_pl_i, 
                         t, 
                         fct_aux.INDEX_ATTRS["mode_i"]] = pl_i.get_mode_i()
@@ -426,7 +427,12 @@ def determinist_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["Si_minus"]] = np.nan
     arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["Si_plus"]] = np.nan
     
+    # ____      game beginning for all t_period ---> debut      _____
     dico_stats_res={}
+    
+    import force_brute_game_model as bfGameModel
+    arr_pl_M_T_vars, possibles_modes = bfGameModel.reupdate_state_players(
+                                        arr_pl_M_T_vars.copy(), 0, 0)
     
     for t in range(0, num_periods):
         print("******* t = {} *******".format(t)) if dbg else None
@@ -449,7 +455,7 @@ def determinist_balanced_player_game(arr_pl_M_T,
         pi_sg_plus_t, pi_sg_minus_t, \
         pi_0_plus_t, pi_0_minus_t, \
         dico_stats_res \
-            = balanced_player_game_t(arr_pl_M_T_vars, t, 
+            = balanced_player_game_t(arr_pl_M_T_vars.copy(), t, 
                                        pi_hp_plus, pi_hp_minus,
                                        pi_sg_plus_t, pi_sg_minus_t, 
                                        m_players, num_periods, 
@@ -477,6 +483,8 @@ def determinist_balanced_player_game(arr_pl_M_T,
         # BENs, CSTs of shape (NUM_PERIODS,M_PLAYERS)
         BENs[:,t] = bens_t
         CSTs[:,t] = csts_t
+        
+    # ____      game beginning for all t_period ---> debut      _____    
         
     # B_is, C_is of shape (M_PLAYERS, )
     prod_i_T = arr_pl_M_T_vars[:,:, fct_aux.INDEX_ATTRS["prod_i"]]
@@ -561,5 +569,5 @@ def test_DETERMINIST_balanced_player_game():
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    test_DETERMINIST_balanced_player_game()
+    arr_M_T_vars = test_DETERMINIST_balanced_player_game()
     print("runtime = {}".format(time.time() - ti))
