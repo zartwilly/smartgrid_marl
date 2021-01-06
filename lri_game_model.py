@@ -553,7 +553,12 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
         
         # get mode_i, state_i and update R_i_old
         pl_i.set_R_i_old(Si_max-Si)
-        state_i = pl_i.find_out_state_i()
+        #state_i = pl_i.find_out_state_i()
+        state_i = arr_pl_M_T_K_vars[
+                        num_pl_i, 
+                        t, k,
+                        fct_aux.INDEX_ATTRS["state_i"]]
+        pl_i.set_state_i(state_i)
         ## update Si at t==0
         
         p_i_t_k = arr_pl_M_T_K_vars[num_pl_i, 
