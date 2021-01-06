@@ -29,7 +29,7 @@ from bokeh.palettes import Category20, Spectral5, Viridis256
 
 from bokeh.models.annotations import Title
 
-COLORS = ["orange", "blue", "green", "pink", "red"]
+# COLORS = ["orange", "blue", "green", "pink", "red"]
 #------------------------------------------------------------------------------
 #                   definitions of constants
 #------------------------------------------------------------------------------
@@ -124,7 +124,8 @@ def turn_arr4d_2_df():
 def get_tuple_paths_of_arrays(name_dir="tests", name_simu="simu_1811_1754",
                    scenarios=None, prob_Cis=None, prices=None, 
                    algos=None, learning_rates=None, 
-                   algos_not_learning=["DETERMINIST","RD-DETERMINIST"], 
+                   algos_not_learning=["DETERMINIST","RD-DETERMINIST",
+                                       "BRUTE-FORCE"], 
                    ext=".npy", 
                    exclude_html_files=[NAME_RESULT_SHOW_VARS,"html"]):
     
@@ -875,8 +876,9 @@ def get_array_turn_df_for_t_OLD(tuple_paths, t=1, k_steps_args=5,
             df_b0_c0_pisg_pi0_T_K, df_B_C_BB_CC_RU_M
             
 def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=5,
-                      algos_for_not_learning=["DETERMINIST","RD-DETERMINIST"], 
-                      algos_for_learning=["LRI1", "LRI2"]):
+                    algos_for_not_learning=["DETERMINIST","RD-DETERMINIST",
+                                            "BRUTE-FORCE"], 
+                    algos_for_learning=["LRI1", "LRI2"]):
     df_arr_M_T_Ks = []
     df_b0_c0_pisg_pi0_T_K = []
     df_B_C_BB_CC_RU_M = []
@@ -1317,7 +1319,7 @@ def plot_all_scenarios_algos(df_pro_ra_pri, prob_Ci, rate, price):
                           color=COLORS[ind_color], legend_label=label)
                 tup_legends.append((label, [r1,r2] ))
                 # tup_legends.append((label, [r2] ))
-            elif algo == "RD_DETERMINIST":
+            elif algo == "RD-DETERMINIST":
                 r2 = px.triangle(x="k", y=ylabel, size=7, source=source, 
                             color=COLORS[ind_color], legend_label=label)
                 tup_legends.append((label, [r1,r2] ))
@@ -1396,12 +1398,12 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
             ind_color = 2 #5
         elif algo == "DETERMINIST":
             ind_color = 3 #5
-        elif algo == "RD_DETERMINIST":
+        elif algo == "RD-DETERMINIST":
             ind_color = 4 #5
             
         r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
                 line_width=2, color=COLORS[ind_color], 
-                line_dash=[5,5])
+                line_dash=[0,0])
         
         nb_k_steps = len(list(df_al['k'].unique()))
         ls = None
@@ -1426,7 +1428,7 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
                       color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
-        elif algo == "RD_DETERMINIST":
+        elif algo == "RD-DETERMINIST":
             r2 = px.triangle(x="k", y=ylabel, size=7, source=source_slice, 
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
@@ -1573,12 +1575,12 @@ def plot_mean_ben_cst_all_states_for_scenarios(
             ind_color = 2 #5
         elif algo == "DETERMINIST":
             ind_color = 3 #5
-        elif algo == "RD_DETERMINIST":
+        elif algo == "RD-DETERMINIST":
             ind_color = 4 #5
             
         r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
                 line_width=2, color=COLORS[ind_color], 
-                line_dash=[5,5])
+                line_dash=[0,0])
         
         nb_k_steps = len(list(df_al_k['k'].unique()))
         interval = int(nb_k_steps*10/250)
@@ -1619,9 +1621,9 @@ def plot_mean_ben_cst_all_states_for_scenarios(
                       color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
-        elif algo == "RD_DETERMINIST":
+        elif algo == "RD-DETERMINIST":
             ind_color = 4
-            r2 = px.triangle(x="k", y=ylabel, size=7, source=source_slice, 
+            r2 = px.triangle(x="k", y=ylabel, size=7, source=source, 
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
@@ -1788,17 +1790,17 @@ def plot_max_proba_mode_onestate_for_scenarios(df_pro_ra_pri_scen_st,
         r1 = px.line(x="k", y=ylabel_moyS1, source=source, 
                      legend_label=label_moyS1,
                      line_width=2, color=COLORS[ind_color], 
-                     line_dash=[5,5])
+                     line_dash=[0,0])
         ind_color = 1
         r2 = px.line(x="k", y=ylabel_moyS2, source=source, 
                      legend_label=label_moyS2,
                      line_width=2, color=COLORS[ind_color], 
-                     line_dash=[5,5])
+                     line_dash=[0,0])
         ind_color = 2
         r3 = px.line(x="k", y=ylabel_moyMaxS12, source=source, 
                      legend_label=label_moyMaxS12,
                      line_width=2, color=COLORS[ind_color], 
-                     line_dash=[5,5])
+                     line_dash=[0,0])
         
         nb_k_steps = len(list(df_al_k['k'].unique()))
         if int(nb_k_steps*10/250) > 0:
@@ -2390,6 +2392,8 @@ if __name__ == "__main__":
     MULT_WIDTH = 2.5;
     MULT_HEIGHT = 1.2;
     
+    debug = False#True
+    
     t = 1
     #t=[1,2]
     
@@ -2401,6 +2405,12 @@ if __name__ == "__main__":
     name_simu = "simu_0412_1726"; k_steps_args = 1000 # for t integer (t=1) or t list (t=[1,2])
     
     name_simu = "simu_1012_2102"; k_steps_args = 10
+    
+    if debug:
+        name_simu = "simu_DDMM_HHMM"; k_steps_args = 50
+    else:
+        name_simu = "simu_2306_2206"; k_steps_args = 1000
+        
     ###----    SCENARIO BASE ---> debut  --------------------------------------
     # name_simu = "SCENARIO_BASE"; k_steps_args = 15
     ###----     SCENARIO BASE ---> fin-----------------------------------------
@@ -2408,13 +2418,16 @@ if __name__ == "__main__":
     ##  name simulation and k_steps ---> fin
     
     # ## -- turn_arr4d_2_df()
+    algos_not_learning=["DETERMINIST","RD-DETERMINIST","BRUTE-FORCE"]
     tuple_paths, scenarios_new, prob_Cis_new, \
         prices_new, algos_new, learning_rates_new \
-            = get_tuple_paths_of_arrays(name_simu=name_simu)
+            = get_tuple_paths_of_arrays(name_simu=name_simu, 
+                                        algos_not_learning=algos_not_learning)
     # df_arr_M_T_Ks, df_ben_cst_M_T_K, df_b0_c0_pisg_pi0_T_K, df_B_C_BB_CC_RU_M \
     #     = get_array_turn_df(tuple_paths, k_steps_args)
     df_arr_M_T_Ks, df_ben_cst_M_T_K, df_b0_c0_pisg_pi0_T_K, df_B_C_BB_CC_RU_M \
-        = get_array_turn_df_for_t(tuple_paths, t, k_steps_args)
+        = get_array_turn_df_for_t(tuple_paths, t, k_steps_args, 
+                                  algos_for_not_learning=algos_not_learning)
     print("df_arr_M_T_Ks: {}, df_ben_cst_M_T_K={}, df_b0_c0_pisg_pi0_T_K={}, df_B_C_BB_CC_RU_M={}".format( 
         df_arr_M_T_Ks.shape, df_ben_cst_M_T_K.shape, df_b0_c0_pisg_pi0_T_K.shape, 
         df_B_C_BB_CC_RU_M.shape ))
