@@ -1471,7 +1471,9 @@ def plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t):
                                       & ((df_arr_M_T_Ks.rate == rate) 
                                          | (df_arr_M_T_Ks.rate == 0)) \
                                       & (df_arr_M_T_Ks.prices == price) \
+                                      & (df_arr_M_T_Ks.scenario == scenario) \
                                       & (df_arr_M_T_Ks.t == t)
+                                          
         df_pro_ra_pri_scen = df_arr_M_T_Ks.loc[mask_pro_ra_pri_scen].copy()
         print("02")
         px_scen = plot_all_algos_for_scenario(df_pro_ra_pri_scen, 
