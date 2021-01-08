@@ -14,7 +14,7 @@ import fonctions_auxiliaires as fct_aux
 
 from datetime import datetime
 
-ALGO_NAMES = ["BEST-BRUTE-FORCE", "BAD-BRUTE-FORCE", "MIDDLE-BRUTE-FORCE"]
+# "ALGO_NAMES_BF = ["BEST-BRUTE-FORCE", "BAD-BRUTE-FORCE", "MIDDLE-BRUTE-FORCE"]"
 
 #------------------------------------------------------------------------------
 #                       definition of functions --> debut
@@ -364,12 +364,24 @@ def bf_balanced_player_game(arr_pl_M_T,
         
         # max_min_moy_bf
         best_key_In_Out_sg = None
-        if algo_name == ALGO_NAMES[0]:              # BEST-BRUTE-FORCE
+        if algo_name == fct_aux.ALGO_NAMES_BF[0]:              # BEST-BRUTE-FORCE
             best_key_In_Out_sg = min(dico_mode_profs.keys())
-        elif algo_name == ALGO_NAMES[1]:            # BAD-BRUTE-FORCE
+        elif algo_name == fct_aux.ALGO_NAMES_BF[1]:            # BAD-BRUTE-FORCE
             best_key_In_Out_sg = max(dico_mode_profs.keys())
-        elif algo_name == ALGO_NAMES[2]:            # MIDDLE-BRUTE-FORCE
-            pass
+        elif algo_name == fct_aux.ALGO_NAMES_BF[2]:            # MIDDLE-BRUTE-FORCE
+            mean_key_In_Out_sg  = np.mean(list(dico_mode_profs.keys()))
+            if mean_key_In_Out_sg in dico_mode_profs.keys():
+                best_key_In_Out_sg = mean_key_In_Out_sg
+            else:
+                sorted_keys = sorted(dico_mode_profs.keys())
+                boolean = True; i_key = 1
+                while boolean:
+                    if sorted_keys[i_key] <= mean_key_In_Out_sg:
+                        i_key += 1
+                    else:
+                        boolean = False; i_key -= 1
+                best_key_In_Out_sg = sorted_keys[i_key]
+                    
         # find the best, bad, middle key in dico_mode_profs and 
         # the best, bad, middle mode_profile
         best_mode_profiles = dico_mode_profs[best_key_In_Out_sg]
@@ -606,7 +618,7 @@ def test_brute_force_game(algo_name="BEST-BRUTE-FORCE"):
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    for algo_name in ALGO_NAMES:
+    for algo_name in fct_aux.ALGO_NAMES_BF:
         arr_pl_M_T_vars = test_brute_force_game(algo_name)
     
     print("runtime = {}".format(time.time() - ti))
