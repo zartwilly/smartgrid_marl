@@ -14,7 +14,6 @@ import fonctions_auxiliaires as fct_aux
 
 from datetime import datetime
 
-# "ALGO_NAMES_BF = ["BEST-BRUTE-FORCE", "BAD-BRUTE-FORCE", "MIDDLE-BRUTE-FORCE"]"
 
 #------------------------------------------------------------------------------
 #                       definition of functions --> debut
@@ -392,26 +391,16 @@ def bf_balanced_player_game(arr_pl_M_T,
             rd = np.random.randint(0, len(best_mode_profiles))
             best_mode_profile = best_mode_profiles[rd]
         
-        
-        # # find the best key in dico_mode_profs and the best mode_profile
-        # best_key_In_Out_sg = min(dico_mode_profs.keys())
-        # best_mode_profiles = dico_mode_profs[best_key_In_Out_sg]
-        # best_mode_profile = None
-        # if len(best_mode_profiles) == 1:
-        #     best_mode_profile = best_mode_profiles[0]
-        # else:
-        #     rd = np.random.randint(0, len(best_mode_profiles))
-        #     best_mode_profile = best_mode_profiles[rd]
-        # ### ____ best 5 keys and values: debut ____
-        # # import collections
-        # # od = collections.OrderedDict(sorted(dico_mode_profs.items()))
-        # # cpt_od = 0
-        # # for k, profil in od.items(): 
-        # #     print('*** key={}, profil={}'.format(k, profil))
-        # #     cpt_od += 1
-        # #     if cpt_od > 5:
-        # #         break
-        # ### ____ best 5 keys and values: fin ____
+        ### ____ best 5 keys and values: debut ____
+        # import collections
+        # od = collections.OrderedDict(sorted(dico_mode_profs.items()))
+        # cpt_od = 0
+        # for k, profil in od.items(): 
+        #     print('*** key={}, profil={}'.format(k, profil))
+        #     cpt_od += 1
+        #     if cpt_od > 5:
+        #         break
+        ### ____ best 5 keys and values: fin ____
         
         print("cpt_xxx={}, best_key_In_Out_sg={}, best_mode_profile={}".format(
                 cpt_xxx, best_key_In_Out_sg, best_mode_profile))
