@@ -411,7 +411,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
     probs_modes_states = [0.5, 0.5, 0.5]
     
     # list of algos
-    ALGOS = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"]
+    ALGOS = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]\
+            + bfGameModel.ALGO_NAMES
     algos = ALGOS if algos is None \
                     else algos
     # list of pi_hp_plus, pi_hp_minus
@@ -465,10 +466,9 @@ def execute_algos_used_Generated_instances(game_dir='tests',
             cpt += 1
             msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
                        +"_pi_hp_minus_"+str(pi_hp_minus_elt)
-            if algo == ALGOS[4]:
-                # BRUTE-FORCE
-                print("*** BRUTE-FORCE *** ")
-                random_determinist = True
+            if algo == ALGOS[6]:
+                # MIDDLE-BRUTE-FORCE
+                print("*** MIDDLE-BRUTE-FORCE *** ")
                 
                 path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
                                     scenario, str(prob_Ci), 
@@ -483,6 +483,45 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 t_periods=num_periods,
                                 prob_Ci=prob_Ci, 
                                 scenario=scenario,
+                                algo_name=algo,
+                                path_to_save=path_to_save, dbg=False)
+            elif algo == ALGOS[5]:
+                # BAD-BRUTE-FORCE
+                print("*** BAD-BRUTE-FORCE *** ")
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = bfGameModel.bf_balanced_player_game(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                t_periods=num_periods,
+                                prob_Ci=prob_Ci, 
+                                scenario=scenario,
+                                algo_name=algo,
+                                path_to_save=path_to_save, dbg=False)
+            elif algo == ALGOS[4]:
+                # BEST-BRUTE-FORCE
+                print("*** BEST-BRUTE-FORCE *** ")
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = bfGameModel.bf_balanced_player_game(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                t_periods=num_periods,
+                                prob_Ci=prob_Ci, 
+                                scenario=scenario,
+                                algo_name=algo,
                                 path_to_save=path_to_save, dbg=False)
             elif algo == ALGOS[3]:
                 # RD-DETERMINIST
