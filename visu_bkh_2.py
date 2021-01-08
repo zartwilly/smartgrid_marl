@@ -125,7 +125,8 @@ def get_tuple_paths_of_arrays(name_dir="tests", name_simu="simu_1811_1754",
                    scenarios=None, prob_Cis=None, prices=None, 
                    algos=None, learning_rates=None, 
                    algos_not_learning=["DETERMINIST","RD-DETERMINIST",
-                                       "BRUTE-FORCE"], 
+                                       "BEST-BRUTE-FORCE","BAD-BRUTE-FORCE", 
+                                       "MIDDLE-BRUTE-FORCE"], 
                    ext=".npy", 
                    exclude_html_files=[NAME_RESULT_SHOW_VARS,"html"]):
     
@@ -877,8 +878,11 @@ def get_array_turn_df_for_t_OLD(tuple_paths, t=1, k_steps_args=5,
             
 def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=5,
                     algos_for_not_learning=["DETERMINIST","RD-DETERMINIST",
-                                            "BRUTE-FORCE"], 
+                                            "BEST-BRUTE-FORCE",
+                                            "BAD-BRUTE-FORCE", 
+                                            "MIDDLE-BRUTE-FORCE"], 
                     algos_for_learning=["LRI1", "LRI2"]):
+    #print("** algos_for_not_learning={}".format(algos_for_not_learning))
     df_arr_M_T_Ks = []
     df_b0_c0_pisg_pi0_T_K = []
     df_B_C_BB_CC_RU_M = []
@@ -1393,13 +1397,19 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
         
         ind_color = 0
         if algo == "LRI1":
-            ind_color = 1 #5
+            ind_color = 1 #7
         elif algo == "LRI2":
-            ind_color = 2 #5
+            ind_color = 2 #7
         elif algo == "DETERMINIST":
-            ind_color = 3 #5
+            ind_color = 3 #7
         elif algo == "RD-DETERMINIST":
-            ind_color = 4 #5
+            ind_color = 4 #7
+        elif algo == "BEST-BRUTE-FORCE":
+            ind_color = 5 #7
+        elif algo == "BAD-BRUTE-FORCE":
+            ind_color = 6 #7
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            ind_color = 7 #7
             
         r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
                 line_width=2, color=COLORS[ind_color], 
@@ -1433,6 +1443,19 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
+        elif algo == "BEST-BRUTE-FORCE":
+            r2 = px.diamond(x="k", y=ylabel, size=7, source=source_slice, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "BAD-BRUTE-FORCE":
+            r2 = px.diamond_cross(x="k", y=ylabel, size=7, source=source_slice, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            r2 = px.diamond_dot(x="k", y=ylabel, size=7, source=source_slice, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            
         
     legend = Legend(items= tup_legends, location="center")
     px.legend.label_text_font_size = "8px"
@@ -1572,13 +1595,19 @@ def plot_mean_ben_cst_all_states_for_scenarios(
 
         ind_color = 0
         if algo == "LRI1":
-            ind_color = 1 #5
+            ind_color = 1 #7
         elif algo == "LRI2":
-            ind_color = 2 #5
+            ind_color = 2 #7
         elif algo == "DETERMINIST":
-            ind_color = 3 #5
+            ind_color = 3 #7
         elif algo == "RD-DETERMINIST":
-            ind_color = 4 #5
+            ind_color = 4 #7
+        elif algo == "BEST-BRUTE-FORCE":
+            ind_color = 5 #7
+        elif algo == "BAD-BRUTE-FORCE":
+            ind_color = 6 #7
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            ind_color = 7 #7
             
         r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
                 line_width=2, color=COLORS[ind_color], 
@@ -1629,6 +1658,18 @@ def plot_mean_ben_cst_all_states_for_scenarios(
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
+        elif algo == "BEST-BRUTE-FORCE":
+            r2 = px.diamond(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "BAD-BRUTE-FORCE":
+            r2 = px.diamond_cross(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            r2 = px.diamond_dot(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
         
     legend = Legend(items= tup_legends, location="center")
     px.legend.label_text_font_size = "8px"
@@ -2394,7 +2435,7 @@ if __name__ == "__main__":
     MULT_WIDTH = 2.5;
     MULT_HEIGHT = 1.2;
     
-    debug = False#True
+    debug = True #False#True
     
     t = 1
     #t=[1,2]
@@ -2420,7 +2461,7 @@ if __name__ == "__main__":
     ##  name simulation and k_steps ---> fin
     
     # ## -- turn_arr4d_2_df()
-    algos_not_learning=["DETERMINIST","RD-DETERMINIST","BRUTE-FORCE"]
+    algos_not_learning=["DETERMINIST","RD-DETERMINIST"]+fct_aux.ALGO_NAMES_BF
     tuple_paths, scenarios_new, prob_Cis_new, \
         prices_new, algos_new, learning_rates_new \
             = get_tuple_paths_of_arrays(name_simu=name_simu, 
