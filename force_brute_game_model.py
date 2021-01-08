@@ -14,6 +14,8 @@ import fonctions_auxiliaires as fct_aux
 
 from datetime import datetime
 
+ALGO_NAMES = ["BEST-BRUTE-FORCE", "BAD-BRUTE-FORCE", "MIDDLE-BRUTE-FORCE"]
+
 #------------------------------------------------------------------------------
 #                       definition of functions --> debut
 #
@@ -218,6 +220,7 @@ def bf_balanced_player_game(arr_pl_M_T,
                              t_periods=4,
                              prob_Ci=0.3, 
                              scenario="scenario1",
+                             algo_name="BEST_BF",
                              path_to_save="tests", dbg=False):
     """
     brute force algorithm for balanced players' game.
@@ -230,8 +233,8 @@ def bf_balanced_player_game(arr_pl_M_T,
 
     """
     
-    print("\n \n brute force game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> debut \n"\
-          .format(scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
+    print("\n \n {} game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> debut \n"\
+          .format(algo_name, scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
         
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
@@ -359,8 +362,16 @@ def bf_balanced_player_game(arr_pl_M_T,
              
             cpt_xxx += 1
         
-        # find the best key in dico_mode_profs and the best mode_profile
-        best_key_In_Out_sg = min(dico_mode_profs.keys())
+        # max_min_moy_bf
+        best_key_In_Out_sg = None
+        if algo_name == ALGO_NAMES[0]:              # BEST-BRUTE-FORCE
+            best_key_In_Out_sg = min(dico_mode_profs.keys())
+        elif algo_name == ALGO_NAMES[1]:            # BAD-BRUTE-FORCE
+            best_key_In_Out_sg = max(dico_mode_profs.keys())
+        elif algo_name == ALGO_NAMES[2]:            # MIDDLE-BRUTE-FORCE
+            pass
+        # find the best, bad, middle key in dico_mode_profs and 
+        # the best, bad, middle mode_profile
         best_mode_profiles = dico_mode_profs[best_key_In_Out_sg]
         best_mode_profile = None
         if len(best_mode_profiles) == 1:
@@ -368,16 +379,27 @@ def bf_balanced_player_game(arr_pl_M_T,
         else:
             rd = np.random.randint(0, len(best_mode_profiles))
             best_mode_profile = best_mode_profiles[rd]
-        ### ____ best 5 keys and values: debut ____
-        # import collections
-        # od = collections.OrderedDict(sorted(dico_mode_profs.items()))
-        # cpt_od = 0
-        # for k, profil in od.items(): 
-        #     print('*** key={}, profil={}'.format(k, profil))
-        #     cpt_od += 1
-        #     if cpt_od > 5:
-        #         break
-        ### ____ best 5 keys and values: fin ____
+        
+        
+        # # find the best key in dico_mode_profs and the best mode_profile
+        # best_key_In_Out_sg = min(dico_mode_profs.keys())
+        # best_mode_profiles = dico_mode_profs[best_key_In_Out_sg]
+        # best_mode_profile = None
+        # if len(best_mode_profiles) == 1:
+        #     best_mode_profile = best_mode_profiles[0]
+        # else:
+        #     rd = np.random.randint(0, len(best_mode_profiles))
+        #     best_mode_profile = best_mode_profiles[rd]
+        # ### ____ best 5 keys and values: debut ____
+        # # import collections
+        # # od = collections.OrderedDict(sorted(dico_mode_profs.items()))
+        # # cpt_od = 0
+        # # for k, profil in od.items(): 
+        # #     print('*** key={}, profil={}'.format(k, profil))
+        # #     cpt_od += 1
+        # #     if cpt_od > 5:
+        # #         break
+        # ### ____ best 5 keys and values: fin ____
         
         print("cpt_xxx={}, best_key_In_Out_sg={}, best_mode_profile={}".format(
                 cpt_xxx, best_key_In_Out_sg, best_mode_profile))
@@ -486,7 +508,7 @@ def bf_balanced_player_game(arr_pl_M_T,
     pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
     
     # save computed variables
-    algo_name = "BRUTE-FORCE"
+    #algo_name = "BRUTE-FORCE"
     fct_aux.save_variables(path_to_save, arr_pl_M_T_vars.copy(), 
                    b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
                    BENs_M_T, CSTs_M_T, 
@@ -496,8 +518,8 @@ def bf_balanced_player_game(arr_pl_M_T,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
                    algo=algo_name)
     
-    print("brute force game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> end \n"\
-          .format(scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
+    print("{} game: {}, probCi={}, pi_hp_plus={} , pi_hp_minus ={} ---> end \n"\
+          .format(algo_name, scenario, prob_Ci, pi_hp_plus, pi_hp_minus))
         
     return arr_pl_M_T_vars
     
@@ -509,7 +531,7 @@ def bf_balanced_player_game(arr_pl_M_T,
 #                       definition of unittests 
 #
 #------------------------------------------------------------------------------
-def test_brute_force_game():
+def test_brute_force_game(algo_name="BEST-BRUTE-FORCE"):
     fct_aux.N_DECIMALS = 6
     
     pi_hp_plus = 0.2*pow(10,-3) #[5, 15]
@@ -561,7 +583,7 @@ def test_brute_force_game():
     print("Generation/Recuperation instances TERMINEE")
     
     msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
-    path_to_save = os.path.join(name_dir, "bf_"+date_hhmm, 
+    path_to_save = os.path.join(name_dir, algo_name.split('-')[0]+"_bf_"+date_hhmm, 
                                     scenario, str(prob_Ci), 
                                     msg)
     
@@ -573,6 +595,7 @@ def test_brute_force_game():
                              t_periods,
                              prob_Ci, 
                              scenario,
+                             algo_name,
                              path_to_save, dbg=False)
     
     
@@ -583,8 +606,8 @@ def test_brute_force_game():
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    
-    arr_pl_M_T_vars = test_brute_force_game()
+    for algo_name in ALGO_NAMES:
+        arr_pl_M_T_vars = test_brute_force_game(algo_name)
     
     print("runtime = {}".format(time.time() - ti))
     
