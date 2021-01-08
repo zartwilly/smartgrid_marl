@@ -51,6 +51,7 @@ INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4,
                "balanced_pl_i": 14, "formule":15}
 
 NON_PLAYING_PLAYERS = {"PLAY":1, "NOT_PLAY":0}
+ALGO_NAMES_BF = ["BEST-BRUTE-FORCE", "BAD-BRUTE-FORCE", "MIDDLE-BRUTE-FORCE"]
 
 #------------------------------------------------------------------------------
 #           definitions of class
