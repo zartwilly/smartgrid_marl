@@ -412,7 +412,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
     
     # list of algos
     ALGOS = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]\
-            + bfGameModel.ALGO_NAMES
+            + fct_aux.ALGO_NAMES_BF
     algos = ALGOS if algos is None \
                     else algos
     # list of pi_hp_plus, pi_hp_minus
