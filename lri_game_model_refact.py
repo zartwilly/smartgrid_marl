@@ -221,6 +221,12 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                                  - bg_i_t_k[num_pl_i]) / \
                               (bg_max_i_t_0_to_k[num_pl_i] 
                                - bg_min_i_t_0_to_k[num_pl_i])
+    
+    if np.isnan(list(u_i_t_k)).all():
+        print(" ** avant u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
+        u_i_t_k[:] = 0
+        print(" ** apres u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
+     
         
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
@@ -424,8 +430,8 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                                   equal_nan=False,
                                   atol=pow(10,-fct_aux.N_DECIMALS))
     if comp_min_max_bg.any() == True:
-        # print("V1 bg_i min == max for players {} --->ERROR".format(
-        #         np.argwhere(comp_min_max_bg).reshape(-1)))
+        print("   V1 bg_i min == max for players {} --->ERROR".format(
+                np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
         indices_non_playing_players_new = np.argwhere(comp_min_max_bg).reshape(-1)
         indices_non_playing_players \
@@ -442,8 +448,7 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
     u_i_t_k = 1 - (bg_max_i_t_0_to_k - bg_i_t_k)\
                         /(bg_max_i_t_0_to_k - bg_min_i_t_0_to_k)
     
-    arr_isnan_u_i_t_k = np.isnan(list(u_i_t_k))
-    if arr_isnan_u_i_t_k.all():
+    if np.isnan(list(u_i_t_k)).all():
         print(" ** avant u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
         u_i_t_k[:] = 0
         print(" ** apres u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
