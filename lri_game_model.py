@@ -108,7 +108,8 @@ def find_out_min_max_bg(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
 def utility_function_version1(arr_pl_M_T_K_vars, 
                               arr_bg_i_nb_repeat_k,
                               bens_t_k, csts_t_k, 
-                              t, k, m_players, indices_non_playing_players, 
+                              t, k, m_players, 
+                              indices_non_playing_players, nb_repeat_k,
                               learning_rate):
     """
     compute the utility of players following the version 1 in document
@@ -181,16 +182,19 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                                   equal_nan=False,
                                   atol=pow(10,-fct_aux.N_DECIMALS))
             
-    if comp_min_max_bg.any() == True:
+    indices_non_playing_players_new = np.argwhere(comp_min_max_bg)\
+                                            .reshape(-1)
+    indices_non_playing_players \
+        = set([*indices_non_playing_players,
+               *list(indices_non_playing_players_new)])
+    
+    if comp_min_max_bg.any() == True \
+        and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
         # print("V1 indices_non_playing_players_old={}".format(indices_non_playing_players))
         # print("V1 bg_i min == max for players {} --->ERROR".format(
         #         np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
-        indices_non_playing_players_new = np.argwhere(comp_min_max_bg)\
-                                            .reshape(-1)
-        indices_non_playing_players \
-            = set([*indices_non_playing_players,
-                   *list(indices_non_playing_players_new)])
+        
         # for num_pl_i in indices_non_playing_players:
         #     state_i = arr_pl_M_T_K_vars[num_pl_i,t,k,fct_aux.INDEX_ATTRS["state_i"]]
         #     mode_i = arr_pl_M_T_K_vars[num_pl_i,t,k,fct_aux.INDEX_ATTRS["mode_i"]]
@@ -221,6 +225,12 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                                  - bg_i_t_k[num_pl_i]) / \
                               (bg_max_i_t_0_to_k[num_pl_i] 
                                - bg_min_i_t_0_to_k[num_pl_i])
+    
+    u_i_t_k[u_i_t_k == np.inf] = 0
+    u_i_t_k[u_i_t_k == -np.inf] = 0
+    where_is_nan = np.isnan(list(u_i_t_k))
+    u_i_t_k[where_is_nan] = 0
+    
         
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
@@ -242,10 +252,11 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                                     + learning_rate \
                                         * u_i_t_k[num_pl_i] \
                                             * (1 - p_i_t_k[num_pl_i])
-            
+    
     u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
     p_i_t_k_new = np.around(np.array(p_i_t_k_new, dtype=float),
                              fct_aux.N_DECIMALS)
+    
     arr_pl_M_T_K_vars[
             :,
             t, k,
@@ -254,6 +265,10 @@ def utility_function_version1(arr_pl_M_T_K_vars,
             :,
             t, k,
             fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
+    arr_pl_M_T_K_vars[list(indices_non_playing_players),
+                      t,k,
+                      fct_aux.INDEX_ATTRS["non_playing_players"]] \
+                            = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
             bool_bg_i_min_eq_max, indices_non_playing_players,\
@@ -263,7 +278,8 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                               b0_t_k, c0_t_k,
                               bens_t_k, csts_t_k, 
                               pi_hp_minus, pi_0_minus_t_k,
-                              t, k, m_players, indices_non_playing_players,
+                              t, k, m_players, 
+                              indices_non_playing_players, nb_repeat_k,
                               learning_rate):
     """
     compute the utility of players following the version 1 in document
@@ -314,6 +330,7 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
     indices_playing_players_pl_is \
         = [num_pl_i for num_pl_i in range(0, arr_pl_M_T_K_vars.shape[0]) 
                     if num_pl_i not in indices_non_playing_players]
+    
     # I_m, I_M
     P_i_t_s = arr_pl_M_T_K_vars[
                 arr_pl_M_T_K_vars[:,t,k,
@@ -422,14 +439,15 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                                   bg_max_i_t_0_to_k, 
                                   equal_nan=False,
                                   atol=pow(10,-fct_aux.N_DECIMALS))
-    if comp_min_max_bg.any() == True:
-        # print("V1 bg_i min == max for players {} --->ERROR".format(
+    indices_non_playing_players_new = np.argwhere(comp_min_max_bg).reshape(-1)
+    indices_non_playing_players \
+        = set([*indices_non_playing_players,
+               *list(indices_non_playing_players_new)])
+    if comp_min_max_bg.any() == True \
+        and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
+        # print("   V2 bg_i min == max for players {} --->ERROR".format(
         #         np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
-        indices_non_playing_players_new = np.argwhere(comp_min_max_bg).reshape(-1)
-        indices_non_playing_players \
-            = set([*indices_non_playing_players,
-                   *list(indices_non_playing_players_new)])
     
         return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
                 bool_bg_i_min_eq_max, list(indices_non_playing_players),\
@@ -440,7 +458,11 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                                  fct_aux.INDEX_ATTRS["bg_i"]]
     u_i_t_k = 1 - (bg_max_i_t_0_to_k - bg_i_t_k)\
                         /(bg_max_i_t_0_to_k - bg_min_i_t_0_to_k)
-    
+    u_i_t_k[u_i_t_k == np.inf] = 0
+    u_i_t_k[u_i_t_k == -np.inf] = 0
+    where_is_nan = np.isnan(list(u_i_t_k))
+    u_i_t_k[where_is_nan] = 0
+                        
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
                         t, k,
@@ -465,6 +487,10 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
         :,
         t, k,
         fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
+    arr_pl_M_T_K_vars[list(indices_non_playing_players),
+                      t,k,
+                      fct_aux.INDEX_ATTRS["non_playing_players"]] \
+                            = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
    
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
@@ -479,7 +505,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
                 bens_t_k, csts_t_k,
                 pi_hp_minus,
                 pi_0_plus_t_k, pi_0_minus_t_k,
-                m_players, indices_non_playing_players,
+                m_players, 
+                indices_non_playing_players, nb_repeat_k,
                 learning_rate,
                 utility_function_version=1):
     bool_bg_i_min_eq_max = False
@@ -493,7 +520,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
                               arr_pl_M_T_K_vars, 
                               arr_bg_i_nb_repeat_k, 
                               bens_t_k, csts_t_k, 
-                              t, k, m_players, indices_non_playing_players,
+                              t, k, m_players, 
+                              indices_non_playing_players, nb_repeat_k,
                               learning_rate)
     else:
         # version 2 of utility function 
@@ -506,7 +534,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
                                 b0_t_k, c0_t_k,
                                 bens_t_k, csts_t_k, 
                                 pi_hp_minus, pi_0_minus_t_k,
-                                t, k, m_players, indices_non_playing_players,
+                                t, k, m_players, 
+                                indices_non_playing_players, nb_repeat_k,
                                 learning_rate)
         
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
@@ -761,7 +790,7 @@ def lri_balanced_player_game(arr_pl_M_T,
     nb_vars_2_add = 6
     # _______ variables' initialization --> fin   ________________
     
-    # ____   turn arr_pl_M_T in a array of 4 dimensions   ____
+    # ____   turn arr_pl_M_T in an array of 4 dimensions   ____
     ## good time 21.3 ns for k_steps = 1000
     arrs = []
     for k in range(0, k_steps):
@@ -838,7 +867,7 @@ def lri_balanced_player_game(arr_pl_M_T,
             pi_sg_plus_t_k, pi_sg_minus_t_k, \
             pi_0_plus_t_k, pi_0_minus_t_k, \
             dico_stats_res_t_k \
-                = balanced_player_game_t(arr_pl_M_T_K_vars_modif, t, k, 
+                = balanced_player_game_t(arr_pl_M_T_K_vars_modif.copy(), t, k, 
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_k_minus_1, pi_sg_minus_t_k_minus_1,
                            m_players, indices_non_playing_players, num_periods, 
@@ -869,14 +898,15 @@ def lri_balanced_player_game(arr_pl_M_T,
             bool_bg_i_min_eq_max, indices_non_playing_players_new, \
             bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
                 = update_probs_modes_states_by_defined_utility_funtion(
-                    arr_pl_M_T_K_vars_modif, 
+                    arr_pl_M_T_K_vars_modif.copy(), 
                     arr_bg_i_nb_repeat_k,
                     t, k,
                     b0_t_k, c0_t_k,
                     bens_t_k, csts_t_k,
                     pi_hp_minus,
                     pi_0_plus_t_k, pi_0_minus_t_k,
-                    m_players, indices_non_playing_players,
+                    m_players, 
+                    indices_non_playing_players, nb_repeat_k,
                     learning_rate, 
                     utility_function_version)
                 
@@ -894,44 +924,47 @@ def lri_balanced_player_game(arr_pl_M_T,
                 #         t, k, nb_repeat_k))
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
                 ## test indices_non_playing_players --> debut
-                indices_non_playing_players = indices_non_playing_players_new 
+                indices_non_playing_players = indices_non_playing_players_new
                 ### add marker to not playing players from k+1 to k_steps
                 arr_pl_M_T_K_vars[
                         indices_non_playing_players,
-                        t,k+1:k_steps,
+                        t,k,
+                        fct_aux.INDEX_ATTRS["non_playing_players"]] \
+                            = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
+                arr_pl_M_T_K_vars_modif[
+                        indices_non_playing_players,
+                        t,k,
                         fct_aux.INDEX_ATTRS["non_playing_players"]] \
                             = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
                 ### update bg_i, mode_i, u_i_t_k, p_i_t_k for not playing players from k+1 to k_steps 
-                # for var in ["bg_i", "mode_i", "prod_i", "cons_i",
-                #             "u_i", "prob_mode_state_i", "r_i", 
-                #             "gamma_i", "state_i"]:
-                for var in ["bg_i", "mode_i", "prod_i", "cons_i",
-                            "u_i", "prob_mode_state_i", "r_i", 
-                            "gamma_i"]:
+                for var in ["prob_mode_state_i"]:
                     # TODO change prob_mode_state_i by p_i_t_k
-                    # print("SHAPE NON_PLAYING: t={},k={},k_steps={} var_modifs_non_players={}, k:k_steps={}".format(
-                    #     t,k,k_steps,
-                    #     arr_pl_M_T_K_vars_modif[indices_non_playing_players,
-                    #                             t,k,fct_aux.INDEX_ATTRS[var]], 
-                    #     arr_pl_M_T_K_vars_modif[indices_non_playing_players,t,
-                    #                             k:k_steps,fct_aux.INDEX_ATTRS[var]]))
-                    
                     arr_pl_M_T_K_vars_modif[
                         indices_non_playing_players,
-                        t,k+1:k_steps,
+                        t,k,
                         fct_aux.INDEX_ATTRS[var]] \
                         = arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
+                                    t,k-1,
+                                    fct_aux.INDEX_ATTRS[var]] \
+                            if k>0 \
+                            else arr_pl_M_T_K_vars_modif[
+                                    indices_non_playing_players,
                                     t,k,
-                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1)
+                                    fct_aux.INDEX_ATTRS[var]] #.reshape(-1,1)
                     arr_pl_M_T_K_vars[
                         indices_non_playing_players,
-                        t,k+1:k_steps,
+                        t,k,
                         fct_aux.INDEX_ATTRS[var]] \
                                 = arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
+                                    t,k-1,
+                                    fct_aux.INDEX_ATTRS[var]] \
+                            if k>0 \
+                            else arr_pl_M_T_K_vars_modif[
+                                    indices_non_playing_players,
                                     t,k,
-                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1)
+                                    fct_aux.INDEX_ATTRS[var]] #.reshape(-1,1)
                     # print("AFTER UPDATE var={}, k+1={}->k-step={}; arr_={}, \n arr_modif={}".format(
                     #     var, k+1, k_steps,
                     #     arr_pl_M_T_K_vars[
@@ -947,6 +980,7 @@ def lri_balanced_player_game(arr_pl_M_T,
                 k = k+1
                 nb_repeat_k = 0
                 remain_m_players = m_players - len(indices_non_playing_players)
+                indices_non_playing_players = set()
                 arr_bg_i_nb_repeat_k \
                     = np.empty(
                         shape=(m_players, fct_aux.NB_REPEAT_K_MAX)
@@ -965,6 +999,7 @@ def lri_balanced_player_game(arr_pl_M_T,
                         )
                 arr_bg_i_nb_repeat_k.fill(np.nan)
                 indices_non_playing_players = indices_non_playing_players_new
+                indices_non_playing_players = set()
             
         # update pi_sg_plus_t_minus_1 and pi_sg_minus_t_minus_1
         pi_sg_plus_t_minus_1 = pi_sg_plus_T_K[t,k_steps-1]
