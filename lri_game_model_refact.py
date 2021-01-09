@@ -314,6 +314,7 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
     indices_playing_players_pl_is \
         = [num_pl_i for num_pl_i in range(0, arr_pl_M_T_K_vars.shape[0]) 
                     if num_pl_i not in indices_non_playing_players]
+    
     # I_m, I_M
     P_i_t_s = arr_pl_M_T_K_vars[
                 arr_pl_M_T_K_vars[:,t,k,
@@ -441,6 +442,12 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
     u_i_t_k = 1 - (bg_max_i_t_0_to_k - bg_i_t_k)\
                         /(bg_max_i_t_0_to_k - bg_min_i_t_0_to_k)
     
+    arr_isnan_u_i_t_k = np.isnan(list(u_i_t_k))
+    if arr_isnan_u_i_t_k.all():
+        print(" ** avant u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
+        u_i_t_k[:] = 0
+        print(" ** apres u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
+                        
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
                         t, k,
@@ -450,12 +457,20 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                         :,
                         t, k-1,
                         fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
+    ## --- a effacer  
+    print("Avant t={},k={}, p_i_t_k={}".format(t, k, p_i_t_k))                  
+    ## --- a effacer 
     
     p_i_t_k_new =  p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
     
     u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
     p_i_t_k_new = np.around(np.array(p_i_t_k_new, dtype=float),
                              fct_aux.N_DECIMALS)
+    
+    ## --- a effacer  
+    print("Apres t={},k={}, u_i_t_k={}, p_i_t_k_new={}".format(
+            t, k, u_i_t_k, p_i_t_k_new))                  
+    ## --- a effacer 
      
     arr_pl_M_T_K_vars[
         :,
