@@ -182,17 +182,19 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                                   equal_nan=False,
                                   atol=pow(10,-fct_aux.N_DECIMALS))
             
+    indices_non_playing_players_new = np.argwhere(comp_min_max_bg)\
+                                            .reshape(-1)
+    indices_non_playing_players \
+        = set([*indices_non_playing_players,
+               *list(indices_non_playing_players_new)])
+    
     if comp_min_max_bg.any() == True \
         and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
         # print("V1 indices_non_playing_players_old={}".format(indices_non_playing_players))
         print("V1 bg_i min == max for players {} --->ERROR".format(
                 np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
-        indices_non_playing_players_new = np.argwhere(comp_min_max_bg)\
-                                            .reshape(-1)
-        indices_non_playing_players \
-            = set([*indices_non_playing_players,
-                   *list(indices_non_playing_players_new)])
+        
         # for num_pl_i in indices_non_playing_players:
         #     state_i = arr_pl_M_T_K_vars[num_pl_i,t,k,fct_aux.INDEX_ATTRS["state_i"]]
         #     mode_i = arr_pl_M_T_K_vars[num_pl_i,t,k,fct_aux.INDEX_ATTRS["mode_i"]]
@@ -268,10 +270,10 @@ def utility_function_version1(arr_pl_M_T_K_vars,
             :,
             t, k,
             fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
-    # arr_pl_M_T_K_vars[indices_non_playing_players,
-    #                   t,k,
-    #                   fct_aux.INDEX_ATTRS["non_playing_players"]] \
-    #                         = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
+    arr_pl_M_T_K_vars[list(indices_non_playing_players),
+                      t,k,
+                      fct_aux.INDEX_ATTRS["non_playing_players"]] \
+                            = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
             bool_bg_i_min_eq_max, indices_non_playing_players,\
@@ -442,15 +444,15 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                                   bg_max_i_t_0_to_k, 
                                   equal_nan=False,
                                   atol=pow(10,-fct_aux.N_DECIMALS))
+    indices_non_playing_players_new = np.argwhere(comp_min_max_bg).reshape(-1)
+    indices_non_playing_players \
+        = set([*indices_non_playing_players,
+               *list(indices_non_playing_players_new)])
     if comp_min_max_bg.any() == True \
         and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
         print("   V2 bg_i min == max for players {} --->ERROR".format(
                 np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
-        indices_non_playing_players_new = np.argwhere(comp_min_max_bg).reshape(-1)
-        indices_non_playing_players \
-            = set([*indices_non_playing_players,
-                   *list(indices_non_playing_players_new)])
     
         return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
                 bool_bg_i_min_eq_max, list(indices_non_playing_players),\
@@ -498,10 +500,11 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
         :,
         t, k,
         fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
-    # arr_pl_M_T_K_vars[indices_non_playing_players,
-    #                   t,k,
-    #                   fct_aux.INDEX_ATTRS["non_playing_players"]] \
-    #                         = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
+    print("indices_non_playing_players={}".format(indices_non_playing_players))
+    arr_pl_M_T_K_vars[list(indices_non_playing_players),
+                      t,k,
+                      fct_aux.INDEX_ATTRS["non_playing_players"]] \
+                            = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
    
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
@@ -1093,7 +1096,7 @@ def test_lri_balanced_player_game():
     prob_Ci = 0.3; learning_rate = 0.05;
     probs_modes_states = [0.5, 0.5, 0.5]
     scenario = "scenario1"; 
-    utility_function_version = 2 ; path_to_save = "tests"
+    utility_function_version = 1 ; path_to_save = "tests"
     
     fct_aux.N_DECIMALS = 3
     fct_aux.NB_REPEAT_K_MAX = 5 #15#5#3#10# 7
