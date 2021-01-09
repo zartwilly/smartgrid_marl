@@ -894,7 +894,8 @@ def lri_balanced_player_game(arr_pl_M_T,
                 #         t, k, nb_repeat_k))
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
                 ## test indices_non_playing_players --> debut
-                indices_non_playing_players = indices_non_playing_players_new 
+                indices_non_playing_players = indices_non_playing_players_new
+                indices_non_playing_players = set()
                 ### add marker to not playing players from k+1 to k_steps
                 arr_pl_M_T_K_vars[
                         indices_non_playing_players,
@@ -970,6 +971,7 @@ def lri_balanced_player_game(arr_pl_M_T,
                         )
                 arr_bg_i_nb_repeat_k.fill(np.nan)
                 indices_non_playing_players = indices_non_playing_players_new
+                indices_non_playing_players = set()
             
         # update pi_sg_plus_t_minus_1 and pi_sg_minus_t_minus_1
         pi_sg_plus_t_minus_1 = pi_sg_plus_T_K[t,k_steps-1]
