@@ -761,7 +761,7 @@ def lri_balanced_player_game(arr_pl_M_T,
     nb_vars_2_add = 6
     # _______ variables' initialization --> fin   ________________
     
-    # ____   turn arr_pl_M_T in a array of 4 dimensions   ____
+    # ____   turn arr_pl_M_T in an array of 4 dimensions   ____
     ## good time 21.3 ns for k_steps = 1000
     arrs = []
     for k in range(0, k_steps):
@@ -838,7 +838,7 @@ def lri_balanced_player_game(arr_pl_M_T,
             pi_sg_plus_t_k, pi_sg_minus_t_k, \
             pi_0_plus_t_k, pi_0_minus_t_k, \
             dico_stats_res_t_k \
-                = balanced_player_game_t(arr_pl_M_T_K_vars_modif, t, k, 
+                = balanced_player_game_t(arr_pl_M_T_K_vars_modif.copy(), t, k, 
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_k_minus_1, pi_sg_minus_t_k_minus_1,
                            m_players, indices_non_playing_players, num_periods, 
@@ -869,7 +869,7 @@ def lri_balanced_player_game(arr_pl_M_T,
             bool_bg_i_min_eq_max, indices_non_playing_players_new, \
             bg_min_i_t_0_to_k, bg_max_i_t_0_to_k \
                 = update_probs_modes_states_by_defined_utility_funtion(
-                    arr_pl_M_T_K_vars_modif, 
+                    arr_pl_M_T_K_vars_modif.copy(), 
                     arr_bg_i_nb_repeat_k,
                     t, k,
                     b0_t_k, c0_t_k,
@@ -898,16 +898,11 @@ def lri_balanced_player_game(arr_pl_M_T,
                 ### add marker to not playing players from k+1 to k_steps
                 arr_pl_M_T_K_vars[
                         indices_non_playing_players,
-                        t,k+1:k_steps,
+                        t,k,
                         fct_aux.INDEX_ATTRS["non_playing_players"]] \
                             = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
                 ### update bg_i, mode_i, u_i_t_k, p_i_t_k for not playing players from k+1 to k_steps 
-                # for var in ["bg_i", "mode_i", "prod_i", "cons_i",
-                #             "u_i", "prob_mode_state_i", "r_i", 
-                #             "gamma_i", "state_i"]:
-                for var in ["bg_i", "mode_i", "prod_i", "cons_i",
-                            "u_i", "prob_mode_state_i", "r_i", 
-                            "gamma_i"]:
+                for var in ["prob_mode_state_i"]:
                     # TODO change prob_mode_state_i by p_i_t_k
                     # print("SHAPE NON_PLAYING: t={},k={},k_steps={} var_modifs_non_players={}, k:k_steps={}".format(
                     #     t,k,k_steps,
@@ -918,17 +913,27 @@ def lri_balanced_player_game(arr_pl_M_T,
                     
                     arr_pl_M_T_K_vars_modif[
                         indices_non_playing_players,
-                        t,k+1:k_steps,
+                        t,k,
                         fct_aux.INDEX_ATTRS[var]] \
                         = arr_pl_M_T_K_vars_modif[
+                                    indices_non_playing_players,
+                                    t,k-1,
+                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1) \
+                            if k>0 \
+                            else arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
                                     t,k,
                                     fct_aux.INDEX_ATTRS[var]].reshape(-1,1)
                     arr_pl_M_T_K_vars[
                         indices_non_playing_players,
-                        t,k+1:k_steps,
+                        t,k,
                         fct_aux.INDEX_ATTRS[var]] \
                                 = arr_pl_M_T_K_vars_modif[
+                                    indices_non_playing_players,
+                                    t,k-1,
+                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1) \
+                            if k>0 \
+                            else arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
                                     t,k,
                                     fct_aux.INDEX_ATTRS[var]].reshape(-1,1)
