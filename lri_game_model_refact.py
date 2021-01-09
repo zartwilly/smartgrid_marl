@@ -895,7 +895,6 @@ def lri_balanced_player_game(arr_pl_M_T,
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
                 ## test indices_non_playing_players --> debut
                 indices_non_playing_players = indices_non_playing_players_new
-                indices_non_playing_players = set()
                 ### add marker to not playing players from k+1 to k_steps
                 arr_pl_M_T_K_vars[
                         indices_non_playing_players,
@@ -912,6 +911,10 @@ def lri_balanced_player_game(arr_pl_M_T,
                     #     arr_pl_M_T_K_vars_modif[indices_non_playing_players,t,
                     #                             k:k_steps,fct_aux.INDEX_ATTRS[var]]))
                     
+                    print("arr_pl_M_T_K_vars_modif={}".format(arr_pl_M_T_K_vars_modif[
+                        indices_non_playing_players,
+                        t,k,
+                        fct_aux.INDEX_ATTRS[var]].shape ))
                     arr_pl_M_T_K_vars_modif[
                         indices_non_playing_players,
                         t,k,
@@ -919,12 +922,12 @@ def lri_balanced_player_game(arr_pl_M_T,
                         = arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
                                     t,k-1,
-                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1) \
+                                    fct_aux.INDEX_ATTRS[var]] \
                             if k>0 \
                             else arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
                                     t,k,
-                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1)
+                                    fct_aux.INDEX_ATTRS[var]] #.reshape(-1,1)
                     arr_pl_M_T_K_vars[
                         indices_non_playing_players,
                         t,k,
@@ -932,12 +935,12 @@ def lri_balanced_player_game(arr_pl_M_T,
                                 = arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
                                     t,k-1,
-                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1) \
+                                    fct_aux.INDEX_ATTRS[var]] \
                             if k>0 \
                             else arr_pl_M_T_K_vars_modif[
                                     indices_non_playing_players,
                                     t,k,
-                                    fct_aux.INDEX_ATTRS[var]].reshape(-1,1)
+                                    fct_aux.INDEX_ATTRS[var]] #.reshape(-1,1)
                     # print("AFTER UPDATE var={}, k+1={}->k-step={}; arr_={}, \n arr_modif={}".format(
                     #     var, k+1, k_steps,
                     #     arr_pl_M_T_K_vars[
@@ -953,6 +956,7 @@ def lri_balanced_player_game(arr_pl_M_T,
                 k = k+1
                 nb_repeat_k = 0
                 remain_m_players = m_players - len(indices_non_playing_players)
+                indices_non_playing_players = set()
                 arr_bg_i_nb_repeat_k \
                     = np.empty(
                         shape=(m_players, fct_aux.NB_REPEAT_K_MAX)
