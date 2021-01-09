@@ -108,7 +108,8 @@ def find_out_min_max_bg(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
 def utility_function_version1(arr_pl_M_T_K_vars, 
                               arr_bg_i_nb_repeat_k,
                               bens_t_k, csts_t_k, 
-                              t, k, m_players, indices_non_playing_players, 
+                              t, k, m_players, 
+                              indices_non_playing_players, nb_repeat_k,
                               learning_rate):
     """
     compute the utility of players following the version 1 in document
@@ -181,10 +182,11 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                                   equal_nan=False,
                                   atol=pow(10,-fct_aux.N_DECIMALS))
             
-    if comp_min_max_bg.any() == True:
+    if comp_min_max_bg.any() == True \
+        and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
         # print("V1 indices_non_playing_players_old={}".format(indices_non_playing_players))
-        # print("V1 bg_i min == max for players {} --->ERROR".format(
-        #         np.argwhere(comp_min_max_bg).reshape(-1)))
+        print("V1 bg_i min == max for players {} --->ERROR".format(
+                np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
         indices_non_playing_players_new = np.argwhere(comp_min_max_bg)\
                                             .reshape(-1)
@@ -222,11 +224,11 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                               (bg_max_i_t_0_to_k[num_pl_i] 
                                - bg_min_i_t_0_to_k[num_pl_i])
     
-    if np.isnan(list(u_i_t_k)).all():
-        print(" ** avant u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
-        u_i_t_k[:] = 0
-        print(" ** apres u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
-     
+    u_i_t_k[u_i_t_k == np.inf] = 0
+    u_i_t_k[u_i_t_k == -np.inf] = 0
+    where_is_nan = np.isnan(list(u_i_t_k))
+    u_i_t_k[where_is_nan] = 0
+    
         
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
@@ -237,6 +239,9 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                         :,
                         t, k-1,
                         fct_aux.INDEX_ATTRS["prob_mode_state_i"]]
+    ## --- a effacer  
+    print("Avant t={},k={}, p_i_t_k={}".format(t, k, p_i_t_k))                  
+    ## --- a effacer 
 
     # p_i_t_k_new = p_i_t_k + learning_rate * u_i_t_k * (1 - p_i_t_k)
     p_i_t_k_new = np.empty(shape=(m_players,)); p_i_t_k_new.fill(np.nan)
@@ -248,10 +253,13 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                                     + learning_rate \
                                         * u_i_t_k[num_pl_i] \
                                             * (1 - p_i_t_k[num_pl_i])
-            
+    
     u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
     p_i_t_k_new = np.around(np.array(p_i_t_k_new, dtype=float),
                              fct_aux.N_DECIMALS)
+    ## --- a effacer  
+    print("Apres t={},k={}, p_i_t_k_new={}".format(t, k, p_i_t_k_new))                  
+    ## --- a effacer 
     arr_pl_M_T_K_vars[
             :,
             t, k,
@@ -260,6 +268,10 @@ def utility_function_version1(arr_pl_M_T_K_vars,
             :,
             t, k,
             fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
+    # arr_pl_M_T_K_vars[indices_non_playing_players,
+    #                   t,k,
+    #                   fct_aux.INDEX_ATTRS["non_playing_players"]] \
+    #                         = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
             bool_bg_i_min_eq_max, indices_non_playing_players,\
@@ -269,7 +281,8 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                               b0_t_k, c0_t_k,
                               bens_t_k, csts_t_k, 
                               pi_hp_minus, pi_0_minus_t_k,
-                              t, k, m_players, indices_non_playing_players,
+                              t, k, m_players, 
+                              indices_non_playing_players, nb_repeat_k,
                               learning_rate):
     """
     compute the utility of players following the version 1 in document
@@ -429,8 +442,9 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                                   bg_max_i_t_0_to_k, 
                                   equal_nan=False,
                                   atol=pow(10,-fct_aux.N_DECIMALS))
-    if comp_min_max_bg.any() == True:
-        print("   V1 bg_i min == max for players {} --->ERROR".format(
+    if comp_min_max_bg.any() == True \
+        and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
+        print("   V2 bg_i min == max for players {} --->ERROR".format(
                 np.argwhere(comp_min_max_bg).reshape(-1)))
         bool_bg_i_min_eq_max = True
         indices_non_playing_players_new = np.argwhere(comp_min_max_bg).reshape(-1)
@@ -447,11 +461,10 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
                                  fct_aux.INDEX_ATTRS["bg_i"]]
     u_i_t_k = 1 - (bg_max_i_t_0_to_k - bg_i_t_k)\
                         /(bg_max_i_t_0_to_k - bg_min_i_t_0_to_k)
-    
-    if np.isnan(list(u_i_t_k)).all():
-        print(" ** avant u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
-        u_i_t_k[:] = 0
-        print(" ** apres u_i_t_k={}, type={}".format(u_i_t_k, type(u_i_t_k) ))
+    u_i_t_k[u_i_t_k == np.inf] = 0
+    u_i_t_k[u_i_t_k == -np.inf] = 0
+    where_is_nan = np.isnan(list(u_i_t_k))
+    u_i_t_k[where_is_nan] = 0
                         
     p_i_t_k = arr_pl_M_T_K_vars[
                         :,
@@ -485,6 +498,10 @@ def utility_function_version2(arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k,
         :,
         t, k,
         fct_aux.INDEX_ATTRS["u_i"]] = u_i_t_k
+    # arr_pl_M_T_K_vars[indices_non_playing_players,
+    #                   t,k,
+    #                   fct_aux.INDEX_ATTRS["non_playing_players"]] \
+    #                         = fct_aux.NON_PLAYING_PLAYERS["NOT_PLAY"]
    
     
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
@@ -499,7 +516,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
                 bens_t_k, csts_t_k,
                 pi_hp_minus,
                 pi_0_plus_t_k, pi_0_minus_t_k,
-                m_players, indices_non_playing_players,
+                m_players, 
+                indices_non_playing_players, nb_repeat_k,
                 learning_rate,
                 utility_function_version=1):
     bool_bg_i_min_eq_max = False
@@ -513,7 +531,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
                               arr_pl_M_T_K_vars, 
                               arr_bg_i_nb_repeat_k, 
                               bens_t_k, csts_t_k, 
-                              t, k, m_players, indices_non_playing_players,
+                              t, k, m_players, 
+                              indices_non_playing_players, nb_repeat_k,
                               learning_rate)
     else:
         # version 2 of utility function 
@@ -526,7 +545,8 @@ def update_probs_modes_states_by_defined_utility_funtion(
                                 b0_t_k, c0_t_k,
                                 bens_t_k, csts_t_k, 
                                 pi_hp_minus, pi_0_minus_t_k,
-                                t, k, m_players, indices_non_playing_players,
+                                t, k, m_players, 
+                                indices_non_playing_players, nb_repeat_k,
                                 learning_rate)
         
     return arr_pl_M_T_K_vars, arr_bg_i_nb_repeat_k, \
@@ -896,7 +916,8 @@ def lri_balanced_player_game(arr_pl_M_T,
                     bens_t_k, csts_t_k,
                     pi_hp_minus,
                     pi_0_plus_t_k, pi_0_minus_t_k,
-                    m_players, indices_non_playing_players,
+                    m_players, 
+                    indices_non_playing_players, nb_repeat_k,
                     learning_rate, 
                     utility_function_version)
                 
