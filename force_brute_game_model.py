@@ -111,7 +111,8 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars,
                                        dico_balanced_pl_i, 
                                        dico_state_mode_i,
                                        cpt_balanced,
-                                       m_players, t_periods):
+                                       m_players, t_periods, 
+                                       manual_debug):
     """
     attribute modes of all players and get players' variables as prod_i, 
     cons_i, r_i, gamma_i saved to  arr_pl_M_T_vars_mode_prof
@@ -178,7 +179,13 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars,
             pi_hp_plus = pi_hp_plus, 
             pi_hp_minus = pi_hp_minus)
         
-        gamma_i = pl_i.get_gamma_i()
+        gamma_i = None
+        if manual_debug:
+            gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
+            pl_i.set_gamma_i(gamma_i)
+        else:
+            gamma_i = pl_i.get_gamma_i()
+            
         if gamma_i >= min(pi_sg_minus_t, pi_sg_plus_t) -1 \
             and gamma_i <= max(pi_hp_minus, pi_hp_plus):
             pass
@@ -220,7 +227,8 @@ def bf_balanced_player_game(arr_pl_M_T,
                              prob_Ci=0.3, 
                              scenario="scenario1",
                              algo_name="BEST_BF",
-                             path_to_save="tests", dbg=False):
+                             path_to_save="tests", 
+                             manual_debug=False, dbg=False):
     """
     brute force algorithm for balanced players' game.
     determine the best solution by enumerating all players' profils.
@@ -320,8 +328,12 @@ def bf_balanced_player_game(arr_pl_M_T,
             else None
             
         # compute pi_0_plus, pi_0_minus, pi_sg_plus, pi_sg_minus
-        pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
-        pi_sg_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t
+        if manual_debug:
+            pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+        else:
+            pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
+            pi_sg_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t
         
         cpt_error_gamma = 0; cpt_balanced = 0;
         dico_state_mode_i = {}; dico_balanced_pl_i = {}
@@ -346,7 +358,8 @@ def bf_balanced_player_game(arr_pl_M_T,
                     dico_balanced_pl_i_mode_prof, 
                     dico_state_mode_i_mode_prof,
                     cpt_balanced_mode_prof,
-                    m_players, t_periods
+                    m_players, t_periods,
+                    manual_debug
                     )
             
             # compute In_sg, Out_sg
@@ -415,7 +428,7 @@ def bf_balanced_player_game(arr_pl_M_T,
                 pi_hp_plus, pi_hp_minus,
                 dico_balanced_pl_i, dico_state_mode_i, 
                 cpt_balanced,
-                m_players, t_periods
+                m_players, t_periods, manual_debug
                 )
         
         dico_stats_res[t] = (round(cpt_balanced/m_players, fct_aux.N_DECIMALS),
@@ -443,6 +456,16 @@ def bf_balanced_player_game(arr_pl_M_T,
         pi_0_plus_t = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 
                             fct_aux.N_DECIMALS)
         pi_0_minus_t = pi_sg_minus_t
+        
+        print("-- Avant: pi_sg_plus_t={}, pi_sg_minus_t={}, pi_0_plus_t={}, pi_0_minus_t={},".format(
+                pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t))
+        if manual_debug:
+            pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+            pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #2 
+            pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
+        print("-- Apres: pi_sg_plus_t={}, pi_sg_minus_t={}, pi_0_plus_t={}, pi_0_minus_t={},".format(
+                pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t))
         
         ## compute prices inside smart grids
         # compute In_sg, Out_sg
@@ -588,6 +611,7 @@ def test_brute_force_game(algo_name="BEST-BRUTE-FORCE"):
                                     scenario, str(prob_Ci), 
                                     msg)
     
+    manual_debug = True #False #True #False
     arr_pl_M_T_probCi_scen = bf_balanced_player_game(
                              arr_pl_M_T_probCi_scen.copy(),
                              pi_hp_plus, 
@@ -597,7 +621,7 @@ def test_brute_force_game(algo_name="BEST-BRUTE-FORCE"):
                              prob_Ci, 
                              scenario,
                              algo_name,
-                             path_to_save, dbg=False)
+                             path_to_save, manual_debug, dbg=False)
     
     
     return arr_pl_M_T_probCi_scen
