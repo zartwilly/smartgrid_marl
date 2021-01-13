@@ -155,11 +155,18 @@ def scenario_base_det(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
                              scenario="scenario_base",
                              random_determinist=False,
                              utility_function_version=1,
-                             path_to_save="tests", dbg=False):
+                             path_to_save="tests", 
+                             manual_debug=False,
+                             dbg=False):
     
     # pi_sg_{plus, minus}, pi_0_{plus, minus}
-    pi_sg_plus_t, pi_sg_minus_t = 5, 4
-    pi_0_plus_t, pi_0_minus_t = 3, 1
+    #pi_sg_plus_t, pi_sg_minus_t = 5, 4
+    #pi_0_plus_t, pi_0_minus_t = 3, 1
+    
+    pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K
+    pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K
+    pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K
+    pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K
     
     # constances 
     t = 0
@@ -241,8 +248,19 @@ def scenario_base_det(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
     print("t={}, pi_sg_plus_t_new={}, pi_sg_minus_t_new={}".format(
         t, pi_sg_plus_t_new, pi_sg_minus_t_new))
     
-    pi_0_plus_t_new = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 2)
-    pi_0_minus_t_new = pi_sg_minus_t
+    pi_sg_plus_t = pi_sg_plus_t if pi_sg_plus_t_new is np.nan \
+                                else pi_sg_plus_t_new
+    pi_sg_minus_t = pi_sg_minus_t if pi_sg_minus_t_new is np.nan \
+                                else pi_sg_minus_t_new
+    pi_0_plus_t = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 
+                            fct_aux.N_DECIMALS)
+    pi_0_minus_t = pi_sg_minus_t
+    
+    if manual_debug:
+        pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+        pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+        pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #2 
+        pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
     
     ## ______ compute prices inside smart grids _______
     # compute In_sg, Out_sg
@@ -288,15 +306,14 @@ def scenario_base_det(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
                    b0_t, c0_t, B_is, C_is, 
                    bens_t, csts_t, 
                    BB_is, CC_is, RU_is, 
-                   pi_sg_minus_t_new, pi_sg_plus_t_new, 
-                   pi_0_minus_t_new, pi_0_plus_t_new,
+                   pi_sg_minus_t, pi_sg_plus_t, 
+                   pi_0_minus_t, pi_0_plus_t,
                    [pi_hp_plus], [pi_hp_minus], 
                    dico_stats_res={}, 
                    algo=algo_name)
     
     print("pi_sg_plus_t_new={}, pi_sg_minus_t_new={}, pi_0_plus_t_new={}, pi_0_minus_t_new={} \n"\
-          .format(pi_sg_plus_t_new, pi_sg_minus_t_new, pi_0_plus_t_new, 
-                  pi_0_minus_t_new))
+          .format(pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t))
     
     print("determinist game: {}, pi_hp_plus={}, pi_hp_minus ={} ---> end \n"\
           .format(scenario, pi_hp_plus, pi_hp_minus))
@@ -319,11 +336,17 @@ def scenario_base_bf(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
                         probs_modes_states=[0.5, 0.5, 0.5],
                         scenario="scenario_base",
                         algo_name="BEST-BRUTE-FORCE",
-                        path_to_save="tests", dbg=False):
+                        path_to_save="tests", 
+                        manual_debug=False, 
+                        dbg=False):
     
     # pi_sg_{plus, minus}, pi_0_{plus, minus}
-    pi_sg_plus_t, pi_sg_minus_t = 5, 4
-    pi_0_plus_t, pi_0_minus_t = 3, 1
+    # pi_sg_plus_t, pi_sg_minus_t = 5, 4
+    # pi_0_plus_t, pi_0_minus_t = 3, 1
+    pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K
+    pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K
+    pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K
+    pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K
     
     # constances 
     t = 0
@@ -367,7 +390,8 @@ def scenario_base_bf(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
                 dico_balanced_pl_i_mode_prof, 
                 dico_state_mode_i_mode_prof,
                 cpt_balanced_mode_prof,
-                m_players, num_periods
+                m_players, num_periods, 
+                manual_debug
                 )
         
         # compute In_sg, Out_sg
@@ -425,7 +449,7 @@ def scenario_base_bf(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
             pi_hp_plus, pi_hp_minus,
             dico_balanced_pl_i, dico_state_mode_i, 
             cpt_balanced,
-            m_players, num_periods
+            m_players, num_periods, manual_debug
             )
     
     dico_stats_res = dict()
@@ -451,9 +475,16 @@ def scenario_base_bf(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
                                 else pi_sg_plus_t_new
     pi_sg_minus_t = pi_sg_minus_t if pi_sg_minus_t_new is np.nan \
                                 else pi_sg_minus_t_new
-    pi_0_plus_t_new = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 
+    pi_0_plus_t = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 
                         fct_aux.N_DECIMALS)
-    pi_0_minus_t_new = pi_sg_minus_t
+    pi_0_minus_t = pi_sg_minus_t
+    
+    if manual_debug:
+        pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+        pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+        pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #2 
+        pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
+    
     
     ## compute prices inside smart grids
     # compute In_sg, Out_sg
@@ -507,8 +538,8 @@ def scenario_base_bf(arr_pl_M_T_vars_init, pi_hp_plus=0.0002,
                    b0_t, c0_t, B_is, C_is, 
                    bens_t, csts_t, 
                    BB_is, CC_is, RU_is, 
-                   pi_sg_minus_t_new, pi_sg_plus_t_new, 
-                   pi_0_minus_t_new, pi_0_plus_t_new,
+                   pi_sg_minus_t, pi_sg_plus_t, 
+                   pi_0_minus_t, pi_0_plus_t,
                    [pi_hp_plus], [pi_hp_minus], 
                    dico_stats_res={}, 
                    algo=algo_name)
@@ -1380,7 +1411,9 @@ def scenario_base_LRI(arr_pl_M_T,
                         probs_modes_states=[0.5, 0.5, 0.5],
                         scenario="scenario_base",
                         utility_function_version=1,
-                        path_to_save="tests", dbg=False):
+                        path_to_save="tests", 
+                        manual_debug=False, 
+                        dbg=False):
     
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_T_K = np.empty(shape=(num_periods,k_steps)); 
@@ -1441,9 +1474,13 @@ def scenario_base_LRI(arr_pl_M_T,
     # ____      run balanced sg for t_period = 0 at any k_step     ________
     
     # constances, pi_sg_{plus, minus}, pi_0_{plus, minus}
+    # pi_sg_plus_t, pi_sg_minus_t = 5, 4
+    # pi_0_plus_t, pi_0_minus_t = 3, 1
     t = 0
-    pi_sg_plus_t, pi_sg_minus_t = 5, 4
-    pi_0_plus_t, pi_0_minus_t = 3, 1
+    pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K
+    pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K
+    pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K
+    pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K
     
     # initialization of variables
     nb_repeat_k = 0
@@ -1483,6 +1520,12 @@ def scenario_base_LRI(arr_pl_M_T,
                     pi_sg_plus_t_k, pi_sg_minus_t_k,
                     m_players, indices_non_playing_players,
                     num_periods, nb_repeat_k, dbg=False)
+            
+        if manual_debug:
+            pi_sg_plus_t_k_plus_1 = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t_k_plus_1 = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+            pi_0_plus_t_k_plus_1 = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K #2 
+            pi_0_minus_t_k_plus_1 = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
         
         ## update pi_sg_minus_t_k_minus_1 and pi_sg_plus_t_k_minus_1
         pi_sg_minus_t_k = pi_sg_minus_t_k_plus_1
@@ -1701,7 +1744,8 @@ def execution_algos(algos, arr_pl_M_T_vars_init,
                     prob_Ci=0.3, learning_rate=0.01,
                     probs_modes_states=[0.5, 0.5, 0.5],
                     scenario="SCENARIO_BASE", random_determinist=False,
-                    utility_function_version=1, path_to_save="tests"):
+                    utility_function_version=1, manual_debug=False, 
+                    path_to_save="tests"):
     
     path_to_save = os.path.join(path_to_save, "SCENARIO_BASE")
     
@@ -1722,6 +1766,7 @@ def execution_algos(algos, arr_pl_M_T_vars_init,
                                   random_determinist=random_determinist,
                                   utility_function_version=utility_function_version,
                                   path_to_save=path_to_save, 
+                                  manual_debug=manual_debug,
                                   dbg=False)
         elif algo == fct_aux.ALGO_NAMES_BF[0]:              # BEST-BRUTE-FORCE
             arr_pl_M_T_vars = scenario_base_bf(arr_pl_M_T_vars_init, 
@@ -1736,6 +1781,7 @@ def execution_algos(algos, arr_pl_M_T_vars_init,
                                   scenario=scenario,
                                   algo_name=algo,
                                   path_to_save=path_to_save, 
+                                  manual_debug=manual_debug,
                                   dbg=False)
         elif algo == fct_aux.ALGO_NAMES_BF[1]:            # BAD-BRUTE-FORCE
             arr_pl_M_T_vars = scenario_base_bf(arr_pl_M_T_vars_init, 
@@ -1750,6 +1796,7 @@ def execution_algos(algos, arr_pl_M_T_vars_init,
                                   scenario=scenario,
                                   algo_name=algo,
                                   path_to_save=path_to_save, 
+                                  manual_debug=manual_debug,
                                   dbg=False)
         elif algo == fct_aux.ALGO_NAMES_BF[2]:            # MIDDLE-BRUTE-FORCE
             arr_pl_M_T_vars = scenario_base_bf(arr_pl_M_T_vars_init, 
@@ -1764,6 +1811,7 @@ def execution_algos(algos, arr_pl_M_T_vars_init,
                                   scenario=scenario,
                                   algo_name=algo,
                                   path_to_save=path_to_save, 
+                                  manual_debug=manual_debug,
                                   dbg=False)
         elif algo == "LRI1":
             arr_pl_M_T_vars = scenario_base_LRI(arr_pl_M_T_vars_init,
@@ -1777,7 +1825,9 @@ def execution_algos(algos, arr_pl_M_T_vars_init,
                              probs_modes_states=probs_modes_states,
                              scenario=scenario,
                              utility_function_version=1,
-                             path_to_save=path_to_save, dbg=False)
+                             path_to_save=path_to_save, 
+                             manual_debug=manual_debug,
+                             dbg=False)
         elif algo == "LRI2":
             arr_pl_M_T_vars = scenario_base_LRI(arr_pl_M_T_vars_init,
                              pi_hp_plus=pi_hp_plus, 
@@ -1790,7 +1840,9 @@ def execution_algos(algos, arr_pl_M_T_vars_init,
                              probs_modes_states=probs_modes_states,
                              scenario=scenario,
                              utility_function_version=2,
-                             path_to_save=path_to_save, dbg=False)
+                             path_to_save=path_to_save, 
+                             manual_debug=manual_debug, 
+                             dbg=False)
          
         dico_arrs[algo] = arr_pl_M_T_vars
         
@@ -1810,6 +1862,12 @@ if __name__ == "__main__":
     fct_aux.Ci_HIGH = 60
     fct_aux.NB_REPEAT_K_MAX = 15
     
+    fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K = 5
+    fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K = 4
+    fct_aux.MANUEL_DBG_PI_0_PLUS_T_K = 3 
+    fct_aux.MANUEL_DBG_PI_0_MINUS_T_K = 1
+    
+    manual_debug = True # False #True
     
     scenarios=["scenario1"]
     prob_Cis=0.3
@@ -1824,7 +1882,8 @@ if __name__ == "__main__":
     arr_pl_M_T_vars_init = create_scenario_base(m_players=4,num_periods=2)
     
     k_steps = 40 #25 # 15
-    execution_algos(algos, arr_pl_M_T_vars_init, k_steps=k_steps)
+    execution_algos(algos, arr_pl_M_T_vars_init, k_steps=k_steps, 
+                    manual_debug=manual_debug)
     
     # visualisation 
     
