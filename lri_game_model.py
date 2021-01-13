@@ -548,7 +548,8 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_minus_1_k, pi_sg_minus_t_minus_1_k,
                            m_players, indices_non_playing_players, 
-                           num_periods, nb_repeat_k, dbg=False):
+                           num_periods, nb_repeat_k, 
+                           manual_debug=False, dbg=False):
     
     cpt_error_gamma = 0; cpt_balanced = 0;
     dico_state_mode_i_t_k = {}; dico_balanced_pl_i_t_k = {}
@@ -641,7 +642,14 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
             pi_0_minus = pi_sg_minus_t_minus_1_k,
             pi_hp_plus = pi_hp_plus, 
             pi_hp_minus = pi_hp_minus)
-        gamma_i = pl_i.get_gamma_i()
+        
+        gamma_i = None
+        if manual_debug:
+            gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
+            pl_i.set_gamma_i(gamma_i)
+        else:
+            gamma_i = pl_i.get_gamma_i()
+            
         if gamma_i >= min(pi_sg_minus_t_minus_1_k, pi_sg_plus_t_minus_1_k)-1 \
             and gamma_i <= max(pi_hp_minus, pi_hp_plus):
             pass
@@ -702,6 +710,13 @@ def balanced_player_game_t(arr_pl_M_T_K_vars, t, k,
     pi_0_plus_t_k = round(pi_sg_minus_t_minus_1_k*pi_hp_plus/pi_hp_minus, 
                           fct_aux.N_DECIMALS)
     pi_0_minus_t_k = pi_sg_minus_t_minus_1_k
+    
+    if manual_debug:
+        pi_sg_plus_t_k = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+        pi_sg_minus_t_k = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+        pi_0_plus_t_k = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #2 
+        pi_0_minus_t_k = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
+        
     print("pi_sg_minus_t_minus_1_k={}, pi_0_plus_t_k={}, pi_0_minus_t_k={},".format(
         pi_sg_minus_t_minus_1_k, pi_0_plus_t_k, pi_0_minus_t_k)) \
         if dbg else None
@@ -751,7 +766,8 @@ def lri_balanced_player_game(arr_pl_M_T,
                              probs_modes_states=[0.5, 0.5, 0.5],
                              scenario="scenario1",
                              utility_function_version=1,
-                             path_to_save="tests", dbg=False):
+                             path_to_save="tests", 
+                             manual_debug=False, dbg=False):
     
     print("{}, probCi={}, pi_hp_plus={}, pi_hp_minus ={}, p_i_t_k={} ---> debut \n".format(
             scenario, prob_Ci, pi_hp_plus, pi_hp_minus, probs_modes_states))
@@ -823,7 +839,14 @@ def lri_balanced_player_game(arr_pl_M_T,
     arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
     
     # ____      run balanced sg for all num_periods at any k_step     ________
-    pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
+    pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = None, None
+    if manual_debug:
+        pi_sg_plus_t_minus_1 = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K # 8 
+        pi_sg_minus_t_minus_1 = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K # 10
+    else:
+        pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
+        
+        
     for t in range(0, num_periods):
         print("******* t = {}, p1p2p3={} *******".format(t, 
                 np.unique(arr_pl_M_T_K_vars_modif[:,t,:,
@@ -859,6 +882,10 @@ def lri_balanced_player_game(arr_pl_M_T,
             pi_sg_minus_t_k_minus_1 = pi_sg_minus_t_minus_1 \
                                         if k == 0 \
                                         else pi_sg_minus_t_k_minus_1
+                                        
+            if manual_debug:
+                pi_sg_plus_t_k_minus_1 = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+                pi_sg_minus_t_k_minus_1 = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
                                             
             ## balanced_player_game_t
             arr_pl_M_T_K_vars_modif, \
@@ -871,7 +898,13 @@ def lri_balanced_player_game(arr_pl_M_T,
                            pi_hp_plus, pi_hp_minus, 
                            pi_sg_plus_t_k_minus_1, pi_sg_minus_t_k_minus_1,
                            m_players, indices_non_playing_players, num_periods, 
-                           nb_repeat_k, dbg=False)
+                           nb_repeat_k, manual_debug, dbg=False)
+                
+            if manual_debug:
+                pi_sg_plus_t_k = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+                pi_sg_minus_t_k = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+                pi_0_plus_t_k = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K #2 
+                pi_0_minus_t_k = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
             
             ## update pi_sg_minus_t_k_minus_1 and pi_sg_plus_t_k_minus_1
             pi_sg_minus_t_k_minus_1 = pi_sg_minus_t_k
@@ -1076,6 +1109,7 @@ def test_lri_balanced_player_game():
     probs_modes_states = [0.5, 0.5, 0.5]
     scenario = "scenario1"; 
     utility_function_version = 2 ; path_to_save = "tests"
+    manual_debug = False #True#False
     
     fct_aux.N_DECIMALS = 3
     fct_aux.NB_REPEAT_K_MAX = 5 #15#5#3#10# 7
@@ -1099,7 +1133,8 @@ def test_lri_balanced_player_game():
                              probs_modes_states=probs_modes_states,
                              scenario=scenario,
                              utility_function_version=utility_function_version,
-                             path_to_save=path_to_save, dbg=False)
+                             path_to_save=path_to_save, 
+                             manual_debug=manual_debug, dbg=False)
     
     return arr_M_T_K_vars
 
