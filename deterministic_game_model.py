@@ -20,7 +20,7 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
                            pi_sg_plus_t, pi_sg_minus_t, 
                            m_players, num_periods, 
                            random_determinist, used_storage,
-                           dico_stats_res, dbg):
+                           dico_stats_res, manual_debug, dbg):
     """
     balance the player game at time t
 
@@ -224,14 +224,20 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
             pi_0_minus = pi_sg_minus_t, 
             pi_hp_plus = pi_hp_plus, 
             pi_hp_minus = pi_hp_minus)
-        gamma_i = pl_i.get_gamma_i()
+        gamma_i = None
+        if manual_debug:
+            gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
+            pl_i.set_gamma_i(gamma_i)
+        else:
+            gamma_i = pl_i.get_gamma_i()
+            
         if gamma_i >= min(pi_sg_minus_t, pi_sg_plus_t) -1 \
             and gamma_i <= max(pi_hp_minus, pi_hp_plus):
             pass
         else :
             cpt_error_gamma = round(1/m_players, 2)
-            dico_state_mode_i["cpt"] = \
-                dico_state_mode_i["cpt"] + cpt_error_gamma \
+            dico_state_mode_i["cpt"] \
+                = dico_state_mode_i["cpt"] + cpt_error_gamma \
                 if "cpt" in dico_state_mode_i \
                 else cpt_error_gamma
             dico_state_mode_i[(pl_i.state_i, pl_i.mode_i)] \
@@ -300,6 +306,11 @@ def balanced_player_game_t(arr_pl_M_T_vars, t,
                                 else pi_sg_minus_t_new
     pi_0_plus_t = round(pi_sg_minus_t*pi_hp_plus/pi_hp_minus, 2)
     pi_0_minus_t = pi_sg_minus_t
+    if manual_debug:
+        pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+        pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+        pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #2 
+        pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
     
     ## compute prices inside smart grids
     # compute In_sg, Out_sg
@@ -340,6 +351,7 @@ def determinist_balanced_player_game(arr_pl_M_T,
                                      random_determinist=False,
                                      used_storage=True,
                                      path_to_save="tests", 
+                                     manual_debug=False,
                                      dbg=False):
     """
     create a game for balancing all players at all periods of time NUM_PERIODS = [1..T]
@@ -442,8 +454,12 @@ def determinist_balanced_player_game(arr_pl_M_T,
             else None
             
         # compute pi_0_plus, pi_0_minus, pi_sg_plus, pi_sg_minus
-        pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
-        pi_sg_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t
+        if manual_debug:
+            pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+        else:
+            pi_sg_plus_t = pi_hp_plus-1 if t == 0 else pi_sg_plus_t
+            pi_sg_minus_t = pi_hp_minus-1 if t == 0 else pi_sg_minus_t
         
         cpt_error_gamma = 0; cpt_balanced = 0;
         dico_state_mode_i = {}; dico_balanced_pl_i = {}
@@ -460,13 +476,19 @@ def determinist_balanced_player_game(arr_pl_M_T,
                                        pi_sg_plus_t, pi_sg_minus_t, 
                                        m_players, num_periods, 
                                        random_determinist, used_storage,
-                                       dico_stats_res, dbg)
+                                       dico_stats_res, manual_debug, dbg)
         
         dico_stats_res[t] = (round(cpt_balanced/m_players,2),
                          round(cpt_error_gamma/m_players,2), 
                          dico_state_mode_i)
         dico_stats_res[t] = {"balanced": dico_balanced_pl_i, 
-                             "gamma_i": dico_state_mode_i}    
+                             "gamma_i": dico_state_mode_i} 
+        
+        if manual_debug:
+            pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+            pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K #2 
+            pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
         
         # b0_ts, c0_ts of shape (NUM_PERIODS,)
         pi_sg_plus[t] = pi_sg_plus_t
@@ -539,6 +561,7 @@ def test_DETERMINIST_balanced_player_game():
     random_determinist = False ; 
     used_storage = True #False #True;
     path_to_save = "tests"
+    manual_debug = True # False #True
     
     fct_aux.N_DECIMALS = 3
     
@@ -560,7 +583,8 @@ def test_DETERMINIST_balanced_player_game():
                              scenario=scenario,
                              random_determinist=random_determinist,
                              used_storage=used_storage,
-                             path_to_save=path_to_save, dbg=False)
+                             path_to_save=path_to_save, 
+                             manual_debug=manual_debug, dbg=False)
     
     return arr_M_T_vars
 
