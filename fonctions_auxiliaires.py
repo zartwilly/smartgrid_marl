@@ -53,6 +53,13 @@ INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4,
 NON_PLAYING_PLAYERS = {"PLAY":1, "NOT_PLAY":0}
 ALGO_NAMES_BF = ["BEST-BRUTE-FORCE", "BAD-BRUTE-FORCE", "MIDDLE-BRUTE-FORCE"]
 
+# manual debug constants
+MANUEL_DBG_GAMMA_I = 5
+MANUEL_DBG_PI_SG_PLUS_T_K = 8
+MANUEL_DBG_PI_SG_MINUS_T_K = 10
+MANUEL_DBG_PI_0_MINUS_T_K = 2 
+MANUEL_DBG_PI_0_MINUS_T_K = 3
+
 #------------------------------------------------------------------------------
 #           definitions of class
 #------------------------------------------------------------------------------
