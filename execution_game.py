@@ -393,7 +393,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                            pi_hp_plus=None,
                                            pi_hp_minus=None,
                                            used_instances=True,
-                                           used_storage_det=True):
+                                           used_storage_det=True,
+                                           manual_debug=False):
     """
     execute algos by used generated instances if there exists or 
         by generated new instances
@@ -484,7 +485,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 prob_Ci=prob_Ci, 
                                 scenario=scenario,
                                 algo_name=algo,
-                                path_to_save=path_to_save, dbg=False)
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, dbg=False)
             elif algo == ALGOS[5]:
                 # BAD-BRUTE-FORCE
                 print("*** BAD-BRUTE-FORCE *** ")
@@ -503,7 +505,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 prob_Ci=prob_Ci, 
                                 scenario=scenario,
                                 algo_name=algo,
-                                path_to_save=path_to_save, dbg=False)
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, dbg=False)
             elif algo == ALGOS[4]:
                 # BEST-BRUTE-FORCE
                 print("*** BEST-BRUTE-FORCE *** ")
@@ -522,7 +525,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 prob_Ci=prob_Ci, 
                                 scenario=scenario,
                                 algo_name=algo,
-                                path_to_save=path_to_save, dbg=False)
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, dbg=False)
             elif algo == ALGOS[3]:
                 # RD-DETERMINIST
                 print("*** RD-DETERMINIST *** ")
@@ -543,7 +547,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                  scenario=scenario,
                                  random_determinist=random_determinist,
                                  used_storage=used_storage_det,
-                                 path_to_save=path_to_save, dbg=False)
+                                 path_to_save=path_to_save, 
+                                 manual_debug=manual_debug, dbg=False)
                 
             elif algo == ALGOS[2]:
                 # DETERMINIST
@@ -564,7 +569,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                  scenario=scenario,
                                  random_determinist=random_determinist,
                                  used_storage=used_storage_det,
-                                 path_to_save=path_to_save, dbg=False)
+                                 path_to_save=path_to_save, 
+                                 manual_debug=manual_debug, dbg=False)
                 
             elif algo == ALGOS[1]:
                 # LRI2
@@ -587,7 +593,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 probs_modes_states=probs_modes_states,
                                 scenario=scenario,
                                 utility_function_version=utility_function_version,
-                                path_to_save=path_to_save, dbg=False)
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, dbg=False)
                 
             elif algo == ALGOS[0]:
                 # LRI1
@@ -610,7 +617,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 probs_modes_states=probs_modes_states,
                                 scenario=scenario,
                                 utility_function_version=utility_function_version,
-                                path_to_save=path_to_save, dbg=False)
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, dbg=False)
         
     print("NB_EXECUTION cpt={}".format(cpt))
 
