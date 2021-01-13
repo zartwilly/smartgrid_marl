@@ -609,8 +609,8 @@ class Player:
                 Z = X + (Y-X)*res
                 
                 #print("res={}, Z={}, X={}, Y={}".format(res, Z, X, Y))
-                if (X>Z or Z>Y):
-                    print("X>Z>Y: {}".format( X>Z or Z>Y ))
+                # if (X>Z or Z>Y):
+                #     print("X>Z>Y: {}".format( X>Z or Z>Y ))
                 self.set_gamma_i(math.floor(Z))   
         else:
             self.set_gamma_i(np.inf) 
