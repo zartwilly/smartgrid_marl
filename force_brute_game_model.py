@@ -1040,28 +1040,6 @@ def test_brute_force_game(algo_name="BEST-BRUTE-FORCE", criteria_bf="Perf_t"):
                                  algo_name,
                                  path_to_save, manual_debug, 
                                  criteria_bf, dbg=False)
-    # if criteria_bf == "In_sg_Out_sg":
-    #     arr_pl_M_T_probCi_scen = bf_balanced_player_game_In_sg_Out_sg(
-    #                              arr_pl_M_T_probCi_scen.copy(),
-    #                              pi_hp_plus, 
-    #                              pi_hp_minus,
-    #                              m_players, 
-    #                              t_periods,
-    #                              prob_Ci, 
-    #                              scenario,
-    #                              algo_name,
-    #                              path_to_save, manual_debug, dbg=False)
-    # elif criteria_bf == "Perf_t":
-    #     arr_pl_M_T_probCi_scen = bf_balanced_player_game_perf_t(
-    #                              arr_pl_M_T_probCi_scen.copy(),
-    #                              pi_hp_plus, 
-    #                              pi_hp_minus,
-    #                              m_players, 
-    #                              t_periods,
-    #                              prob_Ci, 
-    #                              scenario,
-    #                              algo_name,
-    #                              path_to_save, manual_debug, dbg=False)
     
     return arr_pl_M_T_probCi_scen
 
