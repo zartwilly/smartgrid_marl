@@ -377,9 +377,9 @@ def bf_balanced_player_game(arr_pl_M_T,
         # max_min_moy_bf
         best_key_In_Out_sg = None
         if algo_name == fct_aux.ALGO_NAMES_BF[0]:              # BEST-BRUTE-FORCE
-            best_key_In_Out_sg = min(dico_mode_profs.keys())
-        elif algo_name == fct_aux.ALGO_NAMES_BF[1]:            # BAD-BRUTE-FORCE
             best_key_In_Out_sg = max(dico_mode_profs.keys())
+        elif algo_name == fct_aux.ALGO_NAMES_BF[1]:            # BAD-BRUTE-FORCE
+            best_key_In_Out_sg = min(dico_mode_profs.keys())
         elif algo_name == fct_aux.ALGO_NAMES_BF[2]:            # MIDDLE-BRUTE-FORCE
             mean_key_In_Out_sg  = np.mean(list(dico_mode_profs.keys()))
             if mean_key_In_Out_sg in dico_mode_profs.keys():
