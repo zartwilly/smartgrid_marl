@@ -1582,12 +1582,10 @@ def plot_Perf_t_all_states_for_scenarios(
         df_al[cols] = df_al[cols].apply(pd.to_numeric, 
                                         downcast='float', 
                                         errors='coerce')
-        
-        
-        #df_al.loc[:,ylabel] = np.sum(df_al['ben'] - df_al['cst'],axis=0)
-        df_al_k = df_al.groupby(by="k")[["pl_i", "ben", "cst"]]\
+                
+        df_al_k = df_al.groupby(by=["k","pl_i"])[cols]\
                     .aggregate(np.sum)\
-                    .apply(lambda x: x[1]-x[2], axis=1).reset_index()
+                    .apply(lambda x: x[0]-x[1], axis=1).reset_index()
         df_al_k.rename(columns={0:ylabel}, inplace=True)
         df_al_k = df_al_k.groupby("k")[ylabel].aggregate(np.sum).reset_index()  
         
