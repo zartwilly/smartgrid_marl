@@ -394,7 +394,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                            pi_hp_minus=None,
                                            used_instances=True,
                                            used_storage_det=True,
-                                           manual_debug=False):
+                                           manual_debug=False, 
+                                           criteria_bf="Perf_t"):
     """
     execute algos by used generated instances if there exists or 
         by generated new instances
@@ -486,7 +487,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 scenario=scenario,
                                 algo_name=algo,
                                 path_to_save=path_to_save, 
-                                manual_debug=manual_debug, dbg=False)
+                                manual_debug=manual_debug, 
+                                criteria_bf=criteria_bf, dbg=False)
             elif algo == ALGOS[5]:
                 # BAD-BRUTE-FORCE
                 print("*** BAD-BRUTE-FORCE *** ")
@@ -506,7 +508,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 scenario=scenario,
                                 algo_name=algo,
                                 path_to_save=path_to_save, 
-                                manual_debug=manual_debug, dbg=False)
+                                manual_debug=manual_debug, 
+                                criteria_bf=criteria_bf, dbg=False)
             elif algo == ALGOS[4]:
                 # BEST-BRUTE-FORCE
                 print("*** BEST-BRUTE-FORCE *** ")
@@ -526,7 +529,8 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 scenario=scenario,
                                 algo_name=algo,
                                 path_to_save=path_to_save, 
-                                manual_debug=manual_debug, dbg=False)
+                                manual_debug=manual_debug, 
+                                criteria_bf=criteria_bf, dbg=False)
             elif algo == ALGOS[3]:
                 # RD-DETERMINIST
                 print("*** RD-DETERMINIST *** ")
