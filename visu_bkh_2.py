@@ -1529,6 +1529,214 @@ def plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t):
 #
 ###############################################################################
 
+###############################################################################
+#
+#           affichage Perf_t pour chaque state  ---> debut
+#
+###############################################################################
+def plot_Perf_t_all_states_for_scenarios(
+                                df_pro_ra_pri_scen_st, 
+                                prob_Ci, rate, price, scenario, state_i, t):
+    """
+    plot the Perf_t at each learning step for all states 
+    considering all scenarios and all algorithms.
+    each figure is for one state, one scenario, one prob_Ci, one learning_rate 
+    and one price.
+    
+    Perf_t = \sum\limits_{1\leq i \leq N} ben_i-cst_i
+    
+    x-axis : one time t
+    y-axis : Perf_t
+    """
+    algos = df_pro_ra_pri_scen_st["algo"].unique()
+    
+    tup_legends = [] 
+    
+    px = figure(plot_height = int(HEIGHT*MULT_HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    
+    for algo in algos:
+        df_al = df_pro_ra_pri_scen_st[(df_pro_ra_pri_scen_st.algo == algo)]
+        
+        title = "mean of ben_i-cst_i for {},{} at t={} (prob_Ci={}, rate={}, price={})".format(
+                state_i, scenario, t, prob_Ci, rate, price)
+        xlabel = "k step of learning" 
+        ylabel = "Perf_t" #"ben_i-cst_i"
+        label = "{}".format(algo)
+        
+        px.title.text = title
+        px.xaxis.axis_label = xlabel
+        px.yaxis.axis_label = ylabel
+        TOOLS[7] = HoverTool(tooltips=[
+                            ("scenario", "@scenario"),
+                            ("algo", "@algo"),
+                            ("k", "@k"),
+                            (ylabel, "$y")
+                            ]
+                        )
+        px.tools = TOOLS
+        
+        cols = ['ben','cst']
+        # TODO lauch warning See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy self[k1] = value[k2]
+        df_al[cols] = df_al[cols].apply(pd.to_numeric, 
+                                        downcast='float', 
+                                        errors='coerce')
+        
+        
+        #df_al.loc[:,ylabel] = np.sum(df_al['ben'] - df_al['cst'],axis=0)
+        df_al_k = df_al.groupby(by="k")[["pl_i", "ben", "cst"]]\
+                    .aggregate(np.sum)\
+                    .apply(lambda x: x[1]-x[2], axis=1).reset_index()
+        df_al_k.rename(columns={0:ylabel}, inplace=True)
+        df_al_k = df_al_k.groupby("k")[ylabel].aggregate(np.sum).reset_index()  
+        
+        df_al_k.loc[:,"scenario"] = scenario
+        df_al_k.loc[:,"algo"] = algo
+        df_al_k.loc[:,"t"] = t
+        source = ColumnDataSource(data = df_al_k)
+
+        ind_color = 0
+        if algo == "LRI1":
+            ind_color = 1 #7
+        elif algo == "LRI2":
+            ind_color = 2 #7
+        elif algo == "DETERMINIST":
+            ind_color = 3 #7
+        elif algo == "RD-DETERMINIST":
+            ind_color = 4 #7
+        elif algo == "BEST-BRUTE-FORCE":
+            ind_color = 5 #7
+        elif algo == "BAD-BRUTE-FORCE":
+            ind_color = 6 #7
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            ind_color = 7 #7
+            
+        r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
+                line_width=2, color=COLORS[ind_color], 
+                line_dash=[0,0])
+        
+        nb_k_steps = len(list(df_al_k['k'].unique()))
+        interval = int(nb_k_steps*10/250)
+        print(".... nb_k_steps={}, interval={} .... ".format(nb_k_steps, interval))
+        ls = None
+        if nb_k_steps > interval and interval > 0:
+            ls = range(0,nb_k_steps,interval)
+        if nb_k_steps > interval and interval <= 0:
+            ls = range(0, nb_k_steps)
+        else:
+            ls = range(0, nb_k_steps)
+        # ls = range(0,nb_k_steps,interval) \
+        #             if nb_k_steps < interval \
+        #             else range(0, nb_k_steps) 
+        # ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        if int(nb_k_steps*10/250) > 0:
+            ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        else:
+            ls = range(0,nb_k_steps,1)
+        df_al_slice = df_al[df_al.index.isin(ls)]
+        source_slice = ColumnDataSource(data = df_al_slice)
+        
+        if algo == "LRI1":
+            ind_color = 1
+            r2 = px.asterisk(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "LRI2":
+            ind_color = 2
+            r2 = px.circle(x="k", y=ylabel, size=7, source=source, 
+                      color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "DETERMINIST":
+            ind_color = 3
+            r2 = px.square(x="k", y=ylabel, size=7, source=source, 
+                      color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "RD-DETERMINIST":
+            ind_color = 4
+            r2 = px.triangle(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "BEST-BRUTE-FORCE":
+            r2 = px.diamond(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "BAD-BRUTE-FORCE":
+            r2 = px.diamond_cross(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            r2 = px.diamond_dot(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        
+    legend = Legend(items= tup_legends, location="center")
+    px.legend.label_text_font_size = "8px"
+    px.legend.click_policy="hide"
+    px.add_layout(legend, 'right') 
+
+    return px               
+
+def plot_Perf_t_players_all_states_for_scenarios(df_ben_cst_M_T_K, t):
+    """
+    plot the Perf_t of players at each learning step k for all prob_Ci, price, 
+    learning_rate for any state
+    
+    Perf_t = \sum\limits_{1\leq i \leq N} ben_i-cst_i
+    """
+    prob_Cis = df_ben_cst_M_T_K["prob_Ci"].unique()
+    rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
+    prices = df_ben_cst_M_T_K["prices"].unique()
+    states = df_ben_cst_M_T_K["state_i"].unique()
+    scenarios = df_ben_cst_M_T_K["scenario"].unique()
+    
+    dico_pxs = dict()
+    cpt = 0
+    for prob_Ci, rate, price, scenario, state_i \
+        in it.product(prob_Cis, rates,prices, scenarios, states):
+        
+        mask_pro_ra_pri_scen_st = (df_ben_cst_M_T_K.prob_Ci == prob_Ci) \
+                                    & ((df_ben_cst_M_T_K.rate == rate) 
+                                         | (df_ben_cst_M_T_K.rate == 0)) \
+                                    & (df_ben_cst_M_T_K.prices == price) \
+                                    & (df_ben_cst_M_T_K.t == t) \
+                                    & (df_ben_cst_M_T_K.scenario == scenario) \
+                                    & (df_ben_cst_M_T_K.state_i == state_i)
+        df_pro_ra_pri_scen_st = df_ben_cst_M_T_K[mask_pro_ra_pri_scen_st].copy()
+        
+        px_scen_st = plot_Perf_t_all_states_for_scenarios(
+                                df_pro_ra_pri_scen_st, 
+                                prob_Ci, rate, price, scenario, state_i, t)
+        # return px_scen_st
+        px_scen_st.legend.click_policy="hide"
+        
+        if (prob_Ci, rate, price, state_i) not in dico_pxs.keys():
+            dico_pxs[(prob_Ci, rate, price, state_i)] \
+                = [px_scen_st]
+        else:
+            dico_pxs[(prob_Ci, rate, price, state_i)].append(px_scen_st)
+        cpt += 1                            
+        
+    # aggregate by state_i i.e each state_i is on new column.
+    col_px_scen_sts = []
+    for key, px_scen_sts in dico_pxs.items():
+        # col_select = column(select_scenario, select_algo)
+        row_px_scens = row(px_scen_sts)
+        col_px_scen_sts.append(row_px_scens)
+    col_px_scen_sts=column(children=col_px_scen_sts, 
+                           sizing_mode='stretch_both')  
+    #show(col_px_scen_sts)
+        
+    return  col_px_scen_sts 
+###############################################################################
+#
+#           affichage Perf_t pour chaque state  ---> fin
+#
+###############################################################################
 
 ###############################################################################
 #
@@ -2384,6 +2592,8 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
                         NAME_RESULT_SHOW_VARS):
     
     col_pxs_in_out = plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t)
+    col_pxs_Pref_t = plot_Perf_t_players_all_states_for_scenarios(
+                        df_ben_cst_M_T_K, t)
     col_pxs_ben_cst = plot_mean_ben_cst_players_all_states_for_scenarios(
                         df_ben_cst_M_T_K, t)
     col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
@@ -2394,6 +2604,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
     
     tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
     tab_bencst=Panel(child=col_pxs_ben_cst, title="mean(ben-cst)")
+    tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t")
     tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
     tab_sts=Panel(child=col_px_scen_sts, title="number players")
     tab_mode_S1S2_nbplayers=Panel(child=col_px_scen_mode_S1S2_nbplayers, 
@@ -2401,7 +2612,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
     tab_playing=Panel(child=col_playing_players, 
                   title="number players playing/not_playing")
     
-    tabs = Tabs(tabs= [tab_inout, tab_bencst, tab_S1S2, tab_sts, 
+    tabs = Tabs(tabs= [tab_inout, tab_bencst, tab_Pref_t, tab_S1S2, tab_sts, 
                         tab_mode_S1S2_nbplayers, tab_playing])
     
     
@@ -2450,7 +2661,7 @@ if __name__ == "__main__":
     name_simu = "simu_1012_2102"; k_steps_args = 10
     
     if debug:
-        name_simu = "simu_DDMM_HHMM"; k_steps_args = 50
+        name_simu = "simu_DDMM_HHMM"; k_steps_args = 250
     else:
         name_simu = "simu_2306_2206"; k_steps_args = 1000
         
@@ -2490,6 +2701,9 @@ if __name__ == "__main__":
     name_dir = os.path.join("tests", name_simu)
     group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir, 
                         NAME_RESULT_SHOW_VARS)
+    
+    # debug
+    #df_al = plot_Perf_t_players_all_states_for_scenarios(df_ben_cst_M_T_K, t)
     
     
     print('runtime = {}'.format(time.time()-ti))
