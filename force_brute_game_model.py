@@ -19,90 +19,90 @@ from datetime import datetime
 #                       definition of functions --> debut
 #
 #------------------------------------------------------------------------------
-def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
-    """
-    after remarking that some players have 2 states during the game, 
-    I decide to write this function to set uniformly the players' state for all
-    periods and all learning step
+# def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
+#     """
+#     after remarking that some players have 2 states during the game, 
+#     I decide to write this function to set uniformly the players' state for all
+#     periods and all learning step
 
-    Parameters
-    ----------
-    arr_pl_M_T_K_vars : TYPE, optional
-        DESCRIPTION. The default is None.
-    t : TYPE, optional
-        DESCRIPTION. The default is 0.
-    k : TYPE, optional
-        DESCRIPTION. The default is 0.
+#     Parameters
+#     ----------
+#     arr_pl_M_T_K_vars : TYPE, optional
+#         DESCRIPTION. The default is None.
+#     t : TYPE, optional
+#         DESCRIPTION. The default is 0.
+#     k : TYPE, optional
+#         DESCRIPTION. The default is 0.
 
-    Returns
-    -------
-    None.
+#     Returns
+#     -------
+#     None.
 
-    """
+#     """
 
-    m_players = arr_pl_M_T_K_vars.shape[0]
-    possibles_modes = list()
+#     m_players = arr_pl_M_T_K_vars.shape[0]
+#     possibles_modes = list()
     
-    arr_pl_vars = None
-    if len(arr_pl_M_T_K_vars.shape) == 3:
-        arr_pl_vars = arr_pl_M_T_K_vars
-        for num_pl_i in range(0, m_players):
-            Ci = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]], 
-                       fct_aux.N_DECIMALS)
-            Pi = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]], 
-                       fct_aux.N_DECIMALS)
-            Si = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Si"]], 
-                       fct_aux.N_DECIMALS)
-            Si_max = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Si_max"]],
-                        fct_aux.N_DECIMALS)
-            gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
-            pl_i = None
-            pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
-                                prod_i, cons_i, r_i, state_i)
+#     arr_pl_vars = None
+#     if len(arr_pl_M_T_K_vars.shape) == 3:
+#         arr_pl_vars = arr_pl_M_T_K_vars
+#         for num_pl_i in range(0, m_players):
+#             Ci = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Ci"]], 
+#                        fct_aux.N_DECIMALS)
+#             Pi = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Pi"]], 
+#                        fct_aux.N_DECIMALS)
+#             Si = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Si"]], 
+#                        fct_aux.N_DECIMALS)
+#             Si_max = round(arr_pl_vars[num_pl_i, t, fct_aux.INDEX_ATTRS["Si_max"]],
+#                         fct_aux.N_DECIMALS)
+#             gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
+#             pl_i = None
+#             pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+#                                 prod_i, cons_i, r_i, state_i)
             
-            # get mode_i, state_i and update R_i_old
-            state_i = pl_i.find_out_state_i()
-            col = "state_i"
-            arr_pl_vars[num_pl_i,:,fct_aux.INDEX_ATTRS[col]] = state_i
-            if state_i == "state1":
-                possibles_modes.append(fct_aux.STATE1_STRATS)
-            elif state_i == "state2":
-                possibles_modes.append(fct_aux.STATE2_STRATS)
-            elif state_i == "state3":
-                possibles_modes.append(fct_aux.STATE3_STRATS)
-            # print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+#             # get mode_i, state_i and update R_i_old
+#             state_i = pl_i.find_out_state_i()
+#             col = "state_i"
+#             arr_pl_vars[num_pl_i,:,fct_aux.INDEX_ATTRS[col]] = state_i
+#             if state_i == "state1":
+#                 possibles_modes.append(fct_aux.STATE1_STRATS)
+#             elif state_i == "state2":
+#                 possibles_modes.append(fct_aux.STATE2_STRATS)
+#             elif state_i == "state3":
+#                 possibles_modes.append(fct_aux.STATE3_STRATS)
+#             # print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
                 
-    elif len(arr_pl_M_T_K_vars.shape) == 4:
-        arr_pl_vars = arr_pl_M_T_K_vars
-        for num_pl_i in range(0, m_players):
-            Ci = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Ci"]], 
-                       fct_aux.N_DECIMALS)
-            Pi = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Pi"]], 
-                       fct_aux.N_DECIMALS)
-            Si = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Si"]], 
-                       fct_aux.N_DECIMALS)
-            Si_max = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Si_max"]],
-                        fct_aux.N_DECIMALS)
-            gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
-            pl_i = None
-            pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
-                                prod_i, cons_i, r_i, state_i)
+#     elif len(arr_pl_M_T_K_vars.shape) == 4:
+#         arr_pl_vars = arr_pl_M_T_K_vars
+#         for num_pl_i in range(0, m_players):
+#             Ci = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Ci"]], 
+#                        fct_aux.N_DECIMALS)
+#             Pi = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Pi"]], 
+#                        fct_aux.N_DECIMALS)
+#             Si = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Si"]], 
+#                        fct_aux.N_DECIMALS)
+#             Si_max = round(arr_pl_vars[num_pl_i, t, k, fct_aux.INDEX_ATTRS["Si_max"]],
+#                         fct_aux.N_DECIMALS)
+#             gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
+#             pl_i = None
+#             pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+#                                 prod_i, cons_i, r_i, state_i)
             
-            # get mode_i, state_i and update R_i_old
-            state_i = pl_i.find_out_state_i()
-            col = "state_i"
-            arr_pl_vars[num_pl_i,:,:,fct_aux.INDEX_ATTRS[col]] = state_i
-            if state_i == "state1":
-                possibles_modes.append(fct_aux.STATE1_STRATS)
-            elif state_i == "state2":
-                possibles_modes.append(fct_aux.STATE2_STRATS)
-            elif state_i == "state3":
-                possibles_modes.append(fct_aux.STATE3_STRATS)
-            # print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
-    else:
-        print("STATE_i: NOTHING TO UPDATE.")
+#             # get mode_i, state_i and update R_i_old
+#             state_i = pl_i.find_out_state_i()
+#             col = "state_i"
+#             arr_pl_vars[num_pl_i,:,:,fct_aux.INDEX_ATTRS[col]] = state_i
+#             if state_i == "state1":
+#                 possibles_modes.append(fct_aux.STATE1_STRATS)
+#             elif state_i == "state2":
+#                 possibles_modes.append(fct_aux.STATE2_STRATS)
+#             elif state_i == "state3":
+#                 possibles_modes.append(fct_aux.STATE3_STRATS)
+#             # print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+#     else:
+#         print("STATE_i: NOTHING TO UPDATE.")
         
-    return arr_pl_vars, possibles_modes
+#     return arr_pl_vars, possibles_modes
 
 def compute_prices_bf(arr_pl_M_T_vars, t,
                       pi_sg_plus_t, pi_sg_minus_t,
@@ -381,7 +381,7 @@ def bf_balanced_player_game_In_sg_Out_sg(arr_pl_M_T,
     # ____      game beginning for all t_period ---> debut      _____ 
     dico_stats_res={}
     
-    arr_pl_M_T_vars, possibles_modes = reupdate_state_players(
+    arr_pl_M_T_vars, possibles_modes = fct_aux.reupdate_state_players(
                                         arr_pl_M_T_vars.copy(), 0, 0)
     
     print("m_players={}, possibles_modes={}".format(m_players, 
@@ -687,7 +687,7 @@ def bf_balanced_player_game_perf_t(arr_pl_M_T,
     # ____      game beginning for all t_period ---> debut      _____ 
     dico_stats_res={}
     
-    arr_pl_M_T_vars, possibles_modes = reupdate_state_players(
+    arr_pl_M_T_vars, possibles_modes = fct_aux.reupdate_state_players(
                                         arr_pl_M_T_vars.copy(), 0, 0)
     
     print("m_players={}, possibles_modes={}".format(m_players, 
