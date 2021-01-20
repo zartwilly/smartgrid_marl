@@ -185,6 +185,73 @@ def compute_energy_unit_price(pi_0_plus, pi_0_minus,
    
     return round(b0, N_DECIMALS), round(c0, N_DECIMALS)
 
+def compute_prices_br(arr_pl_M_T_K_vars, t, k,
+                   pi_sg_plus_t_minus_1_k, pi_sg_minus_t_minus_1_k,
+                   pi_hp_plus, pi_hp_minus, manual_debug, dbg):
+    """
+    compute the best response prices' and benefits/costs variables: 
+        ben_i, cst_i
+        pi_sg_plus_t_k, pi_sg_minus_t_k
+        pi_0_plus_t_k, pi_0_minus_t_k
+    """
+    pi_sg_plus_t_k_new, pi_sg_minus_t_k_new \
+        = determine_new_pricing_sg(
+            arr_pl_M_T_K_vars[:,:,k,:], 
+            pi_hp_plus, 
+            pi_hp_minus, 
+            t, 
+            dbg=dbg)
+    print("pi_sg_plus_{}_{}_new={}, pi_sg_minus_{}_{}_new={}".format(
+        t, k, pi_sg_plus_t_k_new, t, k, pi_sg_minus_t_k_new)) if dbg else None
+          
+    pi_sg_plus_t_k = pi_sg_plus_t_minus_1_k \
+                            if pi_sg_plus_t_k_new is np.nan \
+                            else pi_sg_plus_t_k_new
+    pi_sg_minus_t_k = pi_sg_minus_t_minus_1_k \
+                            if pi_sg_minus_t_k_new is np.nan \
+                            else pi_sg_minus_t_k_new
+    pi_0_plus_t_k = round(pi_sg_minus_t_minus_1_k*pi_hp_plus/pi_hp_minus, 
+                          N_DECIMALS)
+    pi_0_minus_t_k = pi_sg_minus_t_minus_1_k
+    
+    if manual_debug:
+        pi_sg_plus_t_k = MANUEL_DBG_PI_SG_PLUS_T_K #8
+        pi_sg_minus_t_k = MANUEL_DBG_PI_SG_MINUS_T_K #10
+        pi_0_plus_t_k = MANUEL_DBG_PI_0_MINUS_T_K #2 
+        pi_0_minus_t_k = MANUEL_DBG_PI_0_MINUS_T_K #3
+        
+    print("pi_sg_minus_t_minus_1_k={}, pi_0_plus_t_k={}, pi_0_minus_t_k={},"\
+          .format(pi_sg_minus_t_minus_1_k, pi_0_plus_t_k, pi_0_minus_t_k)) \
+        if dbg else None
+    print("pi_sg_plus_t_k={}, pi_sg_minus_t_k={} \n"\
+          .format(pi_sg_plus_t_k, pi_sg_minus_t_k)) \
+        if dbg else None
+    
+    ## compute prices inside smart grids
+    # compute In_sg, Out_sg
+    In_sg, Out_sg = compute_prod_cons_SG(
+                        arr_pl_M_T_K_vars[:,:,k,:], t)
+    # compute prices of an energy unit price for cost and benefit players
+    b0_t_k, c0_t_k = compute_energy_unit_price(
+                        pi_0_plus_t_k, pi_0_minus_t_k, 
+                        pi_hp_plus, pi_hp_minus,
+                        In_sg, Out_sg) 
+    
+    # compute ben, cst of shapes (M_PLAYERS,) 
+    # compute cost (csts) and benefit (bens) players by energy exchanged.
+    gamma_is = arr_pl_M_T_K_vars[:, t, k, INDEX_ATTRS["gamma_i"]]
+    bens_t_k, csts_t_k = compute_utility_players(
+                            arr_pl_M_T_K_vars[:,t,:,:], 
+                            gamma_is, 
+                            k, 
+                            b0_t_k, 
+                            c0_t_k)
+    
+    return pi_sg_plus_t_k, pi_sg_minus_t_k, \
+            pi_0_plus_t_k, pi_0_minus_t_k, \
+            b0_t_k, c0_t_k, \
+            bens_t_k, csts_t_k 
+
 def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
     diff_energy_cons_t = 0
     diff_energy_prod_t = 0
@@ -586,7 +653,7 @@ def balanced_player(pl_i, thres=0.1, dbg=False):
 
 # __________    look for whether pli is balanced or not --> fin  ____________
 
-def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
+def reupdate_state_players_OLD(arr_pl_M_T_K_vars, t=0, k=0):
     """
     after remarking that some players have 2 states during the game, 
     I decide to write this function to set uniformly the players' state for all
@@ -651,6 +718,92 @@ def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
     #     print("num_pl_i={} res={}".format(num_pl_i, res))
         
     return arr_pl_M_T_K_vars
+
+def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
+    """
+    after remarking that some players have 2 states during the game, 
+    I decide to write this function to set uniformly the players' state for all
+    periods and all learning step
+
+    Parameters
+    ----------
+    arr_pl_M_T_K_vars : TYPE, optional
+        DESCRIPTION. The default is None.
+    t : TYPE, optional
+        DESCRIPTION. The default is 0.
+    k : TYPE, optional
+        DESCRIPTION. The default is 0.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    m_players = arr_pl_M_T_K_vars.shape[0]
+    possibles_modes = list()
+    
+    arr_pl_vars = None
+    if len(arr_pl_M_T_K_vars.shape) == 3:
+        arr_pl_vars = arr_pl_M_T_K_vars
+        for num_pl_i in range(0, m_players):
+            Ci = round(arr_pl_vars[num_pl_i, t, INDEX_ATTRS["Ci"]], 
+                       N_DECIMALS)
+            Pi = round(arr_pl_vars[num_pl_i, t, INDEX_ATTRS["Pi"]], 
+                       N_DECIMALS)
+            Si = round(arr_pl_vars[num_pl_i, t, INDEX_ATTRS["Si"]], 
+                       N_DECIMALS)
+            Si_max = round(arr_pl_vars[num_pl_i, t, INDEX_ATTRS["Si_max"]],
+                           N_DECIMALS)
+            gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
+            pl_i = None
+            pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                                prod_i, cons_i, r_i, state_i)
+            
+            # get mode_i, state_i and update R_i_old
+            state_i = pl_i.find_out_state_i()
+            col = "state_i"
+            arr_pl_vars[num_pl_i,:,INDEX_ATTRS[col]] = state_i
+            if state_i == "state1":
+                possibles_modes.append(STATE1_STRATS)
+            elif state_i == "state2":
+                possibles_modes.append(STATE2_STRATS)
+            elif state_i == "state3":
+                possibles_modes.append(STATE3_STRATS)
+            # print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+                
+    elif len(arr_pl_M_T_K_vars.shape) == 4:
+        arr_pl_vars = arr_pl_M_T_K_vars
+        for num_pl_i in range(0, m_players):
+            Ci = round(arr_pl_vars[num_pl_i, t, k, INDEX_ATTRS["Ci"]], 
+                       N_DECIMALS)
+            Pi = round(arr_pl_vars[num_pl_i, t, k, INDEX_ATTRS["Pi"]], 
+                       N_DECIMALS)
+            Si = round(arr_pl_vars[num_pl_i, t, k, INDEX_ATTRS["Si"]], 
+                       N_DECIMALS)
+            Si_max = round(arr_pl_vars[num_pl_i, t, k, INDEX_ATTRS["Si_max"]],
+                        N_DECIMALS)
+            gamma_i, prod_i, cons_i, r_i, state_i = 0, 0, 0, 0, ""
+            pl_i = None
+            pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                                prod_i, cons_i, r_i, state_i)
+            
+            # get mode_i, state_i and update R_i_old
+            state_i = pl_i.find_out_state_i()
+            col = "state_i"
+            arr_pl_vars[num_pl_i,:,:,INDEX_ATTRS[col]] = state_i
+            if state_i == "state1":
+                possibles_modes.append(STATE1_STRATS)
+            elif state_i == "state2":
+                possibles_modes.append(STATE2_STRATS)
+            elif state_i == "state3":
+                possibles_modes.append(STATE3_STRATS)
+            # print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+    else:
+        print("STATE_i: NOTHING TO UPDATE.")
+        
+    return arr_pl_vars, possibles_modes
+
 
 def compute_real_money_SG(arr_pls_M_T, pi_sg_plus_s, pi_sg_minus_s, 
                           INDEX_ATTRS):
