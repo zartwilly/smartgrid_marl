@@ -20,6 +20,7 @@ import game_model_period_T as gmpT
 import deterministic_game_model as detGameModel
 import lri_game_model as lriGameModel
 import force_brute_game_model as bfGameModel
+import detection_nash_game_model as nashGameModel
 import visu_bkh as bkh
 
 from datetime import datetime
@@ -414,7 +415,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
     
     # list of algos
     ALGOS = ["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST"]\
-            + fct_aux.ALGO_NAMES_BF
+            + fct_aux.ALGO_NAMES_BF + fct_aux.ALGO_NAMES_NASH
     algos = ALGOS if algos is None \
                     else algos
     # list of pi_hp_plus, pi_hp_minus
@@ -468,7 +469,70 @@ def execute_algos_used_Generated_instances(game_dir='tests',
             cpt += 1
             msg = "pi_hp_plus_"+str(pi_hp_plus_elt)\
                        +"_pi_hp_minus_"+str(pi_hp_minus_elt)
-            if algo == ALGOS[6]:
+            if algo == fct_aux.ALGO_NAMES_NASH[2]:
+                # MIDDLE-NASH
+                print("*** MIDDLE-NASH *** ")
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = nashGameModel.nash_balanced_player_game_perf_t(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                t_periods=num_periods,
+                                prob_Ci=prob_Ci, 
+                                scenario=scenario,
+                                algo_name=algo,
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, 
+                                dbg=False)
+            elif algo == fct_aux.ALGO_NAMES_NASH[1]:
+                # BAD-NASH
+                print("*** BAD-NASH *** ")
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = nashGameModel.nash_balanced_player_game_perf_t(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                t_periods=num_periods,
+                                prob_Ci=prob_Ci, 
+                                scenario=scenario,
+                                algo_name=algo,
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, 
+                                dbg=False)
+            elif algo == fct_aux.ALGO_NAMES_NASH[0]:
+                # BEST-NASH
+                print("*** BEST-NASH *** ")
+                
+                path_to_save = os.path.join(name_dir, "simu_"+date_hhmm, 
+                                    scenario, str(prob_Ci), 
+                                    msg, algo
+                                    )
+                Path(path_to_save).mkdir(parents=True, exist_ok=True)
+                arr_M_T_vars = nashGameModel.nash_balanced_player_game_perf_t(
+                                arr_pl_M_T_probCi_scen.copy(),
+                                pi_hp_plus=pi_hp_plus_elt, 
+                                pi_hp_minus=pi_hp_minus_elt,
+                                m_players=m_players, 
+                                t_periods=num_periods,
+                                prob_Ci=prob_Ci, 
+                                scenario=scenario,
+                                algo_name=algo,
+                                path_to_save=path_to_save, 
+                                manual_debug=manual_debug, 
+                                dbg=False)
+            if algo == fct_aux.ALGO_NAMES_BF[2]: #ALGOS[6]:
                 # MIDDLE-BRUTE-FORCE
                 print("*** MIDDLE-BRUTE-FORCE *** ")
                 
@@ -489,7 +553,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 path_to_save=path_to_save, 
                                 manual_debug=manual_debug, 
                                 criteria_bf=criteria_bf, dbg=False)
-            elif algo == ALGOS[5]:
+            elif algo == fct_aux.ALGO_NAMES_BF[1]:  #ALGOS[5]:
                 # BAD-BRUTE-FORCE
                 print("*** BAD-BRUTE-FORCE *** ")
                 
@@ -510,7 +574,7 @@ def execute_algos_used_Generated_instances(game_dir='tests',
                                 path_to_save=path_to_save, 
                                 manual_debug=manual_debug, 
                                 criteria_bf=criteria_bf, dbg=False)
-            elif algo == ALGOS[4]:
+            elif algo == fct_aux.ALGO_NAMES_BF[0]: #ALGOS[4]:
                 # BEST-BRUTE-FORCE
                 print("*** BEST-BRUTE-FORCE *** ")
                 
