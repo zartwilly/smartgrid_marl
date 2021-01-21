@@ -46,6 +46,7 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, arr_pl_M_T_vars, t):
     nash_profils = list()
     
     for key_modes_prof, dico_Vi_Pref_t in dico_profs_Vis_Perf_t.items():
+        cpt_players_stables = 0
         for num_pl_i, mode_i in enumerate(key_modes_prof):                      # 0 <= num_pl_i < m_player            
             Vi = dico_Vi_Pref_t[RACINE_PLAYER+"_"+str(num_pl_i)]
             state_i = arr_pl_M_T_vars[num_pl_i, t, 
@@ -78,7 +79,10 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, arr_pl_M_T_vars, t):
             Vi_bar = dico_profs_Vis_Perf_t[new_key_modes_prof]\
                                           [RACINE_PLAYER+"_"+str(num_pl_i)]
             if Vi >= Vi_bar:
-                nash_profils.append(key_modes_prof)
+                cpt_players_stables += 1
+        
+        if cpt_players_stables == len(key_modes_prof):
+            nash_profils.append(key_modes_prof)
                 
     return nash_profils
 
