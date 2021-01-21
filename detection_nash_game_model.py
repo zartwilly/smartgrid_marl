@@ -82,11 +82,7 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, arr_pl_M_T_vars, t):
                 
     return nash_profils
 
-def delete_duplicate_profils(nash_profils):
-    """
-    delete all occurences of the profiles 
-    """
-    return nash_profils
+
 #------------------------------------------------------------------------------
 #                       definition of functions --> fin
 #
@@ -238,7 +234,10 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T,
                         dico_profs_Vis_Perf_t,
                         arr_pl_M_T_vars, 
                         t)
-        nash_profils = delete_duplicate_profils(nash_profils)
+        # delete all occurences of the profiles 
+        print("----> avant supp doublons nash_profils={}".format(len(nash_profils)))
+        nash_profils = set(nash_profils)
+        print("----> apres supp doublons nash_profils={}".format(len(nash_profils)))
         
         # create dico of nash profils with key is Pref_t and value is profil
         dico_Perft_nashProfil = dict()
