@@ -460,7 +460,8 @@ class Player:
         float value if state != None or np.nan if state == None.
 
         """
-        if self.state_i ==  "state1":
+        
+        if self.state_i ==  "state1":                                           # Deficit
             self.prod_i = 0
             self.cons_i = (self.mode_i == "CONS+")*(self.Ci - (self.Pi + self.Si)) \
                             + (self.mode_i == "CONS-")*(self.Ci - self.Pi)
@@ -469,28 +470,23 @@ class Player:
             self.Si = (self.mode_i == "CONS+")*0 \
                         + (self.mode_i == "CONS-")*self.Si
             R_i = self.Si_max - self.Si
-            self.r_i = min(R_i, self.Ci - self.Pi) \
-                        if self.mode_i == "CONS-" else 0
             
-        elif self.state_i ==  "state2":
+            
+        elif self.state_i ==  "state2":                                         # Self
             self.prod_i = 0
             self.cons_i = (self.mode_i == "DIS")*0 \
                             + (self.mode_i == "CONS-")*(self.Ci - self.Pi)
-            #TODO demander si le r_i est mis avant ou apres la mise a jour de S_i
-            self.r_i = self.Si - (self.Ci - self.Pi) \
-                        if self.mode_i == "DIS" else 0
             self.Si_old = (self.mode_i == "DIS")*self.Si \
                             + (self.mode_i == "CONS-")*self.Si_old
             self.Si = (self.mode_i == "DIS")*(
                         max(0,self.Si - (self.Ci - self.Pi))) \
                         + (self.mode_i == "CONS-")*self.Si
     
-        elif self.state_i ==  "state3":
+        elif self.state_i ==  "state3":                                         # Surplus
             self.cons_i = 0
             if self.Pi == self.Ci:
                 self.Si = self.Si
                 self.Si_old = self.Si_old
-                self.r_i = self.Si_max - self.Si
                 self.prod_i = 0
             else:
                 R_i = self.Si_max - self.Si
@@ -499,8 +495,6 @@ class Player:
                 self.Si = (self.mode_i == "DIS") \
                                 *(min(self.Si_max, self.Si + (self.Pi - self.Ci))) \
                             + (self.mode_i == "PROD")*self.Si
-                self.r_i = min(R_i, self.Pi - self.Ci) \
-                            if self.mode_i == "DIS" else 0
                 self.prod_i = (self.mode_i == "PROD")*(self.Pi - self.Ci)\
                                + (self.mode_i == "DIS") \
                                    *fct_aux.fct_positive(sum([self.Pi]), 
@@ -511,6 +505,19 @@ class Player:
             self.prod_i = np.nan
             self.cons_i = np.nan
             self.r_i = np.nan
+        
+        # compute preserved stock r_i
+        if self.mode_i == "CONS+":
+            self.r_i = 0
+        elif self.mode_i == "CONS-":
+            self.r_i = self.Si
+        elif self.mode_i == "PROD":
+            self.r_i = self.Si
+        elif self.mode_i == "DIS" and self.state_i ==  "state2":
+            self.r_i = self.Si - (self.Ci - self.Pi)
+        elif self.mode_i == "DIS" and self.state_i ==  "state3":
+            self.r_i = min(self.Si_max, self.Si + self.Pi - self.Ci)
+        
         
     def select_storage_politic(self, Ci_t_plus_1, Pi_t_plus_1, 
                                pi_0_plus, pi_0_minus, 
