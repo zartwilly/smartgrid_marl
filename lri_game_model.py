@@ -145,6 +145,10 @@ def utility_function_version1(arr_pl_M_T_K_vars,
         False if min(bg_i) not equal to max(bg_i)
 
     """
+    # compute stock maximal
+    stock_max = np.max(arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["Si_plus"]] 
+                       * arr_pl_M_T_K_vars[:,t,k,fct_aux.INDEX_ATTRS["gamma_i"]],
+                       axis=0)
     # compute bg_i
     indices_playing_players_pl_is \
         = [num_pl_i for num_pl_i in range(0, arr_pl_M_T_K_vars.shape[0]) 
@@ -166,7 +170,7 @@ def utility_function_version1(arr_pl_M_T_K_vars,
                 t, k,
                 fct_aux.INDEX_ATTRS["bg_i"]] \
                 = fct_aux.fct_positive(csts_t_k[num_pl_i] , 
-                                       bens_t_k[num_pl_i])
+                                       bens_t_k[num_pl_i]) + stock_max
             #print("pl_{}, prod={}, cons={}, r_i={}, gamma_i={}, R_i_old={}, Si_old={}, Si={}, Si_max={}, cst={}, ben={}".format(num_pl_i, round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["prod_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["cons_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["r_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["gamma_i"]],3), round(arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["R_i_old"]],3), arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_old"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si"]], arr_pl_M_T_K_vars[num_pl_i, t, k,fct_aux.INDEX_ATTRS["Si_max"]], csts_t_k[num_pl_i], bens_t_k[num_pl_i]))
     
     # bg_min_i_t_0_to_k, bg_max_i_t_0_to_k
