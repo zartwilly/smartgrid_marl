@@ -383,6 +383,108 @@ def save_instances_games(arr_pl_M_T, name_file_arr_pl, path_to_save):
             arr_pl_M_T)
     
 
+# __________        resume game on excel file :   debut          ______________
+def resume_game_on_excel_file(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+                              t, m_players, t_periods, k_steps, 
+                              scenario="scenario1", learning_rate=0.1, 
+                              prob_Ci = 0.5):
+    """
+    resume_game_on_excel_file(df_arr_M_T_Ks, 
+                              t = t, 
+                              m_players=m_players, 
+                              t_periods=t_periods, 
+                              k_steps=k_steps,
+                              scenario=scenario, 
+                              learning_rate=learning_rate, 
+                              prob_Ci=prob_Ci)
+    """
+   
+    print('shape: df_arr_M_T_Ks = {} '.format(df_arr_M_T_Ks.shape))
+    df_arr_M_T_Ks["pl_i"] = df_arr_M_T_Ks['pl_i'].astype(float);
+    df_ben_cst_M_T_K["pl_i"] = df_ben_cst_M_T_K['pl_i'].astype(float);
+    
+
+    learning_algos = ["LRI1","LRI2"]
+    algo_names = learning_algos\
+                    +[ALGO_NAMES_BF[0]] \
+                    + [ALGO_NAMES_NASH[0]] 
+    
+    
+    # initial array from INSTANCES_GAMES
+    path_to_variable = os.path.join(
+                        "tests", "INSTANCES_GAMES", scenario, str(prob_Ci)
+                        )
+    arr_name = "arr_pl_M_T_players_{}_periods_{}.npy".format(m_players, t_periods)
+    arr_pl_M_T_vars = np.load(os.path.join(path_to_variable, arr_name),
+                                            allow_pickle=True)
+    INDEX_ATTRS_INIT = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+               "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
+               "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
+               "balanced_pl_i": 14, "formule":15}
+    arr_cols = list(INDEX_ATTRS_INIT.keys())
+    df_arr_M_T_vars = pd.DataFrame(arr_pl_M_T_vars[:,t,:],
+                                   columns=arr_cols)
+    df_arr_M_T_vars = df_arr_M_T_vars.reset_index()
+    df_arr_M_T_vars.rename(columns={"index":"pl_i"}, inplace=True)
+    
+    print("shape: arr_pl_M_T_K={}, df_arr_M_T_vars={}".format(
+            arr_pl_M_T_vars.shape, df_arr_M_T_vars.shape))
+    
+    cols = ["state_i","algo","pl_i","k","Ci","Pi","Si","Si_max","gamma_i",
+            "prod_i","cons_i","Profili","Casei","bg_i","u_i","prob_mode_state_i",
+            "mode_i"] #,"","","","","",]
+    
+    df = pd.DataFrame(columns=cols)
+    
+    k_step_chosen = k_steps
+    states = list(df_arr_M_T_Ks['state_i'].unique())
+    for state_i in states:
+        for algo_name in algo_names:
+            mask_algo_name = (df_arr_M_T_Ks.state_i == state_i) \
+                                & (df_arr_M_T_Ks.algo == algo_name) \
+                                & (df_arr_M_T_Ks.k == k_step_chosen-1) \
+                                & (df_arr_M_T_Ks.scenario == scenario)
+            df_al = df_arr_M_T_Ks[mask_algo_name].copy()
+            df_al = df_al[cols]
+            
+            #mask arr
+            mask_arr = (df_arr_M_T_vars.state_i == state_i)
+            df_arr = df_arr_M_T_vars[mask_arr].copy()
+            df_arr = df_arr[["pl_i","Si"]]
+            df_arr.rename(columns={"Si":"initial_Si"}, inplace=True)
+                        
+            mask_ben_cst = (df_ben_cst_M_T_K.state_i == state_i) \
+                                & (df_ben_cst_M_T_K.algo == algo_name) \
+                                & (df_ben_cst_M_T_K.k == k_step_chosen-1) \
+                                & (df_ben_cst_M_T_K.scenario == scenario)
+            df_ben = df_ben_cst_M_T_K[mask_ben_cst]
+            df_ben = df_ben[["pl_i","ben","cst"]]
+            
+            
+            df_al = pd.merge(left=df_al, right=df_ben, 
+                          left_on='pl_i', right_on='pl_i')
+            df_al = pd.merge(left=df_al, right=df_arr, 
+                          left_on='pl_i', right_on='pl_i')
+            
+            
+            df = pd.concat([df, df_al], axis=0)
+            
+    # save to the excel file
+    df.rename(columns={"mode_i":"strategie","prob_mode_state_i":'p_i_j_k'}, 
+              inplace=True)
+    cols = df.columns.tolist()
+    cols.insert(6, cols.pop(19))
+    df = df[cols]
+    path_to_save = os.path.join(*["files_debug"])
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    df.to_excel(os.path.join(
+                *[path_to_save,
+                  "resume_game_rate_{}.xlsx".format(learning_rate)]), 
+                index=False )
+    
+    return arr_pl_M_T_vars, df_arr_M_T_vars, df
+# __________        resume game on excel file :   fin           ______________
+
 # __________    generate Cis, Pis, Si_maxs and Sis --> debut   ________________
 def generate_Pi_Ci_Si_Simax_by_profil_scenario(
                                     m_players=3, num_periods=5, 
