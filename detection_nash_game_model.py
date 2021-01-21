@@ -81,6 +81,12 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, arr_pl_M_T_vars, t):
                 nash_profils.append(key_modes_prof)
                 
     return nash_profils
+
+def delete_duplicate_profils(nash_profils):
+    """
+    delete all occurences of the profiles 
+    """
+    return nash_profils
 #------------------------------------------------------------------------------
 #                       definition of functions --> fin
 #
@@ -232,6 +238,7 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T,
                         dico_profs_Vis_Perf_t,
                         arr_pl_M_T_vars, 
                         t)
+        nash_profils = delete_duplicate_profils(nash_profils)
         
         # create dico of nash profils with key is Pref_t and value is profil
         dico_Perft_nashProfil = dict()
@@ -272,15 +279,16 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T,
             rd = np.random.randint(0, len(best_nash_mode_profiles))
             best_nash_mode_profile = best_nash_mode_profiles[rd]
         
-        print("** Running at t={}: numbers of -> cpt_profils ={}, nash_profils={}"\
-              .format(t, cpt_profs, len(nash_profils) ))
+        print("** Running at t={}: numbers of -> cpt_profils={}, best_nash_mode_profiles={}, nash_profils={}"\
+              .format(t, cpt_profs, len(best_nash_mode_profiles), 
+                      len(nash_profils) ))
         print("best_key_Perf_t={}, {}_nash_mode_profiles={}".format(
                 best_key_Perf_t, algo_name, best_nash_mode_profile))
         
         # balanced nash profil and compute prices
         dico_balanced_pl_i_nash_mode_prof = dict() 
         dico_state_mode_i_nash_mode_prof = dict()
-        cpt_balanced_nash_mode_prof = dict()
+        cpt_balanced_nash_mode_prof = 0
         
         arr_pl_M_T_vars_nash_mode_prof, \
         dico_balanced_pl_i_nash_mode_prof, \
@@ -429,7 +437,7 @@ def test_nash_balanced_player_game_perf_t(algo_name="BEST-NASH"):
     print("Generation/Recuperation instances TERMINEE")
     
     msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
-    path_to_save = os.path.join(name_dir, algo_name.split('-')[0]+"_bf_"+date_hhmm, 
+    path_to_save = os.path.join(name_dir, algo_name+"_"+date_hhmm, 
                                     scenario, str(prob_Ci), 
                                     msg)
     
