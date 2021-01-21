@@ -442,8 +442,7 @@ def determinist_balanced_player_game(arr_pl_M_T,
     # ____      game beginning for all t_period ---> debut      _____
     dico_stats_res={}
     
-    import force_brute_game_model as bfGameModel
-    arr_pl_M_T_vars, possibles_modes = bfGameModel.reupdate_state_players(
+    arr_pl_M_T_vars, possibles_modes = fct_aux.reupdate_state_players(
                                         arr_pl_M_T_vars.copy(), 0, 0)
     
     for t in range(0, num_periods):
