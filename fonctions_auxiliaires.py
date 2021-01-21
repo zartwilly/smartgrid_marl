@@ -7,6 +7,7 @@ Created on Fri Sep 18 16:45:38 2020
 import os
 import sys
 import time
+import math
 import json
 import string
 import random
@@ -664,6 +665,150 @@ def generer_Pi_Ci_Si_Simax_for_all_scenarios(scenarios=["scenario1"],
     return l_arr_pl_M_T
 
 # __________    generate Cis, Pis, Si_maxs and Sis --> fin   ________________
+
+###############################################################################
+#            generate Pi, Ci, Si by automate --> debut
+###############################################################################
+
+def generate_Pi_Ci_Si_Simax_by_automate(m_players_set1, m_players_set2, 
+                                        t_periods, 
+                                        set1_states=None, 
+                                        set2_states=None,
+                                        set1_stateId0_m_players=15,
+                                        set2_stateId0_m_players=5):
+    """
+    generate the variables' values for each player using the automata 
+    defined in the section 5.1
+    
+    consider set1 = {state1, state2} and set2={state2, state3}
+        set1_stateId0 = state1, set1_stateId1 = state2
+        set2_stateId0 = state2, set2_stateId1 = state3
+    Returns
+    -------
+    None.
+
+    """
+    set1_states = [STATES[0], STATES[1]] \
+                    if set1_states == None else set1_states
+    set2_states = [STATES[1], STATES[2]] \
+                    if set2_states == None else set2_states
+                        
+    # ____ generation of sub set of players in set1 and set2 : debut _________
+    m_players = m_players_set1 + m_players_set2
+    list_players = range(0, m_players)
+    
+    set1_players = list(np.random.choice(list(list_players), 
+                                    size=m_players_set1, 
+                                    replace=False))
+    set1_stateId0_players = list(np.random.choice(set1_players, 
+                                    size=set1_stateId0_m_players, 
+                                    replace=False))
+    set1_stateId1_players = list(set(set1_players) \
+                                 - set(set1_stateId0_players))
+    
+    set2_players = list(np.random.choice(list(list_players), 
+                                    size=m_players_set2, 
+                                    replace=False))
+    set2_stateId0_players = list(np.random.choice(set2_players, 
+                                    size=set2_stateId0_m_players, 
+                                    replace=False))
+    set2_stateId1_players = list(set(set2_players) \
+                                 - set(set2_stateId0_players))
+    if len(set(set1_stateId0_players)\
+           .intersection(set(set1_stateId1_players))) == 0:
+        print("set1: stateId0={}:{}, stateId1={}:{}--> OK".format(
+            set1_states[0], len(set1_stateId0_players), 
+            set1_states[1], len(set1_stateId1_players) ))
+    else:
+        print("set1: stateId0={}:{}, stateId1={}:{}--> NOK".format(
+            set1_states[0], len(set1_stateId0_players), 
+            set1_states[1], len(set1_stateId1_players) ))
+        
+    if len(set(set2_stateId0_players)\
+           .intersection(set(set2_stateId1_players))) == 0:
+        print("set2: stateId0={}:{}, stateId1={}:{}--> OK".format(
+            set2_states[0], len(set2_stateId0_players), 
+            set2_states[1], len(set2_stateId1_players) ))
+    else:
+        print("set2: stateId0={}:{}, stateId1={}:{}--> NOK".format(
+            set2_states[0], len(set2_stateId0_players), 
+            set2_states[1], len(set2_stateId1_players) ))
+        
+    # ____ generation of sub set of players in set1 and set2 : fin   _________
+    
+    # ____          creation of arr_pl_M_T_vars : debut             _________
+    arr_pl_M_T_vars = np.zeros((m_players_set1+m_players_set2,
+                                  t_periods,
+                                  len(INDEX_ATTRS.keys())),
+                                 dtype=object)
+    # ____          creation of arr_pl_M_T_vars : fin               _________
+    
+    # ____ attribution of players' states in arr_pl_M_T_vars : debut _________
+    t = 0
+    arr_pl_M_T_vars[set1_stateId0_players,t, 
+                    INDEX_ATTRS["state_i"]] = set1_states[0]                    # state1 or Deficit
+    arr_pl_M_T_vars[set1_stateId1_players,t, 
+                    INDEX_ATTRS["state_i"]] = set1_states[1]                    # state2 or Self
+    
+    arr_pl_M_T_vars[set2_stateId0_players,t, 
+                    INDEX_ATTRS["state_i"]] = set2_states[0]                    # state2 or Self
+    arr_pl_M_T_vars[set2_stateId1_players,t, 
+                    INDEX_ATTRS["state_i"]] = set2_states[1]                    # state3 or Surplus
+    
+    for t in range(0, t_periods):
+        for num_pl_i in range(0, m_players_set1+m_players_set2):
+            state_i = arr_pl_M_T_vars[num_pl_i, t, 
+                                      INDEX_ATTRS["state_i"]]
+            
+            # compute values and inject in arr_pl_M_T
+            Pi_t, Ci_t, Si_t, Si_t_max = None, None, None, None
+            Si_t_max = 10
+            if state_i == STATES[0]:                                            # state1 or Deficit
+                Si_t = 3
+                Ci_t = 10 + Si_t
+                x = np.random.randint(low=2, high=6, size=1)[0]
+                Pi_t = x + math.ceil(Si_t/2)
+            elif state_i == STATES[1]:                                          # state2 or Self
+                Si_t = 4
+                y = np.random.randint(low=20, high=30, size=1)[0]
+                Ci_t = y + math.ceil(Si_t/2)
+                Pi_t = Ci_t - math.ceil(Si_t/2)
+            elif state_i == STATES[2]:                                          # state3 or Surplus
+                Si_t = 10
+                Ci_t = 30
+                x = np.random.randint(low=31, high=40, size=1)[0]
+                Pi_t = x - math.ceil(Si_t/2)
+                
+            cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si", Si_t), 
+                    ("Si_max", Si_t_max)]
+            for col, val in cols:
+                arr_pl_M_T_vars[num_pl_i, t, 
+                                INDEX_ATTRS[col]] = val
+                
+            # determine state of player for t+1
+            state_i_t_plus_1 = None
+            if num_pl_i in set1_players and state_i == set1_states[0]:           # set1_states[0] = Deficit
+                state_i_t_plus_1 = np.random.choice(set1_states, p=[0.7,0.3])
+            if num_pl_i in set1_players and state_i == set1_states[1]:           # set1_states[1] = Self
+                state_i_t_plus_1 = np.random.choice(set1_states, p=[0.5,0.5])
+            if num_pl_i in set2_players and state_i == set2_states[0]:           # set2_states[0] = Self
+                state_i_t_plus_1 = np.random.choice(set2_states, p=[0.4,0.6])
+            if num_pl_i in set2_players and state_i == set2_states[1]:           # set2_states[1] = Surplus
+                state_i_t_plus_1 = np.random.choice(set2_states, p=[0.4,0.6])
+            
+            if t < t_periods-1:
+                arr_pl_M_T_vars[
+                    num_pl_i, t+1, 
+                    INDEX_ATTRS["state_i"]] = state_i_t_plus_1
+            
+    # ____ attribution of players' states in arr_pl_M_T_vars : fin   _________
+    
+    return arr_pl_M_T_vars
+    
+    
+###############################################################################
+#            generate Pi, Ci, Si by automate --> fin
+###############################################################################
 
 # __________    look for whether pli is balanced or not --> debut  ____________
 
