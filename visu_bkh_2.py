@@ -40,8 +40,8 @@ MULT_HEIGHT = 3.5;
 
 MARKERS = ["o", "v", "^", "<", ">", "1", "2", "3", "4", "8", "s", "p", 
                "P", "*", "h", "H", "+", "x", "X", "D", "d"]
-COLORS = ["red", "yellow", "blue", "green", "rosybrown", 
-              "darkorange", "fuchsia", "grey"]
+COLORS = Category20[19] #["red", "yellow", "blue", "green", "rosybrown", 
+          #    "darkorange", "fuchsia", "grey", ]
 
 TOOLS = [
             PanTool(),
@@ -1319,7 +1319,7 @@ def plot_all_scenarios_algos(df_pro_ra_pri, prob_Ci, rate, price):
                 tup_legends.append((label, [r1,r2] ))
                 # tup_legends.append((label, [r2] ))
             elif algo == "DETERMINIST":
-                r2 = px.square(x="k", y=ylabel, size=7, source=source, 
+                r2 = px.triangle_dot(x="k", y=ylabel, size=7, source=source, 
                           color=COLORS[ind_color], legend_label=label)
                 tup_legends.append((label, [r1,r2] ))
                 # tup_legends.append((label, [r2] ))
@@ -1397,19 +1397,25 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
         
         ind_color = 0
         if algo == "LRI1":
-            ind_color = 1 #7
+            ind_color = 1 #10
         elif algo == "LRI2":
-            ind_color = 2 #7
+            ind_color = 2 #10
         elif algo == "DETERMINIST":
-            ind_color = 3 #7
+            ind_color = 3 #10
         elif algo == "RD-DETERMINIST":
-            ind_color = 4 #7
+            ind_color = 4 #10
         elif algo == "BEST-BRUTE-FORCE":
-            ind_color = 5 #7
+            ind_color = 5 #10
         elif algo == "BAD-BRUTE-FORCE":
-            ind_color = 6 #7
+            ind_color = 6 #10
         elif algo == "MIDDLE-BRUTE-FORCE":
-            ind_color = 7 #7
+            ind_color = 7 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            ind_color = 8 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            ind_color = 9 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            ind_color = 10 #10
             
         r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
                 line_width=2, color=COLORS[ind_color], 
@@ -1434,7 +1440,7 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
         elif algo == "DETERMINIST":
-            r2 = px.square(x="k", y=ylabel, size=7, source=source_slice, 
+            r2 = px.triangle_dot(x="k", y=ylabel, size=7, source=source_slice, 
                       color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
@@ -1453,6 +1459,18 @@ def plot_all_algos_for_scenario(df_pro_ra_pri_scen, prob_Ci, rate,
             tup_legends.append((label, [r1,r2] ))
         elif algo == "MIDDLE-BRUTE-FORCE":
             r2 = px.diamond_dot(x="k", y=ylabel, size=7, source=source_slice, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            r2 = px.square_cross(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            r2 = px.square_pin(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            r2 = px.square_x(x="k", y=ylabel, size=7, source=source, 
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             
@@ -1596,19 +1614,25 @@ def plot_Perf_t_all_states_for_scenarios(
 
         ind_color = 0
         if algo == "LRI1":
-            ind_color = 1 #7
+            ind_color = 1 #10
         elif algo == "LRI2":
-            ind_color = 2 #7
+            ind_color = 2 #10
         elif algo == "DETERMINIST":
-            ind_color = 3 #7
+            ind_color = 3 #10
         elif algo == "RD-DETERMINIST":
-            ind_color = 4 #7
+            ind_color = 4 #10
         elif algo == "BEST-BRUTE-FORCE":
-            ind_color = 5 #7
+            ind_color = 5 #10
         elif algo == "BAD-BRUTE-FORCE":
-            ind_color = 6 #7
+            ind_color = 6 #10
         elif algo == "MIDDLE-BRUTE-FORCE":
-            ind_color = 7 #7
+            ind_color = 7 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            ind_color = 8 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            ind_color = 9 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            ind_color = 10 #10
             
         r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
                 line_width=2, color=COLORS[ind_color], 
@@ -1649,7 +1673,7 @@ def plot_Perf_t_all_states_for_scenarios(
             # tup_legends.append((label, [r2] ))
         elif algo == "DETERMINIST":
             ind_color = 3
-            r2 = px.square(x="k", y=ylabel, size=7, source=source, 
+            r2 = px.triangle_dot(x="k", y=ylabel, size=7, source=source, 
                       color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
@@ -1669,6 +1693,18 @@ def plot_Perf_t_all_states_for_scenarios(
             tup_legends.append((label, [r1,r2] ))
         elif algo == "MIDDLE-BRUTE-FORCE":
             r2 = px.diamond_dot(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            r2 = px.square_cross(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            r2 = px.square_pin(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            r2 = px.square_x(x="k", y=ylabel, size=7, source=source, 
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
         
@@ -1801,19 +1837,25 @@ def plot_mean_ben_cst_all_states_for_scenarios(
 
         ind_color = 0
         if algo == "LRI1":
-            ind_color = 1 #7
+            ind_color = 1 #10
         elif algo == "LRI2":
-            ind_color = 2 #7
+            ind_color = 2 #10
         elif algo == "DETERMINIST":
-            ind_color = 3 #7
+            ind_color = 3 #10
         elif algo == "RD-DETERMINIST":
-            ind_color = 4 #7
+            ind_color = 4 #10
         elif algo == "BEST-BRUTE-FORCE":
-            ind_color = 5 #7
+            ind_color = 5 #10
         elif algo == "BAD-BRUTE-FORCE":
-            ind_color = 6 #7
+            ind_color = 6 #10
         elif algo == "MIDDLE-BRUTE-FORCE":
-            ind_color = 7 #7
+            ind_color = 7 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            ind_color = 8 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            ind_color = 9 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            ind_color = 10 #10
             
         r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
                 line_width=2, color=COLORS[ind_color], 
@@ -1854,7 +1896,7 @@ def plot_mean_ben_cst_all_states_for_scenarios(
             # tup_legends.append((label, [r2] ))
         elif algo == "DETERMINIST":
             ind_color = 3
-            r2 = px.square(x="k", y=ylabel, size=7, source=source, 
+            r2 = px.triangle_dot(x="k", y=ylabel, size=7, source=source, 
                       color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
             # tup_legends.append((label, [r2] ))
@@ -1874,6 +1916,18 @@ def plot_mean_ben_cst_all_states_for_scenarios(
             tup_legends.append((label, [r1,r2] ))
         elif algo == "MIDDLE-BRUTE-FORCE":
             r2 = px.diamond_dot(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            r2 = px.square_cross(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            r2 = px.square_pin(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            r2 = px.square_x(x="k", y=ylabel, size=7, source=source, 
                         color=COLORS[ind_color], legend_label=label)
             tup_legends.append((label, [r1,r2] ))
         
