@@ -554,11 +554,11 @@ class Player:
             # Si_plus = self.get_Si() if self.mode_i == "CONS-" else 0
             if self.mode_i == "CONS+":
                 Si_minus = 0;
-                Si_plus = self.get_Si()
+                Si_plus = self.Si
             else:
                 # CONS-
                 Si_minus = 0;
-                Si_plus = self.get_Si()
+                Si_plus = self.Si
             X = pi_0_minus
             Y = pi_hp_minus
         elif self.state_i == "state2":
@@ -566,12 +566,12 @@ class Player:
             #     if self.mode_i == "DIS" else 0
             # Si_plus = self.get_Si() if self.mode_i == "CONS-" else 0
             if self.mode_i == "DIS":
-                Si_minus = self.get_Si() - (self.get_Ci() - self.get_Pi())
-                Si_plus = self.get_Si()
+                Si_minus = self.Si - (self.Ci - self.Pi)
+                Si_plus = self.Si
             else:
                 # CONS-
                 Si_minus = 0
-                Si_plus = self.get_Si()
+                Si_plus = self.Si
             X = pi_0_minus
             Y = pi_hp_minus
         elif self.state_i == "state3":
@@ -579,15 +579,15 @@ class Player:
             # Si_plus = max(self.get_Si_max(), 
             #               self.get_Si() + (self.get_Pi() - self.get_Ci()))
             if self.mode_i == "PROD":
-                Si_minus = self.get_Si()
-                Si_plus = self.get_Si_max()
+                Si_minus = self.Si
+                Si_plus = self.Si_max
             else:
                 # DIS
                 Si_minus = 0
-                Si_plus = max(self.get_Si_max(), 
-                              self.get_Si() 
-                              + (self.get_Pi() 
-                                 - self.get_Ci()
+                Si_plus = max(self.Si_max, 
+                              self.Si 
+                              + (self.Pi 
+                                 - self.Ci
                                  )
                               )
             X = pi_0_plus
