@@ -62,6 +62,9 @@ MANUEL_DBG_PI_SG_MINUS_T_K = 10
 MANUEL_DBG_PI_0_PLUS_T_K = 2 
 MANUEL_DBG_PI_0_MINUS_T_K = 3
 
+#_________________            AUTOMATE CONSTANCES           ________________
+AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_set1_{}_repSet1_{}_set2_{}_repSet2_{}_periods_{}.npy"
+
 #------------------------------------------------------------------------------
 #           definitions of class
 #------------------------------------------------------------------------------
@@ -670,7 +673,7 @@ def generer_Pi_Ci_Si_Simax_for_all_scenarios(scenarios=["scenario1"],
 #            generate Pi, Ci, Si by automate --> debut
 ###############################################################################
 
-def generate_Pi_Ci_Si_Simax_by_automate(m_players_set1, m_players_set2, 
+def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players, 
                                         t_periods, 
                                         set1_states=None, 
                                         set2_states=None,
@@ -694,11 +697,11 @@ def generate_Pi_Ci_Si_Simax_by_automate(m_players_set1, m_players_set2,
                     if set2_states == None else set2_states
                         
     # ____ generation of sub set of players in set1 and set2 : debut _________
-    m_players = m_players_set1 + m_players_set2
+    m_players = set1_m_players + set2_m_players
     list_players = range(0, m_players)
     
     set1_players = list(np.random.choice(list(list_players), 
-                                    size=m_players_set1, 
+                                    size=set1_m_players, 
                                     replace=False))
     set1_stateId0_players = list(np.random.choice(set1_players, 
                                     size=set1_stateId0_m_players, 
@@ -707,7 +710,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(m_players_set1, m_players_set2,
                                  - set(set1_stateId0_players))
     
     set2_players = list(np.random.choice(list(list_players), 
-                                    size=m_players_set2, 
+                                    size=set2_m_players, 
                                     replace=False))
     set2_stateId0_players = list(np.random.choice(set2_players, 
                                     size=set2_stateId0_m_players, 
@@ -737,7 +740,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(m_players_set1, m_players_set2,
     # ____ generation of sub set of players in set1 and set2 : fin   _________
     
     # ____          creation of arr_pl_M_T_vars : debut             _________
-    arr_pl_M_T_vars = np.zeros((m_players_set1+m_players_set2,
+    arr_pl_M_T_vars = np.zeros((set1_m_players+set2_m_players,
                                   t_periods,
                                   len(INDEX_ATTRS.keys())),
                                  dtype=object)
@@ -756,7 +759,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(m_players_set1, m_players_set2,
                     INDEX_ATTRS["state_i"]] = set2_states[1]                    # state3 or Surplus
     
     for t in range(0, t_periods):
-        for num_pl_i in range(0, m_players_set1+m_players_set2):
+        for num_pl_i in range(0, set1_m_players+set2_m_players):
             state_i = arr_pl_M_T_vars[num_pl_i, t, 
                                       INDEX_ATTRS["state_i"]]
             
