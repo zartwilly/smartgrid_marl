@@ -709,14 +709,16 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
     set1_stateId1_players = list(set(set1_players) \
                                  - set(set1_stateId0_players))
     
-    set2_players = list(np.random.choice(list(list_players), 
-                                    size=set2_m_players, 
-                                    replace=False))
+    set2_players = list(set(list_players) - set(set1_players))
     set2_stateId0_players = list(np.random.choice(set2_players, 
                                     size=set2_stateId0_m_players, 
                                     replace=False))
     set2_stateId1_players = list(set(set2_players) \
                                  - set(set2_stateId0_players))
+    if len(set(set1_players).intersection(set2_players)) == 0:
+        print("set1 != set2 --> OK")
+    else:
+        print("set1 != set2 --> NOK")
     if len(set(set1_stateId0_players)\
            .intersection(set(set1_stateId1_players))) == 0:
         print("set1: stateId0={}:{}, stateId1={}:{}--> OK".format(
@@ -757,6 +759,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
                     INDEX_ATTRS["state_i"]] = set2_states[0]                    # state2 or Self
     arr_pl_M_T_vars[set2_stateId1_players,t, 
                     INDEX_ATTRS["state_i"]] = set2_states[1]                    # state3 or Surplus
+    print("Set1: players={}, Set2: players={}".format(set1_players, set2_players))
     
     for t in range(0, t_periods):
         for num_pl_i in range(0, set1_m_players+set2_m_players):
@@ -782,8 +785,11 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
                 x = np.random.randint(low=31, high=40, size=1)[0]
                 Pi_t = x - math.ceil(Si_t/2)
                 
+            print("t={}, pl_i={}, Pi_t={}, Ci_t={}, Si_t={}, state_i={}".format(t, 
+                    num_pl_i,Pi_t, Ci_t, Si_t, state_i))
+                
             cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si", Si_t), 
-                    ("Si_max", Si_t_max)]
+                    ("Si_max", Si_t_max), ("mode_i","")]
             for col, val in cols:
                 arr_pl_M_T_vars[num_pl_i, t, 
                                 INDEX_ATTRS[col]] = val
