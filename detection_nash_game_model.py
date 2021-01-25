@@ -33,6 +33,36 @@ RACINE_PLAYER = "player"
 #                       definition of functions --> debut
 #
 #------------------------------------------------------------------------------
+def find_out_opposite_mode(state_i, mode_i):
+    """
+    look for the opposite mode of the player.
+    for example, 
+    if state_i = state1, the possible modes are CONS+ and CONS-
+    the opposite mode of CONS+ is CONS- and this of CONS- is CONS+
+    """
+    mode_i_bar = None
+    if state_i == fct_aux.STATES[0] \
+        and mode_i == fct_aux.STATE1_STRATS[0]:                         # state1, CONS+
+        mode_i_bar = fct_aux.STATE1_STRATS[1]                           # CONS-
+    elif state_i == fct_aux.STATES[0] \
+        and mode_i == fct_aux.STATE1_STRATS[1]:                         # state1, CONS-
+        mode_i_bar = fct_aux.STATE1_STRATS[0]                           # CONS+
+    elif state_i == fct_aux.STATES[1] \
+        and mode_i == fct_aux.STATE2_STRATS[0]:                         # state2, DIS
+        mode_i_bar = fct_aux.STATE2_STRATS[1]                           # CONS-
+    elif state_i == fct_aux.STATES[1] \
+        and mode_i == fct_aux.STATE2_STRATS[1]:                         # state2, CONS-
+        mode_i_bar = fct_aux.STATE2_STRATS[0]                           # DIS
+    elif state_i == fct_aux.STATES[2] \
+        and mode_i == fct_aux.STATE3_STRATS[0]:                         # state3, DIS
+        mode_i_bar = fct_aux.STATE3_STRATS[1]                           # PROD
+    elif state_i == fct_aux.STATES[2] \
+        and mode_i == fct_aux.STATE3_STRATS[1]:                         # state3, PROD
+        mode_i_bar = fct_aux.STATE3_STRATS[0]                           # DIS
+
+    return mode_i_bar
+    
+
 def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, arr_pl_M_T_vars, t):
     """
     detect the profil driving to nash equilibrium
@@ -54,25 +84,7 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, arr_pl_M_T_vars, t):
             state_i = arr_pl_M_T_vars[num_pl_i, t, 
                                       fct_aux.INDEX_ATTRS["state_i"]]
             mode_i_bar = None
-            if state_i == fct_aux.STATES[0] \
-                and mode_i == fct_aux.STATE1_STRATS[0]:                         # state1, CONS+
-                mode_i_bar = fct_aux.STATE1_STRATS[1]                           # CONS-
-            elif state_i == fct_aux.STATES[0] \
-                and mode_i == fct_aux.STATE1_STRATS[1]:                         # state1, CONS-
-                mode_i_bar = fct_aux.STATE1_STRATS[0]                           # CONS+
-            elif state_i == fct_aux.STATES[1] \
-                and mode_i == fct_aux.STATE2_STRATS[0]:                         # state2, DIS
-                mode_i_bar = fct_aux.STATE2_STRATS[1]                           # CONS-
-            elif state_i == fct_aux.STATES[1] \
-                and mode_i == fct_aux.STATE2_STRATS[1]:                         # state2, CONS-
-                mode_i_bar = fct_aux.STATE2_STRATS[0]                           # DIS
-            elif state_i == fct_aux.STATES[2] \
-                and mode_i == fct_aux.STATE3_STRATS[0]:                         # state3, DIS
-                mode_i_bar = fct_aux.STATE3_STRATS[1]                           # PROD
-            elif state_i == fct_aux.STATES[2] \
-                and mode_i == fct_aux.STATE3_STRATS[1]:                         # state3, PROD
-                mode_i_bar = fct_aux.STATE3_STRATS[0]                           # DIS
-            
+            mode_i_bar = find_out_opposite_mode(state_i, mode_i)
             new_key_modes_prof = list(key_modes_prof)
             new_key_modes_prof[num_pl_i] = mode_i_bar
             new_key_modes_prof = tuple(new_key_modes_prof)
@@ -88,6 +100,61 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, arr_pl_M_T_vars, t):
                 
     return nash_profils
 
+def compute_perf_t_by_mode_profiles(arr_pl_M_T_vars, t,
+                                    mode_profiles, 
+                                    pi_sg_plus_t, pi_sg_minus_t,
+                                    pi_hp_plus, pi_hp_minus, 
+                                    m_players, t_periods,
+                                    manual_debug, dbg=False):
+    """
+    compute the utility of each player by their modes providing from mode_profile
+    """
+    #m_players, t_periods = arr_pl_M_T_vars.shape[0], arr_pl_M_T_vars.shape[1]
+    
+    dico_profs_Vis_Perf_t = dict()
+    cpt_profs = 0
+    for mode_profile in mode_profiles:
+        dico_balanced_pl_i_mode_prof, cpt_balanced_mode_prof = dict(), 0
+        dico_state_mode_i_mode_prof = dict()
+        
+        # balanced players
+        arr_pl_M_T_vars_mode_prof, \
+        dico_balanced_pl_i_mode_prof, \
+        dico_state_mode_i_mode_prof, \
+        cpt_balanced_mode_prof \
+            = bf_model.balanced_player_game_4_mode_profil(
+                arr_pl_M_T_vars.copy(),
+                mode_profile, t,
+                pi_sg_plus_t, pi_sg_minus_t, 
+                pi_hp_plus, pi_hp_minus,
+                dico_balanced_pl_i_mode_prof, 
+                dico_state_mode_i_mode_prof,
+                cpt_balanced_mode_prof,
+                m_players, t_periods,
+                manual_debug
+                )
+        # compute Perf_t 
+        pi_sg_plus_t, pi_sg_minus_t, \
+        pi_0_plus_t, pi_0_minus_t, \
+        b0_t, c0_t, \
+        bens_t, csts_t \
+            = bf_model.compute_prices_bf(
+                arr_pl_M_T_vars_mode_prof.copy(), t, 
+                pi_sg_plus_t, pi_sg_minus_t,
+                pi_hp_plus, pi_hp_minus, manual_debug, dbg)
+        
+        bens_csts_t = bens_t - csts_t
+        Perf_t = np.sum(bens_csts_t, axis=0)
+        dico_Vis_Pref_t = dict()
+        for num_pl_i in range(bens_csts_t.shape[0]):            # bens_csts_t.shape[0] = m_players
+            dico_Vis_Pref_t[RACINE_PLAYER+"_"+str(num_pl_i)] \
+                = bens_csts_t[num_pl_i]
+        dico_Vis_Pref_t["Perf_t"] = Perf_t
+        
+        dico_profs_Vis_Perf_t[mode_profile] = dico_Vis_Pref_t
+        cpt_profs += 1
+        
+    return dico_profs_Vis_Perf_t, cpt_profs
 
 #------------------------------------------------------------------------------
 #                       definition of functions --> fin
@@ -192,47 +259,14 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T,
         # Perf_t by players' profil modes
         dico_profs_Vis_Perf_t = dict()
         cpt_profs = 0
-        for mode_profile in mode_profiles:
-            dico_balanced_pl_i_mode_prof, cpt_balanced_mode_prof = dict(), 0
-            dico_state_mode_i_mode_prof = dict()
-            
-            # balanced players
-            arr_pl_M_T_vars_mode_prof, \
-            dico_balanced_pl_i_mode_prof, \
-            dico_state_mode_i_mode_prof, \
-            cpt_balanced_mode_prof \
-                = bf_model.balanced_player_game_4_mode_profil(
-                    arr_pl_M_T_vars.copy(),
-                    mode_profile, t,
-                    pi_sg_plus_t, pi_sg_minus_t, 
-                    pi_hp_plus, pi_hp_minus,
-                    dico_balanced_pl_i_mode_prof, 
-                    dico_state_mode_i_mode_prof,
-                    cpt_balanced_mode_prof,
-                    m_players, t_periods,
-                    manual_debug
-                    )
-            # compute Perf_t 
-            pi_sg_plus_t, pi_sg_minus_t, \
-            pi_0_plus_t, pi_0_minus_t, \
-            b0_t, c0_t, \
-            bens_t, csts_t \
-                = bf_model.compute_prices_bf(
-                    arr_pl_M_T_vars_mode_prof.copy(), t, 
-                    pi_sg_plus_t, pi_sg_minus_t,
-                    pi_hp_plus, pi_hp_minus, manual_debug, dbg)
-            
-            bens_csts_t = bens_t - csts_t
-            Perf_t = np.sum(bens_csts_t, axis=0)
-            dico_Vis_Pref_t = dict()
-            for num_pl_i in range(bens_csts_t.shape[0]):            # bens_csts_t.shape[0] = m_players
-                dico_Vis_Pref_t[RACINE_PLAYER+"_"+str(num_pl_i)] \
-                    = bens_csts_t[num_pl_i]
-            dico_Vis_Pref_t["Perf_t"] = Perf_t
-            
-            dico_profs_Vis_Perf_t[mode_profile] = dico_Vis_Pref_t
-            cpt_profs += 1
-         
+        dico_profs_Vis_Perf_t, cpt_profs = compute_perf_t_by_mode_profiles(
+                                            arr_pl_M_T_vars, t,
+                                            mode_profiles, 
+                                            pi_sg_plus_t, pi_sg_minus_t,
+                                            pi_hp_plus, pi_hp_minus, 
+                                            m_players, t_periods,
+                                            manual_debug, dbg=dbg)
+        
         
         # detection of NASH profils
         nash_profils = list()
@@ -459,95 +493,18 @@ def test_nash_balanced_player_game_perf_t(algo_name="BEST-NASH"):
             algo_name,
             path_to_save, manual_debug, dbg=False
             )
+        
+    
+    checkout_nash_equilibrium(arr_pl_M_T_probCi_scen_nashProfil, path_to_save,
+                              pi_hp_plus, pi_hp_minus, manual_debug,
+                              algo_name)
     
     
     return arr_pl_M_T_probCi_scen_nashProfil
     
-def compute_perf_t_by_mode_profiles(arr_pl_M_T_vars, t,
-                                    mode_profiles, 
-                                    pi_sg_plus_t, pi_sg_minus_t,
-                                    pi_hp_plus, pi_hp_minus, 
-                                    manual_debug, dbg=False):
-    """
-    compute the utility of each joueur by their modes providing from mode_profile
-    """
-    m_players, t_periods = arr_pl_M_T_vars.shape[0], arr_pl_M_T_vars.shape[1]
-    
-    dico_profs_Vis_Perf_t = dict()
-    cpt_profs = 0
-    for mode_profile in mode_profiles:
-        dico_balanced_pl_i_mode_prof, cpt_balanced_mode_prof = dict(), 0
-        dico_state_mode_i_mode_prof = dict()
-        
-        # balanced players
-        arr_pl_M_T_vars_mode_prof, \
-        dico_balanced_pl_i_mode_prof, \
-        dico_state_mode_i_mode_prof, \
-        cpt_balanced_mode_prof \
-            = bf_model.balanced_player_game_4_mode_profil(
-                arr_pl_M_T_vars.copy(),
-                mode_profile, t,
-                pi_sg_plus_t, pi_sg_minus_t, 
-                pi_hp_plus, pi_hp_minus,
-                dico_balanced_pl_i_mode_prof, 
-                dico_state_mode_i_mode_prof,
-                cpt_balanced_mode_prof,
-                m_players, t_periods,
-                manual_debug
-                )
-        # compute Perf_t 
-        pi_sg_plus_t, pi_sg_minus_t, \
-        pi_0_plus_t, pi_0_minus_t, \
-        b0_t, c0_t, \
-        bens_t, csts_t \
-            = bf_model.compute_prices_bf(
-                arr_pl_M_T_vars_mode_prof.copy(), t, 
-                pi_sg_plus_t, pi_sg_minus_t,
-                pi_hp_plus, pi_hp_minus, manual_debug, dbg)
-        
-        bens_csts_t = bens_t - csts_t
-        Perf_t = np.sum(bens_csts_t, axis=0)
-        dico_Vis_Pref_t = dict()
-        for num_pl_i in range(bens_csts_t.shape[0]):            # bens_csts_t.shape[0] = m_players
-            dico_Vis_Pref_t[RACINE_PLAYER+"_"+str(num_pl_i)] \
-                = bens_csts_t[num_pl_i]
-        dico_Vis_Pref_t["Perf_t"] = Perf_t
-        
-        dico_profs_Vis_Perf_t[mode_profile] = dico_Vis_Pref_t
-        cpt_profs += 1
-        
-    return dico_profs_Vis_Perf_t, cpt_profs
-
-def find_out_opposite_mode(state_i, mode_i):
-    """
-    look for the opposite mode of the player.
-    for example, 
-    if state_i = state1, the possible modes are CONS+ and CONS-
-    the opposite mode of CONS+ is CONS- and this of CONS- is CONS+
-    """
-    mode_i_bar = None
-    if state_i == fct_aux.STATES[0] \
-        and mode_i == fct_aux.STATE1_STRATS[0]:                         # state1, CONS+
-        mode_i_bar = fct_aux.STATE1_STRATS[1]                           # CONS-
-    elif state_i == fct_aux.STATES[0] \
-        and mode_i == fct_aux.STATE1_STRATS[1]:                         # state1, CONS-
-        mode_i_bar = fct_aux.STATE1_STRATS[0]                           # CONS+
-    elif state_i == fct_aux.STATES[1] \
-        and mode_i == fct_aux.STATE2_STRATS[0]:                         # state2, DIS
-        mode_i_bar = fct_aux.STATE2_STRATS[1]                           # CONS-
-    elif state_i == fct_aux.STATES[1] \
-        and mode_i == fct_aux.STATE2_STRATS[1]:                         # state2, CONS-
-        mode_i_bar = fct_aux.STATE2_STRATS[0]                           # DIS
-    elif state_i == fct_aux.STATES[2] \
-        and mode_i == fct_aux.STATE3_STRATS[0]:                         # state3, DIS
-        mode_i_bar = fct_aux.STATE3_STRATS[1]                           # PROD
-    elif state_i == fct_aux.STATES[2] \
-        and mode_i == fct_aux.STATE3_STRATS[1]:                         # state3, PROD
-        mode_i_bar = fct_aux.STATE3_STRATS[0]                           # DIS
-
-    return mode_i_bar
-    
-def checkout_nash_equilibrium(algo_name="BEST-NASH"):
+def checkout_nash_equilibrium(arr_pl_M_T_vars, path_to_variable,
+                              pi_hp_plus, pi_hp_minus, manual_debug,
+                              algo_name="BEST-NASH"):
     """
     pour tout instant de temps t:
     verifier la stabilité de chaque joueur
@@ -556,52 +513,21 @@ def checkout_nash_equilibrium(algo_name="BEST-NASH"):
         * les colonnes sont le temps et les valeurs la stabilité sous la forme 
             d'un booleen
     """
-    t = 1
-    manual_debug = True
-    scenario = "scenario1"
-    prob_Ci = 0.3
-    pi_hp_minus = 0.33; pi_hp_plus = 0.2*pow(10,-3)
-    msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
-    name_dir = "tests"
-    date_hhmm = "2501_0927"
-    path_to_variable = os.path.join(name_dir, algo_name+"_"+date_hhmm, 
-                                    scenario, str(prob_Ci), 
-                                    msg)
     
-    # read arr_pl_M_T, BENs_M_T et CSTs_M_T
-    arr_pl_M_T_vars = np.load(os.path.join(path_to_variable, 
-                                             "arr_pl_M_T_K_vars.npy"),
-                          allow_pickle=True)
-    BENs_M_T = np.load(os.path.join(path_to_variable, "BENs_M_T_K.npy"),
-                          allow_pickle=True)
-    CSTs_M_T = np.load(os.path.join(path_to_variable, "CSTs_M_T_K.npy"),
-                          allow_pickle=True)
-    b0_s_T = np.load(os.path.join(path_to_variable, "b0_s_T_K.npy"),
-                          allow_pickle=True)
-    c0_s_T = np.load(os.path.join(path_to_variable, "c0_s_T_K.npy"),
-                          allow_pickle=True)
-    B_is_M = np.load(os.path.join(path_to_variable, "B_is_M.npy"),
-                          allow_pickle=True)
-    C_is_M = np.load(os.path.join(path_to_variable, "C_is_M.npy"),
-                          allow_pickle=True)
+    # read pi_sg_{plus,minus}_T
     pi_sg_plus_T = np.load(os.path.join(path_to_variable, "pi_sg_plus_T_K.npy"),
                           allow_pickle=True)
     pi_sg_minus_T = np.load(os.path.join(path_to_variable, "pi_sg_minus_T_K.npy"),
                           allow_pickle=True)
-    pi_0_plus_T = np.load(os.path.join(path_to_variable, "pi_0_plus_T_K.npy"),
-                          allow_pickle=True)
-    pi_0_minus_T = np.load(os.path.join(path_to_variable, "pi_0_minus_T_K.npy"),
-                          allow_pickle=True)
     
-    print("SHAPE: arr_pl_M_T_vars={}, BENs_M_T_K={}, CSTs_M_T_K={},".format(
-            arr_pl_M_T_vars.shape, BENs_M_T.shape, CSTs_M_T.shape))
+    print("**** CHECKOUT STABILITY PLAYERS ****")
+    print("SHAPE: arr_pl_M_T_vars={}, pi_sg_plus_T={}, pi_sg_minus_T={},".format(
+            arr_pl_M_T_vars.shape, pi_sg_plus_T.shape, pi_sg_minus_T.shape))
     
-    fct_aux.INDEX_ATTRS["Si_minus"] = 16
-    fct_aux.INDEX_ATTRS["Si_plus"] = 17
+    # fct_aux.INDEX_ATTRS["Si_minus"] = 16
+    # fct_aux.INDEX_ATTRS["Si_plus"] = 17
     
     # create a result dataframe of checking players' stability and nash equilibrium
-    # cols = ["players", "states", "nash_modes"]\
-    #         +['t_'+str(t) for t in range(0, arr_pl_M_T_vars.shape[1])]
     cols = [["players", "states", "nash_modes"]]\
             +[['Vis_t{}'.format(str(t)), 'Vis_bar_t{}'.format(str(t)), 
                'res_t{}'.format(str(t))] 
@@ -610,6 +536,8 @@ def checkout_nash_equilibrium(algo_name="BEST-NASH"):
     
     id_players = list(range(0, arr_pl_M_T_vars.shape[0]))
     df_res = pd.DataFrame(index=id_players, columns=cols)
+    
+    m_players, t_periods = arr_pl_M_T_vars.shape[0], arr_pl_M_T_vars.shape[1]
     
     for t in range(0, arr_pl_M_T_vars.shape[1]):
         # calcul de l'utilité pour tous les joueurs selon le profil
@@ -623,6 +551,7 @@ def checkout_nash_equilibrium(algo_name="BEST-NASH"):
                                             mode_profiles, 
                                             pi_sg_plus_t, pi_sg_minus_t,
                                             pi_hp_plus, pi_hp_minus, 
+                                            m_players, t_periods,
                                             manual_debug, dbg=False)
         
         # stabilité de chaque joueur
@@ -652,17 +581,17 @@ def checkout_nash_equilibrium(algo_name="BEST-NASH"):
             else:
                 df_res.loc[num_pl_i, 'res_t{}'.format(t)] = "INSTABLE"
             
-            print("-> pl_i = {}, Vi={}, Vi_bar={}".format(num_pl_i, Vi, Vi_bar))
-            print("pl_i = {}, mode_i={}, mode_i_bar={}".format(num_pl_i, mode_i, mode_i_bar))
-            print("nash_prof={},\n bar_prof={} \n".format(nash_modes_profil, 
-                                                        opposite_modes_profil))
+            # print("-> pl_i = {}, Vi={}, Vi_bar={}".format(num_pl_i, Vi, Vi_bar))
+            # print("pl_i = {}, mode_i={}, mode_i_bar={}".format(num_pl_i, mode_i, mode_i_bar))
+            # print("nash_prof={},\n bar_prof={} \n".format(nash_modes_profil, 
+            #                                             opposite_modes_profil))
                 
     # save to excel file
     path_to_save = os.path.join(*["files_debug"])
     Path(path_to_save).mkdir(parents=True, exist_ok=True)
     df_res.to_excel(os.path.join(
                 *[path_to_save,
-                  "resume_verify_Nash_equilibrium.xlsx"]), 
+                  "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
                 index=False )
         
     
@@ -676,9 +605,8 @@ def checkout_nash_equilibrium(algo_name="BEST-NASH"):
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    # for algo_name in fct_aux.ALGO_NAMES_NASH:
-    #     arr_pl_M_T_vars = test_nash_balanced_player_game_perf_t(algo_name)
-        
-    checkout_nash_equilibrium()
+    for algo_name in fct_aux.ALGO_NAMES_NASH:
+        arr_pl_M_T_vars = test_nash_balanced_player_game_perf_t(algo_name)
+        #checkout_nash_equilibrium() #(algo_name)
     
     print("runtime = {}".format(time.time() - ti))
