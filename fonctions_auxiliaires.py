@@ -63,7 +63,15 @@ MANUEL_DBG_PI_0_PLUS_T_K = 2
 MANUEL_DBG_PI_0_MINUS_T_K = 3
 
 #_________________            AUTOMATE CONSTANCES           ________________
+
 AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_set1_{}_repSet1_{}_set2_{}_repSet2_{}_periods_{}.npy"
+
+AUTOMATE_INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+               "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
+               "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
+               "balanced_pl_i": 14, "formule":15, "Si_minus":16,
+               "Si_plus":17, "u_i": 18, "bg_i": 19,
+               "p_i_j_k": 20, "non_playing_players":21, "set":22}
 
 #------------------------------------------------------------------------------
 #           definitions of class
@@ -703,13 +711,23 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
     set1_players = list(np.random.choice(list(list_players), 
                                     size=set1_m_players, 
                                     replace=False))
+    if type(set1_stateId0_m_players) is int:
+        set1_stateId0_m_players = set1_stateId0_m_players
+    else:
+        set1_stateId0_m_players = int(np.rint(set1_m_players
+                                              *set1_stateId0_m_players))
     set1_stateId0_players = list(np.random.choice(set1_players, 
-                                    size=set1_stateId0_m_players, 
-                                    replace=False))
+                                        size=set1_stateId0_m_players, 
+                                        replace=False))
     set1_stateId1_players = list(set(set1_players) \
                                  - set(set1_stateId0_players))
     
     set2_players = list(set(list_players) - set(set1_players))
+    if type(set2_stateId0_m_players) is int:
+        set2_stateId0_m_players = set2_stateId0_m_players
+    else:
+        set2_stateId0_m_players = int(np.rint(set2_m_players
+                                              *set2_stateId0_m_players))
     set2_stateId0_players = list(np.random.choice(set2_players, 
                                     size=set2_stateId0_m_players, 
                                     replace=False))
@@ -744,22 +762,25 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
     # ____          creation of arr_pl_M_T_vars : debut             _________
     arr_pl_M_T_vars = np.zeros((set1_m_players+set2_m_players,
                                   t_periods,
-                                  len(INDEX_ATTRS.keys())),
+                                  len(AUTOMATE_INDEX_ATTRS.keys())),
                                  dtype=object)
     # ____          creation of arr_pl_M_T_vars : fin               _________
     
     # ____ attribution of players' states in arr_pl_M_T_vars : debut _________
     t = 0
-    arr_pl_M_T_vars[set1_stateId0_players,t, 
-                    INDEX_ATTRS["state_i"]] = set1_states[0]                    # state1 or Deficit
+    arr_pl_M_T_vars[set1_stateId0_players, t, 
+                    AUTOMATE_INDEX_ATTRS["state_i"]] = set1_states[0]                    # state1 or Deficit
     arr_pl_M_T_vars[set1_stateId1_players,t, 
-                    INDEX_ATTRS["state_i"]] = set1_states[1]                    # state2 or Self
+                    AUTOMATE_INDEX_ATTRS["state_i"]] = set1_states[1]                    # state2 or Self
+    arr_pl_M_T_vars[set1_players, :, 
+                    AUTOMATE_INDEX_ATTRS["set"]] = "set1"
     
-    arr_pl_M_T_vars[set2_stateId0_players,t, 
+    arr_pl_M_T_vars[set2_stateId0_players, t, 
                     INDEX_ATTRS["state_i"]] = set2_states[0]                    # state2 or Self
     arr_pl_M_T_vars[set2_stateId1_players,t, 
                     INDEX_ATTRS["state_i"]] = set2_states[1]                    # state3 or Surplus
-    print("Set1: players={}, Set2: players={}".format(set1_players, set2_players))
+    arr_pl_M_T_vars[set2_players, :, 
+                    AUTOMATE_INDEX_ATTRS["set"]] = "set2"
     
     for t in range(0, t_periods):
         for num_pl_i in range(0, set1_m_players+set2_m_players):
@@ -785,8 +806,6 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
                 x = np.random.randint(low=31, high=40, size=1)[0]
                 Pi_t = x - math.ceil(Si_t/2)
                 
-            print("t={}, pl_i={}, Pi_t={}, Ci_t={}, Si_t={}, state_i={}".format(t, 
-                    num_pl_i,Pi_t, Ci_t, Si_t, state_i))
                 
             cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si", Si_t), 
                     ("Si_max", Si_t_max), ("mode_i","")]
