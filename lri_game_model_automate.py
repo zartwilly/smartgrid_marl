@@ -345,7 +345,7 @@ def utility_function_version2(arr_pl_M_T_K_vars_modif_new,
                 ][:,t,k,
                   fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]]
     
-    #print("P_i_t_s={}, C_i_t_s={}".format(P_i_t_s, C_i_t_s))
+    #print("P_i_t_s={}, C_i_t_s={}, \n Si_max_t_s={}, S_i_t_s={}".format(P_i_t_s, C_i_t_s, Si_max_t_s, S_i_t_s))
                   
     ## I_m
     P_C_S_i_t_s = P_i_t_s - (C_i_t_s + (Si_max_t_s - S_i_t_s))
@@ -409,28 +409,30 @@ def utility_function_version2(arr_pl_M_T_K_vars_modif_new,
     OUT_sg = np.sum(arr_pl_M_T_K_vars_modif_new[
                         :,t,k,
                         fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], axis=0)
-    if I_m <= IN_sg and IN_sg <= I_M:
-        print("LRI2, t={},k={}: I_m <= IN_sg <= I_M? ---> OK".format(t,k))
-        if dbg:
-           print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> OK"\
-                 .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2))) 
-    else:
-        print("LRI2: I_m <= IN_sg <= I_M? t={},k={} ---> NOK".format(t,k))
-        print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> NOK"\
-                 .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2)))
-        if dbg:
-           print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> OK"\
-                 .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2)))
-    if O_m <= OUT_sg and OUT_sg <= O_M:
-        print("LRI2, t={},k={}: O_m <= OUT_sg <= O_M? ---> OK".format(t,k))
-        if dbg:
-           print("LRI2 t={},k={}: O_m={} <= OUT_sg={} <= O_M={} ---> OK"\
-                 .format(t,k, round(O_m,2), round(OUT_sg,2), round(O_M,2))) 
-    else:
-        print("LRI2: O_m <= OUT_sg <= O_M? t={},k={} ---> NOK".format(t,k))
-        if dbg:
-           print("LRI2 t={},k={}: O_m={} <= OUT_sg={} <= O_M={} ---> OK"\
-                 .format(t,k, round(O_m,2), round(OUT_sg,2), round(O_M,2))) 
+    
+    if dbg:
+        if I_m <= IN_sg and IN_sg <= I_M:
+            print("LRI2, t={},k={}: I_m <= IN_sg <= I_M? ---> OK".format(t,k))
+            if dbg:
+               print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> OK"\
+                     .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2))) 
+        else:
+            print("LRI2: I_m <= IN_sg <= I_M? t={},k={} ---> NOK".format(t,k))
+            print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> NOK"\
+                     .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2)))
+            if dbg:
+               print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> OK"\
+                     .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2)))
+        if O_m <= OUT_sg and OUT_sg <= O_M:
+            print("LRI2, t={},k={}: O_m <= OUT_sg <= O_M? ---> OK".format(t,k))
+            if dbg:
+               print("LRI2 t={},k={}: O_m={} <= OUT_sg={} <= O_M={} ---> OK"\
+                     .format(t,k, round(O_m,2), round(OUT_sg,2), round(O_M,2))) 
+        else:
+            print("LRI2: O_m <= OUT_sg <= O_M? t={},k={} ---> NOK".format(t,k))
+            if dbg:
+               print("LRI2 t={},k={}: O_m={} <= OUT_sg={} <= O_M={} ---> OK"\
+                     .format(t,k, round(O_m,2), round(OUT_sg,2), round(O_M,2))) 
                
     # c_0_M
     frac = ( (O_M - I_m) * pi_hp_minus + I_M * pi_0_minus_t_k ) / O_m
