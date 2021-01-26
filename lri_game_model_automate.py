@@ -436,7 +436,7 @@ def utility_function_version2(arr_pl_M_T_K_vars_modif_new,
                
     # c_0_M
     frac = ( (O_M - I_m) * pi_hp_minus + I_M * pi_0_minus_t_k ) / O_m
-    c_0_M = min(frac, pi_0_minus_t_k)
+    c_0_M = max(frac, pi_0_minus_t_k)
     c_0_M = round(c_0_M, fct_aux.N_DECIMALS)
     #print("c_0_M = {}, pi_0_minus_t_k={}".format(c_0_M, pi_0_minus_t_k))
 
