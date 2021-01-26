@@ -1072,107 +1072,9 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
 #
 ###############################################################################
 
-# ____________________     A EFFACER     _____________________________________
-def get_or_create_instance(set1_m_players, set2_m_players, 
-                            t_periods, 
-                            set1_states, 
-                            set2_states,
-                            set1_stateId0_m_players,
-                            set2_stateId0_m_players, 
-                            path_to_arr_pl_M_T, used_instances):
-    """
-    get instance if it exists else create instance.
-
-    set1 = {state1, state2} : set of players' states 
-    set2 = {state2, state3}
-    
-    Parameters
-    ----------
-    set1_m_players : integer
-        DESCRIPTION.
-        Number of players having their states belonging to set1.
-    set2_m_players : integer
-        DESCRIPTION.
-        Number of players having their states belonging to set2.
-    t_periods : integer
-        DESCRIPTION.
-        Number of periods in the game
-    set1_states : set
-        DESCRIPTION.
-        set of states creating the group set1
-    set2_states: set
-        DESCRIPTION.
-        set of states creating the group set1
-    set1_stateId0_m_players : Integer
-        DESCRIPTION. 
-        Number of players in the set1 having the state equal to the first state in set1
-    set2_stateId0_m_players : Integer
-        DESCRIPTION. 
-        Number of players in the set2 having the state equal to the first state in set2
-    path_to_arr_pl_M_T : string
-        DESCRIPTION.
-        path to save/get array arr_pl_M_T
-        example: tests/AUTOMATE_INSTANCES_GAMES/\
-                    arr_pl_M_T_players_set1_{m_players_set1}_set2_{m_players_set2}\
-                        _periods_{t_periods}.npy
-    used_instances : boolean
-        DESCRIPTION.
-
-    Returns
-    -------
-    arr_pl_M_T_vars : array of 
-        DESCRIPTION.
-
-    """
-    arr_pl_M_T_vars = None
-    filename_arr_pl = fct_aux.AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
-                        set1_m_players, set2_m_players, set1_stateId0_m_players,
-                        set2_stateId0_m_players, t_periods)
-    # path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
-    
-    if os.path.exists(path_to_arr_pl_M_T):
-        # read arr_pl_M_T
-        if used_instances:
-            arr_pl_M_T_vars \
-                = np.load(os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl]),
-                          allow_pickle=True)
-            print("READ INSTANCE GENERATED")
-            
-        else:
-            # create arr_pl_M_T when used_instances = False
-            arr_pl_M_T_vars \
-                = fct_aux.generate_Pi_Ci_Si_Simax_by_automate(
-                    set1_m_players, set2_m_players, 
-                    t_periods, 
-                    set1_states, 
-                    set2_states,
-                    set1_stateId0_m_players,
-                    set2_stateId0_m_players)
-            
-            fct_aux.save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
-                                         path_to_save=path_to_arr_pl_M_T)
-            print("CREATE INSTANCE used_instance={}".format(used_instances))
-    else:
-        # create arr_pl_M_T
-        arr_pl_M_T_vars \
-                = fct_aux.generate_Pi_Ci_Si_Simax_by_automate(
-                    set1_m_players, set2_m_players, 
-                    t_periods, 
-                    set1_states, 
-                    set2_states,
-                    set1_stateId0_m_players,
-                    set2_stateId0_m_players)
-        fct_aux.save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
-                                         path_to_save=path_to_arr_pl_M_T)
-        print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
-            
-    return arr_pl_M_T_vars
-# ____________________     A EFFACER     _____________________________________
-
-
 def test_lri_balanced_player_game():
     # steps of learning
-    k_steps = 5
+    k_steps = 5 # 250
     p_i_j_ks = [0.5, 0.5, 0.5]
     
     pi_hp_plus = 0.2*pow(10,-3)
@@ -1190,14 +1092,14 @@ def test_lri_balanced_player_game():
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
-    arr_pl_M_T_vars_init = get_or_create_instance(
-                                set1_m_players, set2_m_players, 
-                               t_periods, 
-                               set1_states, 
-                               set2_states,
-                               set1_stateId0_m_players,
-                               set2_stateId0_m_players, 
-                               path_to_arr_pl_M_T, used_instances)
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance(
+                                    set1_m_players, set2_m_players, 
+                                   t_periods, 
+                                   set1_states, 
+                                   set2_states,
+                                   set1_stateId0_m_players,
+                                   set2_stateId0_m_players, 
+                                   path_to_arr_pl_M_T, used_instances)
     # return arr_pl_M_T_vars_init
     
     arr_pl_M_T_K_vars_modif = lri_balanced_player_game(arr_pl_M_T_vars_init,
