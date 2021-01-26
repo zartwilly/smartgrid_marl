@@ -46,8 +46,10 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
         pl_i.set_R_i_old(Si_max-Si)                                             # update R_i_old
         
         # get mode_i
+        mode_i = None
         if t == 0 or random_determinist:
             pl_i.select_mode_i(p_i = 0.5)
+            mode_i = pl_i.get_mode_i()
         else:
             # t in [1,num_periods]
             Pi_t_plus_1 = arr_pl_M_T_vars_modif[num_pl_i, 
@@ -70,7 +72,7 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                                      fct_aux.AUTOMATE_INDEX_ATTRS["Si_plus"]] \
                                 if t-1 > 0 \
                                 else 0
-            mode_i = None
+            
             if used_storage:
                 if state_i == fct_aux.STATES[0] \
                     and fct_aux.fct_positive(
@@ -111,9 +113,12 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                     mode_i = fct_aux.STATE3_STRATS[1]           # PROD, state3
                     
             pl_i.set_mode_i(mode_i)
-        
+                
         # update prod, cons and r_i
         pl_i.update_prod_cons_r_i()
+    
+        # print("T={}, player_{}: state_i={}, mode_i={}, prod_i={}, cons_i={}".format(
+        #     t, num_pl_i, state_i, mode_i, pl_i.get_prod_i(), pl_i.get_cons_i()))
     
         # is pl_i balanced?
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
@@ -166,7 +171,7 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                 ("Si_plus", pl_i.get_Si_plus() )]
         for col, val in tup_cols_values:
             arr_pl_M_T_vars_modif[num_pl_i, t, 
-                                    fct_aux.INDEX_ATTRS[col]] = val
+                                    fct_aux.AUTOMATE_INDEX_ATTRS[col]] = val
             
     return arr_pl_M_T_vars_modif, dico_gamma_players_t
 
@@ -184,7 +189,8 @@ def compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
                                             t, dbg=dbg)
     ## compute prices inside smart grids
     # compute In_sg, Out_sg
-    In_sg, Out_sg = fct_aux.compute_prod_cons_SG(arr_pl_M_T_vars_modif, t)
+    In_sg, Out_sg = fct_aux.compute_prod_cons_SG(arr_pl_M_T_vars_modif.copy(), t)
+    print("In_sg={}, Out_sg={}".format(In_sg, Out_sg ))
     # compute prices of an energy unit price for cost and benefit players
     b0_t, c0_t = fct_aux.compute_energy_unit_price(
                     pi_0_plus_t, pi_0_minus_t, 
@@ -199,8 +205,6 @@ def compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
                                               t, 
                                               b0_t, 
                                               c0_t)
-    # print('#### bens={}'.format(bens_t.shape)) if dbg else None
-    
     
     return b0_t, c0_t, \
             bens_t, csts_t, \
@@ -212,7 +216,7 @@ def balanced_player_game_t(arr_pl_M_T_vars_modif, t,
                             random_determinist, used_storage,
                             manual_debug, dbg):
     # find mode, prod, cons, r_i
-    arr_pl_M_T_K_vars_modif, dico_gamma_players_t \
+    arr_pl_M_T_vars_modif, dico_gamma_players_t \
         = balanced_player_game_4_random_mode(
             arr_pl_M_T_vars_modif.copy(), t, 
             pi_hp_plus, pi_hp_minus,
@@ -303,8 +307,6 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     CSTs_M_T = np.empty(shape=(m_players, t_periods))    
         
     
-    print("SHAPE : arr_pl_M_T_vars_init={}".format(arr_pl_M_T_vars_init.shape))
-    
     arr_pl_M_T_vars_modif = arr_pl_M_T_vars_init.copy()
     arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si_minus"]] = np.nan
     arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si_plus"]] = np.nan
@@ -323,6 +325,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
     pi_sg_plus_t, pi_sg_minus_t = None, None
     for t in range(0, t_periods):
+        print("----- t = {} ------ ".format(t))
         if manual_debug:
             pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
             pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
@@ -408,7 +411,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     print("determinist game: pi_hp_plus={}, pi_hp_minus ={} ---> FIN \n"\
           .format( pi_hp_plus, pi_hp_minus))
     
-    
+    return arr_pl_M_T_vars_modif
     
     
 # ________       main function of DETERMINIST   ---> fin        _______________
@@ -419,14 +422,10 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
 #------------------------------------------------------------------------------
 def test_DETERMINIST_balanced_player_game():
     
-    # steps of learning
-    k_steps = 5 # 250
-    p_i_j_ks = [0.5, 0.5, 0.5]
-    
     pi_hp_plus = 0.2*pow(10,-3)
     pi_hp_minus = 0.33
-    random_determinist = True #False
-    used_storage = True #False
+    random_determinist = False #True #False
+    used_storage = False #True #False
     
     manual_debug=True
     
