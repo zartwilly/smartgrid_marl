@@ -804,7 +804,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
                 Si_t = 10
                 Ci_t = 30
                 x = np.random.randint(low=31, high=40, size=1)[0]
-                Pi_t = x - math.ceil(Si_t/2)
+                Pi_t = x + math.ceil(Si_t/2)
                 
                 
             cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si", Si_t), 
