@@ -12,7 +12,6 @@ import numpy as np
 import itertools as it
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
-import execution_game_automate as exe_game
 
 ###############################################################################
 #                   definition  des fonctions
@@ -345,6 +344,9 @@ def utility_function_version2(arr_pl_M_T_K_vars_modif_new,
                     fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] == fct_aux.STATES[2]
                 ][:,t,k,
                   fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]]
+    
+    #print("P_i_t_s={}, C_i_t_s={}".format(P_i_t_s, C_i_t_s))
+                  
     ## I_m
     P_C_S_i_t_s = P_i_t_s - (C_i_t_s + (Si_max_t_s - S_i_t_s))
     P_C_S_i_t_s[P_C_S_i_t_s < 0] = 0
@@ -414,6 +416,8 @@ def utility_function_version2(arr_pl_M_T_K_vars_modif_new,
                  .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2))) 
     else:
         print("LRI2: I_m <= IN_sg <= I_M? t={},k={} ---> NOK".format(t,k))
+        print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> NOK"\
+                 .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2)))
         if dbg:
            print("LRI2 t={},k={}: I_m={} <= IN_sg={} <= I_M={} ---> OK"\
                  .format(t,k, round(I_m,2), round(IN_sg,2), round(I_M,2)))
@@ -600,17 +604,18 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k, dbg):
         pl_i.set_R_i_old(Si_max-Si)                                             # update R_i_old
         
         # select mode for player num_pl_i
-        p_i_t_k = arr_pl_M_T_K_vars[num_pl_i, 
+        p_i_t_k = arr_pl_M_T_K_vars_modif[num_pl_i, 
                                     t, k, 
                                     fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
             if k == 0 \
-            else arr_pl_M_T_K_vars[num_pl_i, 
+            else arr_pl_M_T_K_vars_modif[num_pl_i, 
                                     t, k-1, 
                                     fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
         pl_i.select_mode_i(p_i=p_i_t_k)
         
         # compute cons, prod, r_i
         pl_i.update_prod_cons_r_i()
+
         
         # is pl_i balanced?
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
@@ -664,12 +669,12 @@ def compute_gamma_4_players(arr_pl_M_T_K_vars_modif, t, k,
         
         # compute gamma_i, Si_{plus,minus}
         Pi_t_plus_1_k \
-            = arr_pl_M_T_K_vars[num_pl_i, t+1, k, 
+            = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
                 if t+1 < t_periods \
                 else 0
         Ci_t_plus_1_k \
-            = arr_pl_M_T_K_vars[num_pl_i, t+1, k, 
+            = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
                 if t+1 < t_periods \
                 else 0
@@ -773,7 +778,7 @@ def compute_prices_inside_SG(arr_pl_M_T_K_vars_modif, t, k,
     gamma_is = arr_pl_M_T_K_vars_modif[:, t, k, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
     bens_t_k, csts_t_k = fct_aux.compute_utility_players(
-                            arr_pl_M_T_K_vars[:,t,:,:], 
+                            arr_pl_M_T_K_vars_modif[:,t,:,:], 
                             gamma_is, 
                             k, 
                             b0_t_k, 
@@ -879,20 +884,22 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
                              arrs.shape[2],
                              arrs.shape[3]), 
                             dtype=object)
-    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["p_i_j_k"]] = 0.5
-    arr_pl_M_T_K_vars[:,:,:,fct_aux.INDEX_ATTRS["non_playing_players"]] \
+    arr_pl_M_T_K_vars[:,:,:,:] = arrs
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
         = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
         
     # ____      run balanced sg for all num_periods at any k_step     ________
     arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
     
-    pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = None, None
-    if manual_debug:
-        pi_sg_plus_t_minus_1 = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K # 8 
-        pi_sg_minus_t_minus_1 = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K # 10
-    else:
-        pi_sg_plus_t_minus_1 = pi_hp_plus-1
-        pi_sg_minus_t_minus_1 = pi_hp_minus-1
+    
+    # pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = None, None
+    # if manual_debug:
+    #     pi_sg_plus_t_minus_1 = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K # 8 
+    #     pi_sg_minus_t_minus_1 = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K # 10
+    # else:
+    #     pi_sg_plus_t_minus_1 = pi_hp_plus-1
+    #     pi_sg_minus_t_minus_1 = pi_hp_minus-1
         
     dico_stats_res = dict()
     for t in range(0, t_periods):
@@ -956,7 +963,9 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
             BENs_M_T_K[:,t,k] = bens_t_k
             CSTs_M_T_K[:,t,k] = csts_t_k
             
+            
             ## compute players' utility
+        
             arr_pl_M_T_K_vars_modif_new, \
             arr_bg_i_nb_repeat_k, \
             bool_bg_i_min_eq_max, \
@@ -1045,13 +1054,14 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
     pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
     
     #__________      save computed variables locally      _____________________
+    algo_name = "LRI1" if utility_function_version == 1 else "LRI2"
     fct_aux.save_variables(path_to_save, arr_pl_M_T_K_vars_modif, 
             b0_s_T_K, c0_s_T_K, B_is_M, C_is_M, BENs_M_T_K, CSTs_M_T_K, 
             BB_is_M, CC_is_M, RU_is_M, 
             pi_sg_minus_T_K, pi_sg_plus_T_K, 
             pi_0_minus_T_K, pi_0_plus_T_K,
             pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-            algo="LRI")
+            algo=algo_name)
     
     return arr_pl_M_T_K_vars_modif
 
@@ -1061,6 +1071,105 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
 #                   definition  des unittests
 #
 ###############################################################################
+
+# ____________________     A EFFACER     _____________________________________
+def get_or_create_instance(set1_m_players, set2_m_players, 
+                            t_periods, 
+                            set1_states, 
+                            set2_states,
+                            set1_stateId0_m_players,
+                            set2_stateId0_m_players, 
+                            path_to_arr_pl_M_T, used_instances):
+    """
+    get instance if it exists else create instance.
+
+    set1 = {state1, state2} : set of players' states 
+    set2 = {state2, state3}
+    
+    Parameters
+    ----------
+    set1_m_players : integer
+        DESCRIPTION.
+        Number of players having their states belonging to set1.
+    set2_m_players : integer
+        DESCRIPTION.
+        Number of players having their states belonging to set2.
+    t_periods : integer
+        DESCRIPTION.
+        Number of periods in the game
+    set1_states : set
+        DESCRIPTION.
+        set of states creating the group set1
+    set2_states: set
+        DESCRIPTION.
+        set of states creating the group set1
+    set1_stateId0_m_players : Integer
+        DESCRIPTION. 
+        Number of players in the set1 having the state equal to the first state in set1
+    set2_stateId0_m_players : Integer
+        DESCRIPTION. 
+        Number of players in the set2 having the state equal to the first state in set2
+    path_to_arr_pl_M_T : string
+        DESCRIPTION.
+        path to save/get array arr_pl_M_T
+        example: tests/AUTOMATE_INSTANCES_GAMES/\
+                    arr_pl_M_T_players_set1_{m_players_set1}_set2_{m_players_set2}\
+                        _periods_{t_periods}.npy
+    used_instances : boolean
+        DESCRIPTION.
+
+    Returns
+    -------
+    arr_pl_M_T_vars : array of 
+        DESCRIPTION.
+
+    """
+    arr_pl_M_T_vars = None
+    filename_arr_pl = fct_aux.AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
+                        set1_m_players, set2_m_players, set1_stateId0_m_players,
+                        set2_stateId0_m_players, t_periods)
+    # path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    
+    if os.path.exists(path_to_arr_pl_M_T):
+        # read arr_pl_M_T
+        if used_instances:
+            arr_pl_M_T_vars \
+                = np.load(os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl]),
+                          allow_pickle=True)
+            print("READ INSTANCE GENERATED")
+            
+        else:
+            # create arr_pl_M_T when used_instances = False
+            arr_pl_M_T_vars \
+                = fct_aux.generate_Pi_Ci_Si_Simax_by_automate(
+                    set1_m_players, set2_m_players, 
+                    t_periods, 
+                    set1_states, 
+                    set2_states,
+                    set1_stateId0_m_players,
+                    set2_stateId0_m_players)
+            
+            fct_aux.save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                                         path_to_save=path_to_arr_pl_M_T)
+            print("CREATE INSTANCE used_instance={}".format(used_instances))
+    else:
+        # create arr_pl_M_T
+        arr_pl_M_T_vars \
+                = fct_aux.generate_Pi_Ci_Si_Simax_by_automate(
+                    set1_m_players, set2_m_players, 
+                    t_periods, 
+                    set1_states, 
+                    set2_states,
+                    set1_stateId0_m_players,
+                    set2_stateId0_m_players)
+        fct_aux.save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                                         path_to_save=path_to_arr_pl_M_T)
+        print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
+            
+    return arr_pl_M_T_vars
+# ____________________     A EFFACER     _____________________________________
+
+
 def test_lri_balanced_player_game():
     # steps of learning
     k_steps = 5
@@ -1069,7 +1178,7 @@ def test_lri_balanced_player_game():
     pi_hp_plus = 0.2*pow(10,-3)
     pi_hp_minus = 0.33
     learning_rate = 0.1
-    utility_function_version=1
+    utility_function_version=2
     
     manual_debug=True
     
@@ -1081,7 +1190,7 @@ def test_lri_balanced_player_game():
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
-    arr_pl_M_T_vars_init = exe_game.get_or_create_instance(
+    arr_pl_M_T_vars_init = get_or_create_instance(
                                 set1_m_players, set2_m_players, 
                                t_periods, 
                                set1_states, 
@@ -1089,6 +1198,7 @@ def test_lri_balanced_player_game():
                                set1_stateId0_m_players,
                                set2_stateId0_m_players, 
                                path_to_arr_pl_M_T, used_instances)
+    # return arr_pl_M_T_vars_init
     
     arr_pl_M_T_K_vars_modif = lri_balanced_player_game(arr_pl_M_T_vars_init,
                              pi_hp_plus=pi_hp_plus, 
@@ -1100,6 +1210,7 @@ def test_lri_balanced_player_game():
                              path_to_save="tests", 
                              manual_debug=manual_debug, 
                              dbg=False)
+    return arr_pl_M_T_K_vars_modif
     
     
 ###############################################################################
