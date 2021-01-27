@@ -166,5 +166,13 @@ if __name__ == "__main__":
         #         scenario=scenarios[0], 
         #         learning_rate=learning_rates[-1], 
         #         prob_Ci=prob_Ci)
+        fct_aux.resume_game_on_excel_file_automate(
+                df_arr_M_T_Ks, df_ben_cst_M_T_K, t = t, 
+                set1_m_players = set1_m_players, 
+                set1_stateId0_m_players = set1_stateId0_m_players, 
+                set2_m_players = set2_m_players, 
+                set2_stateId0_m_players = set2_stateId0_m_players, 
+                t_periods = t_periods, k_steps = k_steps_args, 
+                learning_rate=learning_rates[-1])
         
     print("runtime = {}".format(time.time() - ti))
