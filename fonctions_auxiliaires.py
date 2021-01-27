@@ -170,6 +170,8 @@ def compute_prod_cons_SG(arr_pl_M_T, t):
     Out_sg = sum( arr_pl_M_T[:, t, INDEX_ATTRS["cons_i"]] )
     return In_sg, Out_sg
     
+# ______________        compute prices: debut       ___________________________ 
+
 def compute_energy_unit_price(pi_0_plus, pi_0_minus, 
                               pi_hp_plus, pi_hp_minus,
                               In_sg, Out_sg):
@@ -320,7 +322,45 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
                             
     return new_pi_sg_plus_t, new_pi_sg_minus_t
 
+def compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
+                                pi_hp_plus, pi_hp_minus,
+                                pi_0_plus_t, pi_0_minus_t,
+                                manual_debug, dbg):
+    
+    # compute the new prices pi_sg_plus_t, pi_sg_minus_t
+    # from a pricing model in the document
+    pi_sg_plus_t, pi_sg_minus_t = determine_new_pricing_sg(
+                                            arr_pl_M_T_vars_modif, 
+                                            pi_hp_plus, 
+                                            pi_hp_minus, 
+                                            t, dbg=dbg)
+    ## compute prices inside smart grids
+    # compute In_sg, Out_sg
+    In_sg, Out_sg = compute_prod_cons_SG(arr_pl_M_T_vars_modif.copy(), t)
+    # print("In_sg={}, Out_sg={}".format(In_sg, Out_sg ))
+    
+    # compute prices of an energy unit price for cost and benefit players
+    b0_t, c0_t = compute_energy_unit_price(
+                    pi_0_plus_t, pi_0_minus_t, 
+                    pi_hp_plus, pi_hp_minus,
+                    In_sg, Out_sg)
+    
+    # compute ben, cst of shape (M_PLAYERS,) 
+    # compute cost (csts) and benefit (bens) players by energy exchanged.
+    gamma_is = arr_pl_M_T_vars_modif[:, t, AUTOMATE_INDEX_ATTRS["gamma_i"]]
+    bens_t, csts_t = compute_utility_players(arr_pl_M_T_vars_modif, 
+                                              gamma_is, 
+                                              t, 
+                                              b0_t, 
+                                              c0_t)
+    
+    return b0_t, c0_t, \
+            bens_t, csts_t, \
+            pi_sg_plus_t, pi_sg_minus_t
+# ______________        compute prices: fin         ___________________________
 
+
+# ______________        save variables: debut       ___________________________ 
 def save_variables(path_to_save, arr_pl_M_T_K_vars, 
                    b0_s_T_K, c0_s_T_K,
                    B_is_M, C_is_M, 
@@ -394,6 +434,7 @@ def save_instances_games(arr_pl_M_T, name_file_arr_pl, path_to_save):
     np.save(os.path.join(path_to_save, name_file_arr_pl), 
             arr_pl_M_T)
     
+# ______________        save variables: debut       ___________________________
 
 # __________        resume game on excel file :   debut          ______________
 def resume_game_on_excel_file(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
