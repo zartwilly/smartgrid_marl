@@ -1065,6 +1065,7 @@ def balanced_player(pl_i, thres=0.1, dbg=False):
 
 # __________    look for whether pli is balanced or not --> fin  ____________
 
+# __________    reupdate states, find possibles modes --> debut     _________
 def reupdate_state_players_OLD(arr_pl_M_T_K_vars, t=0, k=0):
     """
     after remarking that some players have 2 states during the game, 
@@ -1216,6 +1217,66 @@ def reupdate_state_players(arr_pl_M_T_K_vars, t=0, k=0):
         
     return arr_pl_vars, possibles_modes
 
+def possibles_modes_players_automate(arr_pl_M_T_K_vars, t=0, k=0):
+    """
+    after remarking that some players have 2 states during the game, 
+    I decide to write this function to set uniformly the players' state for all
+    periods and all learning step
+
+    Parameters
+    ----------
+    arr_pl_M_T_K_vars : TYPE, optional
+        DESCRIPTION. The default is None.
+    t : TYPE, optional
+        DESCRIPTION. The default is 0.
+    k : TYPE, optional
+        DESCRIPTION. The default is 0.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    m_players = arr_pl_M_T_K_vars.shape[0]
+    possibles_modes = list()
+    
+    arr_pl_vars = None
+    if len(arr_pl_M_T_K_vars.shape) == 3:
+        arr_pl_vars = arr_pl_M_T_K_vars
+        for num_pl_i in range(0, m_players):
+            state_i = arr_pl_vars[num_pl_i, t, 
+                                  AUTOMATE_INDEX_ATTRS["state_i"]] 
+            
+            # get mode_i
+            if state_i == "state1":
+                possibles_modes.append(STATE1_STRATS)
+            elif state_i == "state2":
+                possibles_modes.append(STATE2_STRATS)
+            elif state_i == "state3":
+                possibles_modes.append(STATE3_STRATS)
+            # print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+                
+    elif len(arr_pl_M_T_K_vars.shape) == 4:
+        arr_pl_vars = arr_pl_M_T_K_vars
+        for num_pl_i in range(0, m_players):
+            state_i = arr_pl_vars[num_pl_i, t, k, 
+                                  AUTOMATE_INDEX_ATTRS["state_i"]]
+            
+            # get mode_i
+            if state_i == "state1":
+                possibles_modes.append(STATE1_STRATS)
+            elif state_i == "state2":
+                possibles_modes.append(STATE2_STRATS)
+            elif state_i == "state3":
+                possibles_modes.append(STATE3_STRATS)
+            # print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+    else:
+        print("STATE_i: NOTHING TO UPDATE.")
+        
+    return possibles_modes
+
+# __________    reupdate states, find possibles modes --> fin       _________
 
 def compute_real_money_SG(arr_pls_M_T, pi_sg_plus_s, pi_sg_minus_s, 
                           INDEX_ATTRS):
