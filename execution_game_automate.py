@@ -130,12 +130,13 @@ def execute_algos_used_Generated_instances(arr_pl_M_T_vars_init,
         elif algo_name == ALGOS[2] or algo_name == ALGOS[3]:
             # 2: DETERMINIST, 3: RANDOM DETERMINIST
             print("*** ALGO: {} *** ".format(algo_name))
+            random_determinist = False if algo_name == ALGOS[2] else True
             Path(path_to_save).mkdir(parents=True, exist_ok=True)
             arr_M_T_vars = autoDetGameModel.determinist_balanced_player_game(
                              arr_pl_M_T_vars_init.copy(),
                              pi_hp_plus=pi_hp_plus_elt, 
                              pi_hp_minus=pi_hp_minus_elt,
-                             algo_name=algo_name,
+                             random_determinist=random_determinist,
                              used_storage=used_storage_det,
                              path_to_save=path_to_save, 
                              manual_debug=manual_debug, dbg=debug)
@@ -242,11 +243,16 @@ def test_get_or_create_instance():
         print("OK no problem in m_players")
     return arr_pl_M_T_vars
 
-def test_execute_algos_used_Generated_instances():
+def test_execute_algos_used_Generated_instances_OLD():
     t_periods = 2
     set1_m_players, set2_m_players = 20, 12
     set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
+    set1_m_players, set2_m_players = 10, 6
+    # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
     set1_states, set2_states = None, None
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
@@ -266,6 +272,38 @@ def test_execute_algos_used_Generated_instances():
     execute_algos_used_Generated_instances(arr_pl_M_T_vars_init, algos=algos, 
                                            k_steps=k_steps, 
                                            learning_rates=learning_rates)
+    
+    
+def test_execute_algos_used_Generated_instances():
+    t_periods = 2
+    set1_m_players, set2_m_players = 20, 12
+    set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
+    set1_m_players, set2_m_players = 10, 6
+    # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
+    set1_states, set2_states = None, None
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False #True
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance(
+                                set1_m_players, set2_m_players, 
+                                t_periods, 
+                                set1_states, 
+                                set2_states,
+                                set1_stateId0_m_players,
+                                set2_stateId0_m_players, 
+                                path_to_arr_pl_M_T, used_instances)
+    
+    algos = ["LRI1", "LRI2", "DETERMINIST"]+ fct_aux.ALGO_NAMES_NASH \
+            + fct_aux.ALGO_NAMES_BF 
+    k_steps = 250
+    learning_rates = [0.1]
+    execute_algos_used_Generated_instances(arr_pl_M_T_vars_init, algos=algos, 
+                                           k_steps=k_steps, 
+                                           learning_rates=learning_rates)
  
 #------------------------------------------------------------------------------
 #                   definitions of functions
@@ -277,8 +315,8 @@ def test_execute_algos_used_Generated_instances():
 if __name__ == "__main__":
     ti = time.time()
     
-    boolean_get_create = True
-    boolean_execute = False
+    boolean_get_create = False#True
+    boolean_execute = True #False
     
     if boolean_get_create:
         arr_pl_M_T_vars = test_get_or_create_instance()
