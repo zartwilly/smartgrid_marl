@@ -15,7 +15,7 @@ import itertools as it
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 
-import force_brute_game_model as bf_model
+import force_brute_game_model_automate as autoBfGameModel
 
 from datetime import datetime
 from pathlib import Path
@@ -197,7 +197,7 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T_vars_init,
             bens_t, csts_t, \
             pi_sg_plus_t, pi_sg_minus_t, \
             dico_gamme_t \
-                = bf_model.balanced_player_game_4_mode_profil_prices_SG(
+                = autoBfGameModel.balanced_player_game_4_mode_profil_prices_SG(
                     arr_pl_M_T_vars_modif.copy(),
                     mode_profile, t,
                     pi_hp_plus, pi_hp_minus,
@@ -281,7 +281,7 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T_vars_init,
         bens_t, csts_t, \
         pi_sg_plus_t, pi_sg_minus_t, \
         dico_gamme_t_nash_mode_prof \
-            = bf_model.balanced_player_game_4_mode_profil_prices_SG(
+            = autoBfGameModel.balanced_player_game_4_mode_profil_prices_SG(
                 arr_pl_M_T_vars_modif.copy(),
                 best_nash_mode_profile, t,
                 pi_hp_plus, pi_hp_minus,
@@ -416,7 +416,7 @@ def checkout_nash_equilibrium(arr_pl_M_T_vars_modif, path_to_variable,
             bens_t, csts_t, \
             pi_sg_plus_t, pi_sg_minus_t, \
             dico_gamme_t \
-                = bf_model.balanced_player_game_4_mode_profil_prices_SG(
+                = autoBfGameModel.balanced_player_game_4_mode_profil_prices_SG(
                     arr_pl_M_T_vars_modif.copy(),
                     mode_profile, t,
                     pi_hp_plus, pi_hp_minus,
@@ -493,7 +493,6 @@ def test_nash_balanced_player_game_perf_t(algo_name="BEST-NASH"):
     
     manual_debug=True
     debug = False
-    criteria_bf = "Perf_t"
     
     t_periods = 2
     set1_m_players, set2_m_players = 20, 12
