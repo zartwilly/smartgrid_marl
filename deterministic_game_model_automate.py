@@ -175,40 +175,6 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
             
     return arr_pl_M_T_vars_modif, dico_gamma_players_t
 
-def compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
-                                pi_hp_plus, pi_hp_minus,
-                                pi_0_plus_t, pi_0_minus_t,
-                                manual_debug, dbg):
-    
-    # compute the new prices pi_sg_plus_t, pi_sg_minus_t
-    # from a pricing model in the document
-    pi_sg_plus_t, pi_sg_minus_t = fct_aux.determine_new_pricing_sg(
-                                            arr_pl_M_T_vars_modif, 
-                                            pi_hp_plus, 
-                                            pi_hp_minus, 
-                                            t, dbg=dbg)
-    ## compute prices inside smart grids
-    # compute In_sg, Out_sg
-    In_sg, Out_sg = fct_aux.compute_prod_cons_SG(arr_pl_M_T_vars_modif.copy(), t)
-    print("In_sg={}, Out_sg={}".format(In_sg, Out_sg ))
-    # compute prices of an energy unit price for cost and benefit players
-    b0_t, c0_t = fct_aux.compute_energy_unit_price(
-                    pi_0_plus_t, pi_0_minus_t, 
-                    pi_hp_plus, pi_hp_minus,
-                    In_sg, Out_sg)
-    
-    # compute ben, cst of shape (M_PLAYERS,) 
-    # compute cost (csts) and benefit (bens) players by energy exchanged.
-    gamma_is = arr_pl_M_T_vars_modif[:, t, fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
-    bens_t, csts_t = fct_aux.compute_utility_players(arr_pl_M_T_vars_modif, 
-                                              gamma_is, 
-                                              t, 
-                                              b0_t, 
-                                              c0_t)
-    
-    return b0_t, c0_t, \
-            bens_t, csts_t, \
-            pi_sg_plus_t, pi_sg_minus_t
 
 def balanced_player_game_t(arr_pl_M_T_vars_modif, t, 
                             pi_hp_plus, pi_hp_minus,
@@ -229,10 +195,10 @@ def balanced_player_game_t(arr_pl_M_T_vars_modif, t,
     b0_t, c0_t, \
     bens_t, csts_t, \
     pi_sg_plus_t, pi_sg_minus_t, \
-        = compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
-                                     pi_hp_plus, pi_hp_minus,
-                                     pi_0_plus_t, pi_0_minus_t,
-                                     manual_debug, dbg)
+        = fct_aux.compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
+                                             pi_hp_plus, pi_hp_minus,
+                                             pi_0_plus_t, pi_0_minus_t,
+                                             manual_debug, dbg)
         
     return arr_pl_M_T_vars_modif, \
             b0_t, c0_t, \
