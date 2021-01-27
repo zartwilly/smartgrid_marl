@@ -17,64 +17,6 @@ from datetime import datetime
 #                       definition of functions
 #
 #------------------------------------------------------------------------------
-def reupdate_state_players_automate(arr_pl_M_T_K_vars, t=0, k=0):
-    """
-    after remarking that some players have 2 states during the game, 
-    I decide to write this function to set uniformly the players' state for all
-    periods and all learning step
-
-    Parameters
-    ----------
-    arr_pl_M_T_K_vars : TYPE, optional
-        DESCRIPTION. The default is None.
-    t : TYPE, optional
-        DESCRIPTION. The default is 0.
-    k : TYPE, optional
-        DESCRIPTION. The default is 0.
-
-    Returns
-    -------
-    None.
-
-    """
-
-    m_players = arr_pl_M_T_K_vars.shape[0]
-    possibles_modes = list()
-    
-    arr_pl_vars = None
-    if len(arr_pl_M_T_K_vars.shape) == 3:
-        arr_pl_vars = arr_pl_M_T_K_vars
-        for num_pl_i in range(0, m_players):
-            state_i = arr_pl_vars[num_pl_i, t, 
-                                  fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] 
-            
-            # get mode_i
-            if state_i == "state1":
-                possibles_modes.append(fct_aux.STATE1_STRATS)
-            elif state_i == "state2":
-                possibles_modes.append(fct_aux.STATE2_STRATS)
-            elif state_i == "state3":
-                possibles_modes.append(fct_aux.STATE3_STRATS)
-            # print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
-                
-    elif len(arr_pl_M_T_K_vars.shape) == 4:
-        arr_pl_vars = arr_pl_M_T_K_vars
-        for num_pl_i in range(0, m_players):
-            state_i = arr_pl_vars[num_pl_i, t, k, 
-                                  fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]]
-            
-            # get mode_i
-            if state_i == "state1":
-                possibles_modes.append(fct_aux.STATE1_STRATS)
-            elif state_i == "state2":
-                possibles_modes.append(fct_aux.STATE2_STRATS)
-            elif state_i == "state3":
-                possibles_modes.append(fct_aux.STATE3_STRATS)
-            # print("4: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
-    else:
-        print("STATE_i: NOTHING TO UPDATE.")
-        
-    return possibles_modes
 
 def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif, 
                                         mode_profile, t, 
@@ -181,42 +123,6 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif,
             
     return arr_pl_M_T_vars_mode_prof, dico_gamma_players_t
     
-def compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
-                                pi_hp_plus, pi_hp_minus,
-                                pi_0_plus_t, pi_0_minus_t,
-                                manual_debug, dbg):
-    # TODO : A deplacer dans fonctions_auxiliaires
-    
-    # compute the new prices pi_sg_plus_t, pi_sg_minus_t
-    # from a pricing model in the document
-    pi_sg_plus_t, pi_sg_minus_t = fct_aux.determine_new_pricing_sg(
-                                            arr_pl_M_T_vars_modif, 
-                                            pi_hp_plus, 
-                                            pi_hp_minus, 
-                                            t, dbg=dbg)
-    ## compute prices inside smart grids
-    # compute In_sg, Out_sg
-    In_sg, Out_sg = fct_aux.compute_prod_cons_SG(arr_pl_M_T_vars_modif.copy(), t)
-    print("In_sg={}, Out_sg={}".format(In_sg, Out_sg ))
-    # compute prices of an energy unit price for cost and benefit players
-    b0_t, c0_t = fct_aux.compute_energy_unit_price(
-                    pi_0_plus_t, pi_0_minus_t, 
-                    pi_hp_plus, pi_hp_minus,
-                    In_sg, Out_sg)
-    
-    # compute ben, cst of shape (M_PLAYERS,) 
-    # compute cost (csts) and benefit (bens) players by energy exchanged.
-    gamma_is = arr_pl_M_T_vars_modif[:, t, fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
-    bens_t, csts_t = fct_aux.compute_utility_players(arr_pl_M_T_vars_modif, 
-                                              gamma_is, 
-                                              t, 
-                                              b0_t, 
-                                              c0_t)
-    
-    return b0_t, c0_t, \
-            bens_t, csts_t, \
-            pi_sg_plus_t, pi_sg_minus_t
-
 def balanced_player_game_4_mode_profil_prices_SG(arr_pl_M_T_vars_modif,
                                         mode_profile, t,
                                         pi_hp_plus, pi_hp_minus,
@@ -236,10 +142,10 @@ def balanced_player_game_4_mode_profil_prices_SG(arr_pl_M_T_vars_modif,
     b0_t, c0_t, \
     bens_t, csts_t, \
     pi_sg_plus_t, pi_sg_minus_t \
-        = compute_prices_inside_SG(arr_pl_M_T_vars_mode_prof, t,
-                                     pi_hp_plus, pi_hp_minus,
-                                     pi_0_plus_t, pi_0_minus_t,
-                                     manual_debug, dbg)
+        = fct_aux.compute_prices_inside_SG(arr_pl_M_T_vars_mode_prof, t,
+                                             pi_hp_plus, pi_hp_minus,
+                                             pi_0_plus_t, pi_0_minus_t,
+                                             manual_debug, dbg)
 
     return arr_pl_M_T_vars_mode_prof, \
             b0_t, c0_t, \
@@ -307,14 +213,8 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
     arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
         = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
         
-    print("\n \n {} game: {}, pi_hp_minus ={} ---> fin \n"\
-          .format(algo_name, pi_hp_plus, pi_hp_minus))
-        
     # ____      game beginning for all t_period ---> debut      _____
     dico_stats_res = dict()
-    
-    possibles_modes = reupdate_state_players_automate(
-                                        arr_pl_M_T_vars.copy(), 0, 0)
     
     pi_sg_plus_t0_minus_1 = pi_hp_plus-1
     pi_sg_minus_t0_minus_1 = pi_hp_minus-1
@@ -322,6 +222,10 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
     pi_sg_plus_t, pi_sg_minus_t = None, None
     for t in range(0, t_periods):
         print("----- t = {} ------ ".format(t))
+        possibles_modes = fct_aux.possibles_modes_players_automate(
+                                        arr_pl_M_T_vars_modif.copy(), t=t, k=0)
+        print("possibles_modes={}".format(len(possibles_modes)))
+
         if manual_debug:
             pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
             pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
@@ -367,6 +271,8 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                 dico_mode_profs[Perf_t] = [mode_profile]
              
             cpt_xxx += 1
+            if cpt_xxx%5000 == 0:
+                print("cpt_xxx={}".format(cpt_xxx))
             
         # max_min_moy_bf
         best_key_Perf_t = None
@@ -495,6 +401,11 @@ def test_brute_force_game(algo_name, criteria):
     set1_m_players, set2_m_players = 20, 12
     set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
+    set1_m_players, set2_m_players = 10, 6
+    # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
     set1_states, set2_states = None, None
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
