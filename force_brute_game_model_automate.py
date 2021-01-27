@@ -343,18 +343,18 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
     
     # __________        compute prices variables         ____________________
     # B_is, C_is of shape (M_PLAYERS, )
-    prod_i_M_T = arr_pl_M_T_vars_mode_prof_best[:,:, 
+    prod_i_M_T = arr_pl_M_T_vars_modif[:,:, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
-    cons_i_M_T = arr_pl_M_T_vars_mode_prof_best[:,:, 
+    cons_i_M_T = arr_pl_M_T_vars_modif[:,:, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
     B_is_M = np.sum(b0_ts_T * prod_i_M_T, axis=1)
     C_is_M = np.sum(c0_ts_T * cons_i_M_T, axis=1)
     
     # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
-    CONS_is_M_T = np.sum(arr_pl_M_T_vars_mode_prof_best[:,:, 
+    CONS_is_M_T = np.sum(arr_pl_M_T_vars_modif[:,:, 
                                          fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
                          axis=1)
-    PROD_is_M_T = np.sum(arr_pl_M_T_vars_mode_prof_best[:,:, 
+    PROD_is_M_T = np.sum(arr_pl_M_T_vars_modif[:,:, 
                                          fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
                          axis=1)
     BB_is_M = pi_sg_plus_T[-1] * PROD_is_M_T #np.sum(PROD_is)
