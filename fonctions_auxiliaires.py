@@ -926,9 +926,14 @@ def get_or_create_instance(set1_m_players, set2_m_players,
 
     """
     arr_pl_M_T_vars = None
+    # filename_arr_pl = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
+    #                     set1_m_players, set2_m_players, set1_stateId0_m_players,
+    #                     set2_stateId0_m_players, t_periods)
+    "arr_pl_M_T_players_set1_{}_repSet1_{}_set2_{}_repSet2_{}_periods_{}.npy"
     filename_arr_pl = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
-                        set1_m_players, set2_m_players, set1_stateId0_m_players,
-                        set2_stateId0_m_players, t_periods)
+                        set1_m_players, set1_stateId0_m_players, 
+                        set2_m_players, set2_stateId0_m_players, 
+                        t_periods)
     path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     path_to_arr_pl_M_T = os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl])
     
