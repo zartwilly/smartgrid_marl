@@ -536,6 +536,100 @@ def resume_game_on_excel_file(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                 index=False )
     
     return arr_pl_M_T_vars, df_arr_M_T_vars, df
+
+def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1, 
+                              set1_m_players=10, set1_stateId0_m_players=0.75, 
+                              set2_m_players=6, set2_stateId0_m_players=0.42, 
+                              t_periods=2, k_steps=250, learning_rate=0.1):
+    """
+    resume_game_on_excel_file_automate(df_arr_M_T_Ks, 
+                              t = t, 
+                              set1_m_players=10, set1_stateId0_m_players=0.75, 
+                              set2_m_players=6, set2_stateId0_m_players=0.42, 
+                              t_periods=2, k_steps=250, learning_rate=0.1)
+    """
+   
+    print('shape: df_arr_M_T_Ks = {} '.format(df_arr_M_T_Ks.shape))
+    df_arr_M_T_Ks["pl_i"] = df_arr_M_T_Ks['pl_i'].astype(float);
+    df_ben_cst_M_T_K["pl_i"] = df_ben_cst_M_T_K['pl_i'].astype(float);
+    
+
+    learning_algos = ["LRI1","LRI2"]
+    algo_names = learning_algos\
+                    +[ALGO_NAMES_BF[0]] \
+                    + [ALGO_NAMES_NASH[0]] 
+    
+    
+    # initial array from INSTANCES_GAMES
+    path_to_variable = os.path.join(
+                        "tests", "AUTOMATE_INSTANCES_GAMES"
+                        )
+    arr_name = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
+                        set1_m_players, set1_stateId0_m_players, 
+                        set2_m_players, set2_stateId0_m_players, 
+                        t_periods)
+    arr_pl_M_T_vars = np.load(os.path.join(path_to_variable, arr_name),
+                                            allow_pickle=True)
+    arr_cols = list(AUTOMATE_INDEX_ATTRS.keys())
+    df_arr_M_T_vars = pd.DataFrame(arr_pl_M_T_vars[:,t,:],
+                                   columns=arr_cols)
+    df_arr_M_T_vars = df_arr_M_T_vars.reset_index()
+    df_arr_M_T_vars.rename(columns={"index":"pl_i"}, inplace=True)
+    
+    print("shape: arr_pl_M_T_K={}, df_arr_M_T_vars={}".format(
+            arr_pl_M_T_vars.shape, df_arr_M_T_vars.shape))
+    
+    cols = ["state_i","algo","pl_i","k","Ci","Pi","Si","Si_max","gamma_i",
+            "prod_i","cons_i","Profili","Casei","bg_i","u_i","p_i_j_k",
+            "mode_i"] #,"","","","","",]
+    
+    df = pd.DataFrame(columns=cols)
+    
+    k_step_chosen = k_steps
+    states = list(df_arr_M_T_Ks['state_i'].unique())
+    for state_i in states:
+        for algo_name in algo_names:
+            mask_algo_name = (df_arr_M_T_Ks.state_i == state_i) \
+                                & (df_arr_M_T_Ks.algo == algo_name) \
+                                & (df_arr_M_T_Ks.k == k_step_chosen-1)
+                                
+            df_al = df_arr_M_T_Ks[mask_algo_name].copy()
+            df_al = df_al[cols]
+            
+            #mask arr
+            mask_arr = (df_arr_M_T_vars.state_i == state_i)
+            df_arr = df_arr_M_T_vars[mask_arr].copy()
+            df_arr = df_arr[["pl_i","Si"]]
+            df_arr.rename(columns={"Si":"initial_Si"}, inplace=True)
+                        
+            mask_ben_cst = (df_ben_cst_M_T_K.state_i == state_i) \
+                                & (df_ben_cst_M_T_K.algo == algo_name) \
+                                & (df_ben_cst_M_T_K.k == k_step_chosen-1) 
+            df_ben = df_ben_cst_M_T_K[mask_ben_cst]
+            df_ben = df_ben[["pl_i","ben","cst"]]
+            
+            
+            df_al = pd.merge(left=df_al, right=df_ben, 
+                          left_on='pl_i', right_on='pl_i')
+            df_al = pd.merge(left=df_al, right=df_arr, 
+                          left_on='pl_i', right_on='pl_i')
+            
+            
+            df = pd.concat([df, df_al], axis=0)
+            
+    # save to the excel file
+    df.rename(columns={"mode_i":"strategie"}, inplace=True)
+    cols = df.columns.tolist()
+    cols.insert(6, cols.pop(19))
+    df = df[cols]
+    path_to_save = os.path.join(*["files_debug"])
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    df.to_excel(os.path.join(
+                *[path_to_save,
+                  "resume_game_rate_{}.xlsx".format(learning_rate)]), 
+                index=False )
+    
+    return arr_pl_M_T_vars, df_arr_M_T_vars, df
 # __________        resume game on excel file :   fin           ______________
 
 # __________    generate Cis, Pis, Si_maxs and Sis --> debut   ________________
