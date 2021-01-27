@@ -1076,7 +1076,6 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
 #                   affichage  dans tab  ---> fin
 # _____________________________________________________________________________
 
-
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -1093,6 +1092,7 @@ if __name__ == "__main__":
     t = 1
     
     name_simu =  "simu_2701_1259"; k_steps_args = 250
+    name_simu =  "simu_DDMM_HHMM"; k_steps_args = 250
     
     algos_4_no_learning = ["DETERMINIST","RD-DETERMINIST"] \
                             + fct_aux.ALGO_NAMES_BF \
@@ -1124,5 +1124,13 @@ if __name__ == "__main__":
     name_dir = os.path.join("tests", name_simu)
     group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir, 
                         NAME_RESULT_SHOW_VARS)
+    
+    
+    ## ---------                A EFFACER               --------------
+    # fct_aux.resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1, 
+    #                           set1_m_players=10, set1_stateId0_m_players=0.75, 
+    #                           set2_m_players=6, set2_stateId0_m_players=0.42, 
+    #                           t_periods=2, k_steps=250, learning_rate=0.1)
+    ## ---------                A EFFACER               --------------
     
     print('runtime = {}'.format(time.time()-ti))
