@@ -888,13 +888,14 @@ def get_or_create_instance(set1_m_players, set2_m_players,
     filename_arr_pl = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
                         set1_m_players, set2_m_players, set1_stateId0_m_players,
                         set2_stateId0_m_players, t_periods)
-    # path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    path_to_arr_pl_M_T = os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl])
     
     if os.path.exists(path_to_arr_pl_M_T):
         # read arr_pl_M_T
         if used_instances:
             arr_pl_M_T_vars \
-                = np.load(os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl]),
+                = np.load(path_to_arr_pl_M_T,
                           allow_pickle=True)
             print("READ INSTANCE GENERATED")
             
@@ -910,7 +911,7 @@ def get_or_create_instance(set1_m_players, set2_m_players,
                     set2_stateId0_m_players)
             
             save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
-                                 path_to_save=path_to_arr_pl_M_T)
+                                 path_to_save=path_to_save)
             print("CREATE INSTANCE used_instance={}".format(used_instances))
     else:
         # create arr_pl_M_T
@@ -923,7 +924,7 @@ def get_or_create_instance(set1_m_players, set2_m_players,
                     set1_stateId0_m_players,
                     set2_stateId0_m_players)
         save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
-                             path_to_save=path_to_arr_pl_M_T)
+                             path_to_save=path_to_save)
         print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
             
     return arr_pl_M_T_vars    
