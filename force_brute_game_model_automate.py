@@ -319,6 +319,12 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                 pi_0_plus_t, pi_0_minus_t,
                 manual_debug, dbg)
         dico_stats_res[t] = dico_gamme_t
+        suff = algo_name.split("-")[0]
+        dico_stats_res[t] = {"gamma_i": dico_gamme_t,
+                             suff+"_mode_profiles": best_mode_profiles,
+                             "nb_"+suff+"_mode_profiles": len(best_mode_profiles),
+                             suff+"_mode_profile": best_mode_profile,
+                             suff+"_Perf_t": best_key_Perf_t }
         
         # verification of best key quality 
         diff = np.abs(best_key_Perf_t-( np.sum(bens_t-csts_t) ))
