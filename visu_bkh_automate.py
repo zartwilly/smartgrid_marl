@@ -320,6 +320,7 @@ def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=250,
             # arr_pl_M_T_K_vars_4D[:,:,:, ind_bg_i] = 0
             # arr_pl_M_T_K_vars_4D[:,:,:, ind_non_playing_players] = 1
             
+            arr_pl_M_T_K_vars_4D[:,:,:,:] = arrs
             # # turn in 2D
             arr_pl_M_T_K_vars_2D = arr_pl_M_T_K_vars_4D.reshape(
                                         -1, 
