@@ -269,11 +269,12 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T_vars_init,
             rd = np.random.randint(0, len(best_nash_mode_profiles))
             best_nash_mode_profile = best_nash_mode_profiles[rd]
         
-        print("** Running at t={}: numbers of -> cpt_profils={}, best_nash_mode_profiles={}, nash_profils={}"\
-              .format(t, cpt_profs, len(best_nash_mode_profiles), 
-                      len(nash_profils) ))
-        print("best_key_Perf_t={}, {}_nash_mode_profiles={}".format(
-                best_key_Perf_t, algo_name, best_nash_mode_profile))
+        print("** Running at t={}: numbers of -> cpt_profils={}, {}_nash_mode_profiles={}, nash_profils={}"\
+              .format(t, cpt_profs, algo_name.split("-")[0], 
+                      len(best_nash_mode_profiles), len(nash_profils) ))
+        print("{}_key_Perf_t={}, {}_nash_mode_profiles={}".format(
+                algo_name.split("-")[0], best_key_Perf_t, algo_name, 
+                best_nash_mode_profile))
         
         
         arr_pl_M_T_vars_nash_mode_prof, \
@@ -287,12 +288,14 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T_vars_init,
                 pi_hp_plus, pi_hp_minus,
                 pi_0_plus_t, pi_0_minus_t,
                 manual_debug, dbg)
+        suff = algo_name.split("-")[0]
         dico_stats_res[t] = {"gamma_i": dico_gamme_t_nash_mode_prof,
                              "nash_profils": nash_profils,
-                             "best_nash_profil": best_nash_mode_profile,
-                             "best_Perf_t": best_key_Perf_t,
+                             "nb_nash_profils": len(nash_profils),
+                             suff+"_nash_profil": best_nash_mode_profile,
+                             suff+"_Perf_t": best_key_Perf_t,
                              "nb_nash_profil_byPerf_t": 
-                                 dico_Perft_nashProfil[best_key_Perf_t]}
+                                 len(dico_Perft_nashProfil[best_key_Perf_t])}
             
         # pi_sg_{plus,minus} of shape (T_PERIODS,)
         pi_sg_plus_T[t] = pi_sg_plus_t
