@@ -581,7 +581,7 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1,
     
     cols = ["state_i","algo","pl_i","k","Ci","Pi","Si","Si_max","gamma_i",
             "prod_i","cons_i","Profili","Casei","bg_i","u_i","p_i_j_k",
-            "mode_i"] #,"","","","","",]
+            "mode_i", "r_i", "set"] #,"","","","","",]
     
     df = pd.DataFrame(columns=cols)
     
@@ -620,7 +620,7 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1,
     # save to the excel file
     df.rename(columns={"mode_i":"strategie"}, inplace=True)
     cols = df.columns.tolist()
-    cols.insert(6, cols.pop(19))
+    cols.insert(6, cols.pop(21))
     df = df[cols]
     path_to_save = os.path.join(*["files_debug"])
     Path(path_to_save).mkdir(parents=True, exist_ok=True)
