@@ -537,10 +537,12 @@ def resume_game_on_excel_file(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     
     return arr_pl_M_T_vars, df_arr_M_T_vars, df
 
-def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1, 
+def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+                              df_b0_c0_pisg_pi0_T_K, t=1, 
                               set1_m_players=10, set1_stateId0_m_players=0.75, 
                               set2_m_players=6, set2_stateId0_m_players=0.42, 
-                              t_periods=2, k_steps=250, learning_rate=0.1):
+                              t_periods=2, k_steps=250, learning_rate=0.1, 
+                              price="0.0002_0.33"):
     """
     resume_game_on_excel_file_automate(df_arr_M_T_Ks, 
                               t = t, 
@@ -552,25 +554,30 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1,
     print('shape: df_arr_M_T_Ks = {} '.format(df_arr_M_T_Ks.shape))
     df_arr_M_T_Ks["pl_i"] = df_arr_M_T_Ks['pl_i'].astype(float);
     df_ben_cst_M_T_K["pl_i"] = df_ben_cst_M_T_K['pl_i'].astype(float);
+    df_arr_M_T_Ks["rate"] = df_arr_M_T_Ks['rate'].astype(float);
+    df_ben_cst_M_T_K["rate"] = df_ben_cst_M_T_K['rate'].astype(float);
+    df_b0_c0_pisg_pi0_T_K["rate"] = df_b0_c0_pisg_pi0_T_K['rate'].astype(float);
+    
     
 
     learning_algos = ["LRI1","LRI2"]
-    algo_names = learning_algos\
-                    +[ALGO_NAMES_BF[0]] \
-                    + [ALGO_NAMES_NASH[0]] 
+    algo_names = learning_algos \
+                    + [fct_aux.ALGO_NAMES_BF[0]] \
+                    + [fct_aux.ALGO_NAMES_BF[1]] \
+                    + [fct_aux.ALGO_NAMES_NASH[0]] 
     
     
     # initial array from INSTANCES_GAMES
     path_to_variable = os.path.join(
                         "tests", "AUTOMATE_INSTANCES_GAMES"
                         )
-    arr_name = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
+    arr_name = fct_aux.AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
                         set1_m_players, set1_stateId0_m_players, 
                         set2_m_players, set2_stateId0_m_players, 
                         t_periods)
     arr_pl_M_T_vars = np.load(os.path.join(path_to_variable, arr_name),
                                             allow_pickle=True)
-    arr_cols = list(AUTOMATE_INDEX_ATTRS.keys())
+    arr_cols = list(fct_aux.AUTOMATE_INDEX_ATTRS.keys())
     df_arr_M_T_vars = pd.DataFrame(arr_pl_M_T_vars[:,t,:],
                                    columns=arr_cols)
     df_arr_M_T_vars = df_arr_M_T_vars.reset_index()
@@ -582,6 +589,7 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1,
     cols = ["state_i","algo","pl_i","k","Ci","Pi","Si","Si_max","gamma_i",
             "prod_i","cons_i","Profili","Casei","bg_i","u_i","p_i_j_k",
             "mode_i", "r_i", "set"] #,"","","","","",]
+    cols_b0_c0 = ["b0","c0", 'pi_0_minus','pi_0_plus','pi_sg_minus','pi_sg_plus']
     
     df = pd.DataFrame(columns=cols)
     
@@ -591,10 +599,26 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1,
         for algo_name in algo_names:
             mask_algo_name = (df_arr_M_T_Ks.state_i == state_i) \
                                 & (df_arr_M_T_Ks.algo == algo_name) \
-                                & (df_arr_M_T_Ks.k == k_step_chosen-1)
-                                
+                                & (df_arr_M_T_Ks.k == k_step_chosen-1) \
+                                & ((df_arr_M_T_Ks.rate == learning_rate) | 
+                                   (df_arr_M_T_Ks.rate == 0))  \
+                                & (df_arr_M_T_Ks.prices == price)
+            mask_b0_c0 = (df_b0_c0_pisg_pi0_T_K.t == t) \
+                            & (df_b0_c0_pisg_pi0_T_K.algo == algo_name) \
+                            & (df_b0_c0_pisg_pi0_T_K.k == k_step_chosen-1) \
+                            & ((df_b0_c0_pisg_pi0_T_K.rate == learning_rate) | 
+                               (df_b0_c0_pisg_pi0_T_K.rate == 0))  \
+                            & (df_b0_c0_pisg_pi0_T_K.prices == price)
+                            
             df_al = df_arr_M_T_Ks[mask_algo_name].copy()
             df_al = df_al[cols]
+            print("shape: df_al={}".format(df_al.shape))
+            df_al_b0_c0 = df_b0_c0_pisg_pi0_T_K[mask_b0_c0].copy()
+            df_al_b0_c0 = df_al_b0_c0[cols_b0_c0].reset_index()
+            df_al_b0_c0.drop('index', axis=1, inplace=True)
+            # df_al_b0_c0 = df_al_b0_c0.loc[df_al_b0_c0.index.repeat(df_al.shape[0])]
+            # df_al_b0_c0.reset_index().drop('index', axis=1, inplace=True)
+            
             
             #mask arr
             mask_arr = (df_arr_M_T_vars.state_i == state_i)
@@ -604,18 +628,31 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, t=1,
                         
             mask_ben_cst = (df_ben_cst_M_T_K.state_i == state_i) \
                                 & (df_ben_cst_M_T_K.algo == algo_name) \
-                                & (df_ben_cst_M_T_K.k == k_step_chosen-1) 
+                                & (df_ben_cst_M_T_K.k == k_step_chosen-1) \
+                                & ((df_ben_cst_M_T_K.rate == learning_rate) | 
+                                   (df_ben_cst_M_T_K.rate == 0))  \
+                                & (df_ben_cst_M_T_K.prices == price) 
             df_ben = df_ben_cst_M_T_K[mask_ben_cst]
             df_ben = df_ben[["pl_i","ben","cst"]]
+            print("shape: df_ben={}".format(df_ben.shape))
             
             
             df_al = pd.merge(left=df_al, right=df_ben, 
-                          left_on='pl_i', right_on='pl_i')
+                          left_on='pl_i', right_on='pl_i').copy()
             df_al = pd.merge(left=df_al, right=df_arr, 
-                          left_on='pl_i', right_on='pl_i')
+                          left_on='pl_i', right_on='pl_i').copy()
+            df_al_b0_c0 = df_al_b0_c0.loc[df_al_b0_c0.index.repeat(df_al.shape[0])]
+            df_al_b0_c0.reset_index().drop('index', axis=1, inplace=True)
+            print("shape: {} df_al={}, df_al_b0_c0={}".format(algo_name, 
+                  df_al.shape, df_al_b0_c0.shape))
+            print("rows: {} df_al={}, df_al_b0_c0={}".format(algo_name, 
+                  len(df_al.index), len(df_al_b0_c0.index)))
+            df_al = pd.concat([df_al, df_al_b0_c0], axis=0)
             
             
             df = pd.concat([df, df_al], axis=0)
+            
+            
             
     # save to the excel file
     df.rename(columns={"mode_i":"strategie"}, inplace=True)
