@@ -166,8 +166,8 @@ def compute_prod_cons_SG(arr_pl_M_T, t):
     In_sg, Out_sg : float, float.
     
     """
-    In_sg = sum( arr_pl_M_T[:, t, INDEX_ATTRS["prod_i"]] )
-    Out_sg = sum( arr_pl_M_T[:, t, INDEX_ATTRS["cons_i"]] )
+    In_sg = sum( arr_pl_M_T[:, t, INDEX_ATTRS["prod_i"]].astype(np.float64) )
+    Out_sg = sum( arr_pl_M_T[:, t, INDEX_ATTRS["cons_i"]].astype(np.float64) )
     return In_sg, Out_sg
     
 # ______________        compute prices: debut       ___________________________ 
@@ -330,7 +330,7 @@ def compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
     # compute the new prices pi_sg_plus_t, pi_sg_minus_t
     # from a pricing model in the document
     pi_sg_plus_t, pi_sg_minus_t = determine_new_pricing_sg(
-                                            arr_pl_M_T_vars_modif, 
+                                            arr_pl_M_T_vars_modif.copy(), 
                                             pi_hp_plus, 
                                             pi_hp_minus, 
                                             t, dbg=dbg)
@@ -555,29 +555,29 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     df_arr_M_T_Ks["pl_i"] = df_arr_M_T_Ks['pl_i'].astype(float);
     df_ben_cst_M_T_K["pl_i"] = df_ben_cst_M_T_K['pl_i'].astype(float);
     df_arr_M_T_Ks["rate"] = df_arr_M_T_Ks['rate'].astype(float);
-    df_ben_cst_M_T_K["rate"] = df_ben_cst_M_T_K['rate'].astype(float);
     df_b0_c0_pisg_pi0_T_K["rate"] = df_b0_c0_pisg_pi0_T_K['rate'].astype(float);
     
     
 
     learning_algos = ["LRI1","LRI2"]
     algo_names = learning_algos \
-                    + [fct_aux.ALGO_NAMES_BF[0]] \
-                    + [fct_aux.ALGO_NAMES_BF[1]] \
-                    + [fct_aux.ALGO_NAMES_NASH[0]] 
+                    + [ALGO_NAMES_BF[0]] \
+                    + ["DETERMINIST"] \
+                    + [ALGO_NAMES_BF[1]] \
+                    + [ALGO_NAMES_NASH[0]] 
     
     
     # initial array from INSTANCES_GAMES
     path_to_variable = os.path.join(
                         "tests", "AUTOMATE_INSTANCES_GAMES"
                         )
-    arr_name = fct_aux.AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
+    arr_name = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT.format(
                         set1_m_players, set1_stateId0_m_players, 
                         set2_m_players, set2_stateId0_m_players, 
                         t_periods)
     arr_pl_M_T_vars = np.load(os.path.join(path_to_variable, arr_name),
                                             allow_pickle=True)
-    arr_cols = list(fct_aux.AUTOMATE_INDEX_ATTRS.keys())
+    arr_cols = list(AUTOMATE_INDEX_ATTRS.keys())
     df_arr_M_T_vars = pd.DataFrame(arr_pl_M_T_vars[:,t,:],
                                    columns=arr_cols)
     df_arr_M_T_vars = df_arr_M_T_vars.reset_index()
@@ -957,7 +957,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
     for t in range(0, t_periods):
         for num_pl_i in range(0, set1_m_players+set2_m_players):
             state_i = arr_pl_M_T_vars[num_pl_i, t, 
-                                      INDEX_ATTRS["state_i"]]
+                                      AUTOMATE_INDEX_ATTRS["state_i"]]
             
             # compute values and inject in arr_pl_M_T
             Pi_t, Ci_t, Si_t, Si_t_max = None, None, None, None
@@ -983,7 +983,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
                     ("Si_max", Si_t_max), ("mode_i","")]
             for col, val in cols:
                 arr_pl_M_T_vars[num_pl_i, t, 
-                                INDEX_ATTRS[col]] = val
+                                AUTOMATE_INDEX_ATTRS[col]] = val
                 
             # determine state of player for t+1
             state_i_t_plus_1 = None
@@ -999,7 +999,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
             if t < t_periods-1:
                 arr_pl_M_T_vars[
                     num_pl_i, t+1, 
-                    INDEX_ATTRS["state_i"]] = state_i_t_plus_1
+                    AUTOMATE_INDEX_ATTRS["state_i"]] = state_i_t_plus_1
             
     # ____ attribution of players' states in arr_pl_M_T_vars : fin   _________
     
@@ -1108,6 +1108,139 @@ def get_or_create_instance(set1_m_players, set2_m_players,
     
 ###############################################################################
 #            generate Pi, Ci, Si by automate --> fin
+###############################################################################
+
+###############################################################################
+#            generate Pi, Ci, Si by automate for 2, 4 players --> debut
+###############################################################################
+
+def generate_Pi_Ci_Si_Simax_by_automate_2_4players(m_players=2, t_periods=2):
+    
+    # ____          creation of arr_pl_M_T_vars : debut             _________
+    arr_pl_M_T_vars = np.zeros((m_players,
+                                t_periods,
+                                len(AUTOMATE_INDEX_ATTRS.keys())),
+                                 dtype=object)
+    # ____          creation of arr_pl_M_T_vars : fin               _________
+    
+    if m_players == 2:
+       arr_pl_M_T_vars[0, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[0]
+       arr_pl_M_T_vars[1, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[2]
+    elif m_players == 3:
+       arr_pl_M_T_vars[0, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[0]
+       arr_pl_M_T_vars[1, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[1]
+       arr_pl_M_T_vars[2, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[2]
+    elif m_players == 4:
+       arr_pl_M_T_vars[0, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[0]
+       arr_pl_M_T_vars[1, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[1]
+       arr_pl_M_T_vars[2, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[1]
+       arr_pl_M_T_vars[3, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[2]
+    
+    for t in range(0, t_periods):
+        for num_pl_i in range(0, m_players):
+            state_i = arr_pl_M_T_vars[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["state_i"]]
+            
+            # compute values and inject in arr_pl_M_T
+            Pi_t, Ci_t, Si_t, Si_t_max = None, None, None, None
+            Si_t_max = 10
+            if state_i == STATES[0]:                                            # state1 or Deficit
+                Si_t = 3
+                Ci_t = 10 + Si_t
+                x = np.random.randint(low=2, high=6, size=1)[0]
+                Pi_t = x + math.ceil(Si_t/2)
+            elif state_i == STATES[1]:                                          # state2 or Self
+                Si_t = 4
+                y = np.random.randint(low=20, high=30, size=1)[0]
+                Ci_t = y + math.ceil(Si_t/2)
+                Pi_t = Ci_t - math.ceil(Si_t/2)
+            elif state_i == STATES[2]:                                          # state3 or Surplus
+                Si_t = 10
+                Ci_t = 30
+                x = np.random.randint(low=31, high=40, size=1)[0]
+                Pi_t = x + math.ceil(Si_t/2)
+                
+                
+            cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si", Si_t), 
+                    ("Si_max", Si_t_max), ("mode_i","")]
+            for col, val in cols:
+                arr_pl_M_T_vars[num_pl_i, t, 
+                                AUTOMATE_INDEX_ATTRS[col]] = val
+                
+    # ____ attribution of players' states in arr_pl_M_T_vars : fin   _________
+    
+    return arr_pl_M_T_vars
+
+def get_or_create_instance_2_4players(m_players=2, t_periods=2,
+                                      path_to_arr_pl_M_T="", 
+                                      used_instances=True):
+    """
+    get instance if it exists else create instance.
+
+    set1 = {state1, state2} : set of players' states 
+    set2 = {state2, state3}
+    
+    Parameters
+    ----------
+    m_players : integer
+        DESCRIPTION.
+        Number of players.
+    t_periods : integer
+        DESCRIPTION.
+        Number of periods in the game
+    path_to_arr_pl_M_T : string
+        DESCRIPTION.
+        path to save/get array arr_pl_M_T
+        example: tests/AUTOMATE_INSTANCES_GAMES/\
+                    arr_pl_M_T_players_set1_{m_players_set1}_set2_{m_players_set2}\
+                        _periods_{t_periods}.npy
+    used_instances : boolean
+        DESCRIPTION.
+
+    Returns
+    -------
+    arr_pl_M_T_vars : array of 
+        DESCRIPTION.
+
+    """
+    arr_pl_M_T_vars = None
+    filename_arr_pl = "arr_pl_M_T_players_{}_periods_{}_DBG.npy".format(
+                        m_players, t_periods)
+    path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    path_to_arr_pl_M_T = os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl])
+    
+    print("path_to_arr_pl_M_T={}".format(path_to_arr_pl_M_T))
+    
+    if os.path.exists(path_to_arr_pl_M_T):
+        # read arr_pl_M_T
+        if used_instances:
+            arr_pl_M_T_vars \
+                = np.load(path_to_arr_pl_M_T,
+                          allow_pickle=True)
+            print("READ INSTANCE GENERATED")
+            
+        else:
+            # create arr_pl_M_T when used_instances = False
+            arr_pl_M_T_vars \
+                = generate_Pi_Ci_Si_Simax_by_automate_2_4players(m_players, 
+                                                                 t_periods)
+            
+            save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                                 path_to_save=path_to_save)
+            print("CREATE INSTANCE used_instance={}".format(used_instances))
+    else:
+        # create arr_pl_M_T
+        arr_pl_M_T_vars \
+                = generate_Pi_Ci_Si_Simax_by_automate_2_4players(m_players, 
+                                                                 t_periods)
+        save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                             path_to_save=path_to_save)
+        print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
+            
+    return arr_pl_M_T_vars   
+
+###############################################################################
+#            generate Pi, Ci, Si by automate for 2, 4 players --> fin
 ###############################################################################
 
 # __________    look for whether pli is balanced or not --> debut  ____________
@@ -1713,22 +1846,36 @@ def test_generer_Pi_Ci_Si_Simax_for_all_scenarios():
                 sys.getsizeof(l_arr_pl_M_T[2])/(1024*1024)))
     else:
         print("___ generer_Pi_Ci_Si_Simax_for_all_scenarios ___ NOK")
+        
+def test_get_or_create_instance_2_4players():
+    m_players=2; t_periods=2
+    
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"]); 
+    used_instances=True
+    
+    arr_pl_M_T_vars = get_or_create_instance_2_4players(m_players, t_periods,
+                                      path_to_arr_pl_M_T, 
+                                      used_instances)
+    
+    print("shape arr_pl_M_T_vars={}".format(arr_pl_M_T_vars.shape))
 
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------    
 if __name__ == "__main__":
     ti = time.time()
-    test_fct_positive()
-    test_generate_energy_unit_price_SG()
+    #test_fct_positive()
+    #test_generate_energy_unit_price_SG()
     
     # test_compute_utility_players()
     # test_compute_real_money_SG()
     # test_compute_prod_cons_SG()
     # test_compute_energy_unit_price()
     
-    arrs = test_generate_Pi_Ci_Si_Simax_by_profil_scenario()
+    #arrs = test_generate_Pi_Ci_Si_Simax_by_profil_scenario()
     
     #test_generer_Pi_Ci_Si_Simax_for_all_scenarios()
+    
+    test_get_or_create_instance_2_4players()
     
     print("runtime = {}".format(time.time() - ti))
