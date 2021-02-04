@@ -9,6 +9,7 @@ import time
 import math
 
 import numpy as np
+import pandas as pd
 import itertools as it
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
@@ -601,10 +602,11 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         Ci = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
                                    fct_aux.AUTOMATE_INDEX_ATTRS['Ci']]
         Si = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
-                                   fct_aux.AUTOMATE_INDEX_ATTRS['Si']] \
-            if k == 0 \
-            else arr_pl_M_T_K_vars_modif[num_pl_i, t, k-1, 
-                                   fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Si']] 
+        # \
+        #     if k == 0 \
+        #     else arr_pl_M_T_K_vars_modif[num_pl_i, t, k-1, 
+        #                            fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
         Si_max = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
         gamma_i, prod_i, cons_i, r_i = 0, 0, 0, 0
@@ -679,6 +681,9 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
                 ("balanced_pl_i", boolean), ("formule", formule), 
                 ("gamma_i", gamma_i), ("Si_minus", pl_i.get_Si_minus() ),
                 ("Si_plus", pl_i.get_Si_plus() )]
+        # print("player pl_{}: t={},k={}, {}, mode_i={}, gamma={}, Si_old={}, Si={}, r_i={}, prod_i={}, cons_i={}, Pi={}, Ci={}, Si_max={}".format(
+        #     num_pl_i, t,k, pl_i.get_state_i(), pl_i.get_mode_i(), pl_i.get_gamma_i(), pl_i.get_Si_old(), 
+        #     pl_i.get_Si(), pl_i.get_r_i(), pl_i.get_prod_i(),  pl_i.get_cons_i(),  Pi, Ci, Si_max))
         for col, val in tup_cols_values:
             arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
                                     fct_aux.AUTOMATE_INDEX_ATTRS[col]] = val
@@ -891,9 +896,17 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
                              arrs.shape[3]), 
                             dtype=object)
     arr_pl_M_T_K_vars[:,:,:,:] = arrs
+    # arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
+    #     arr_pl_M_T_K_vars[:,:,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = 0.5
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
         = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
+    for num_pl_i in range(0, m_players):
+        for t in range(0, t_periods):
+            arr_pl_M_T_K_vars[num_pl_i,t,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
+                arr_pl_M_T_K_vars[num_pl_i,t,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+            arr_pl_M_T_K_vars[num_pl_i,t,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]] = \
+                arr_pl_M_T_K_vars[num_pl_i,t,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]]
         
     # ____      run balanced sg for all num_periods at any k_step     ________
     arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
@@ -1080,11 +1093,66 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
             pi_0_minus_T, pi_0_plus_T,
             pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
             algo=algo_name)
+    turn_dico_stats_res_into_df_LRI(
+            arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars_modif, 
+            BENs_M_T_K = BENs_M_T_K, 
+            CSTs_M_T_K = CSTs_M_T_K,
+            path_to_save = path_to_save, 
+            manual_debug = manual_debug, 
+            algo_name=algo_name)
+    
     
     return arr_pl_M_T_K_vars_modif
 
 # ______________       main function of LRI   ---> fin        _________________
 
+def turn_dico_stats_res_into_df_LRI(
+                            arr_pl_M_T_K_vars_modif, BENs_M_T_K, CSTs_M_T_K,
+                            path_to_save, 
+                            manual_debug=True, 
+                            algo_name="LRI1"):
+    """
+    transform the dico in the row dico_nash_profils into a DataFrame
+
+    Parameters
+    ----------
+    path_to_variable : TYPE
+        DESCRIPTION.
+        
+
+    Returns
+    -------
+    None.
+
+    """
+    m_players = arr_pl_M_T_K_vars_modif.shape[0]
+    t_periods = arr_pl_M_T_K_vars_modif.shape[1]
+    k_steps = arr_pl_M_T_K_vars_modif.shape[2]
+    dico_players = dict()
+    for t in range(0, t_periods):
+        ben_csts_MKs_t = BENs_M_T_K[:,t,:] - CSTs_M_T_K[:,t,:]
+        perf_t_K_t = np.sum(ben_csts_MKs_t, axis=0)
+        for k in range(0, k_steps):
+            dico_pls = dict()
+            for num_pl_i in range(0, m_players):
+                state_i = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]]
+                mode_i = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
+                Vi = ben_csts_MKs_t[num_pl_i, k]
+                
+                dico_pls["player_"+str(num_pl_i)] \
+                    = (state_i, mode_i, Vi)
+            dico_pls["Perf_t"] = perf_t_K_t[k]
+            dico_players["step_"+str(k)+"_t_"+str(t)] = dico_pls
+        
+        
+    df = pd.DataFrame.from_dict(dico_players, orient="columns").T
+    df.to_csv(os.path.join( *[path_to_save, algo_name+"_"+"dico.csv"]))
+             
+    
 ###############################################################################
 #                   definition  des unittests
 #

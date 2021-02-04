@@ -461,6 +461,18 @@ class Player:
 
         """
         
+        # compute preserved stock r_i
+        if self.mode_i == "CONS+":
+            self.r_i = 0
+        elif self.mode_i == "CONS-":
+            self.r_i = self.Si
+        elif self.mode_i == "PROD":
+            self.r_i = self.Si
+        elif self.mode_i == "DIS" and self.state_i ==  "state2":
+            self.r_i = self.Si - (self.Ci - self.Pi)
+        elif self.mode_i == "DIS" and self.state_i ==  "state3":
+            self.r_i = min(self.Si_max, self.Si + self.Pi - self.Ci)
+        
         if self.state_i ==  "state1":                                           # Deficit
             self.prod_i = 0
             self.cons_i = (self.mode_i == "CONS+")*(self.Ci - (self.Pi + self.Si)) \
@@ -506,17 +518,6 @@ class Player:
             self.cons_i = np.nan
             self.r_i = np.nan
         
-        # compute preserved stock r_i
-        if self.mode_i == "CONS+":
-            self.r_i = 0
-        elif self.mode_i == "CONS-":
-            self.r_i = self.Si
-        elif self.mode_i == "PROD":
-            self.r_i = self.Si
-        elif self.mode_i == "DIS" and self.state_i ==  "state2":
-            self.r_i = self.Si - (self.Ci - self.Pi)
-        elif self.mode_i == "DIS" and self.state_i ==  "state3":
-            self.r_i = min(self.Si_max, self.Si + self.Pi - self.Ci)
         
         
     def select_storage_politic(self, Ci_t_plus_1, Pi_t_plus_1, 
@@ -725,17 +726,59 @@ def test_class_player():
     # les afficher ces indicateurs rp
     rp = round(nb_ok/N_INSTANCE, 3)
     print("rapport execution rp={}".format(rp))
-    pass
+    
 
+def test_class_player_r_i():
+    
+    import os
+    m_players=4; t_periods=2; 
 
+    
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"]); 
+    used_instances=True
+    
+    arr_pl_M_T_vars = fct_aux.get_or_create_instance_2_4players(m_players, t_periods,
+                                      path_to_arr_pl_M_T, 
+                                      used_instances)
+    
+    t = 1
+    for num_pl_i in range(0, m_players):
+        Pi = arr_pl_M_T_vars[num_pl_i, t,
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Pi']]
+        Ci = arr_pl_M_T_vars[num_pl_i, t,
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Ci']]
+        Si = arr_pl_M_T_vars[num_pl_i, t, 
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Si']] 
+        Si_max = arr_pl_M_T_vars[num_pl_i, t,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
+        gamma_i, prod_i, cons_i, r_i = 0, 0, 0, 0
+        state_i = arr_pl_M_T_vars[num_pl_i, t,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['state_i']]
+        
+        pl_i = None
+        pl_i = Player(Pi, Ci, Si, Si_max, gamma_i, 
+                              prod_i, cons_i, r_i, state_i)
+        pl_i.set_R_i_old(Si_max-Si)                                             # update R_i_old
+        
+        # select mode for player num_pl_i
+        p_i_t_k = 0.5
+        pl_i.select_mode_i(p_i=p_i_t_k)
+        
+        # compute cons, prod, r_i
+        pl_i.update_prod_cons_r_i()
+        
+        print("player pl_{}: {}, mode_i={}, gamma={}, Si_old={}, Si={}, r_i={}, prod_i={}, cons_i={}, Pi={}, Ci={}, Si_max={}".format(
+            num_pl_i, pl_i.get_state_i(), pl_i.get_mode_i(), pl_i.get_gamma_i(), pl_i.get_Si_old(), 
+            pl_i.get_Si(), pl_i.get_r_i(), pl_i.get_prod_i(),  pl_i.get_cons_i(),  Pi, Ci, Si_max))
 
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    test_class_player()
+    # test_class_player()
     # y = test_merge_vars()
+    test_class_player_r_i()
     print("classe player runtime = {}".format(time.time() - ti))
 
 

@@ -32,7 +32,7 @@ if __name__ == "__main__":
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm="DDMM_HHMM"
         t_periods = 2
-        k_steps = 50 #250
+        k_steps = 250#50 #250
         NB_REPEAT_K_MAX= 3 #15 #30
         learning_rates = [0.1] #[0.01] #[0.0001]
         
@@ -50,6 +50,9 @@ if __name__ == "__main__":
         set1_m_players, set2_m_players = 10, 6
         # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
         set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+        
+        # ---- DEBUG A EFFACER apres debug ----
+        # m_players, t_periods = 4, 2
     else:
        # ---- new constances simu_2306_2206 --- **** debug ***** 
        date_hhmm="2306_2206"
@@ -82,17 +85,39 @@ if __name__ == "__main__":
                                 set1_stateId0_m_players,
                                 set2_stateId0_m_players, 
                                 path_to_arr_pl_M_T, used_instances)
+    # # ---- DEBUG A EFFACER apres debug ----
+    # arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_2_4players(
+    #                                    m_players, t_periods,
+    #                                   path_to_arr_pl_M_T, 
+    #                                   used_instances)
     
     algos= None #["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"] 
     if set1_m_players + set2_m_players <= 20:
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
-                + fct_aux.ALGO_NAMES_NASH \
-                + fct_aux.ALGO_NAMES_BF
+                + fct_aux.ALGO_NAMES_BF \
+                + fct_aux.ALGO_NAMES_NASH 
+                
     else:
         algos=["LRI1", "LRI2", "DETERMINIST"] 
         
     
-    autoExeGame.execute_algos_used_Generated_instances(
+    # autoExeGame.execute_algos_used_Generated_instances(
+    #             arr_pl_M_T_vars_init, 
+    #             name_dir = name_dir,
+    #             date_hhmm = date_hhmm,
+    #             k_steps = k_steps,
+    #             NB_REPEAT_K_MAX = NB_REPEAT_K_MAX,
+    #             algos = algos,
+    #             learning_rates = learning_rates,
+    #             pi_hp_plus = pi_hp_plus,
+    #             pi_hp_minus = pi_hp_minus,
+    #             used_instances = used_instances,
+    #             used_storage_det = used_storage_det,
+    #             manual_debug = manual_debug, 
+    #             criteria_bf = criteria_bf, 
+    #             debug = False
+    #             )
+    autoExeGame.execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                 arr_pl_M_T_vars_init, 
                 name_dir = name_dir,
                 date_hhmm = date_hhmm,
@@ -109,12 +134,13 @@ if __name__ == "__main__":
                 debug = False
                 )
     
+    
     if Visualisation: 
         autoVizGame.MULT_WIDTH = 2.25;
         autoVizGame.MULT_HEIGHT = 1.1;
         
         name_simu = "simu_"+date_hhmm; k_steps_args = k_steps
-        t = 1
+        t = 0 #1
         
         autoVizGame.NAME_RESULT_SHOW_VARS \
             = autoVizGame.NAME_RESULT_SHOW_VARS.format(pi_hp_plus[0], 
@@ -167,12 +193,15 @@ if __name__ == "__main__":
         #         learning_rate=learning_rates[-1], 
         #         prob_Ci=prob_Ci)
         fct_aux.resume_game_on_excel_file_automate(
-                df_arr_M_T_Ks, df_ben_cst_M_T_K, t = t, 
+                df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+                df_b0_c0_pisg_pi0_T_K = df_b0_c0_pisg_pi0_T_K,
+                t = t, 
                 set1_m_players = set1_m_players, 
                 set1_stateId0_m_players = set1_stateId0_m_players, 
                 set2_m_players = set2_m_players, 
                 set2_stateId0_m_players = set2_stateId0_m_players, 
                 t_periods = t_periods, k_steps = k_steps_args, 
-                learning_rate=learning_rates[-1])
+                learning_rate=learning_rates[-1], 
+                price = str(pi_hp_plus[0]) +"_"+ str(pi_hp_minus[0]))
         
     print("runtime = {}".format(time.time() - ti))

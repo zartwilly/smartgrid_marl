@@ -320,7 +320,7 @@ def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=250,
             # arr_pl_M_T_K_vars_4D[:,:,:, ind_bg_i] = 0
             # arr_pl_M_T_K_vars_4D[:,:,:, ind_non_playing_players] = 1
             
-            arr_pl_M_T_K_vars_4D[:,:,:,:] = arrs
+            arr_pl_M_T_K_vars_4D[:,:,:,:] = arrs.copy()
             # # turn in 2D
             arr_pl_M_T_K_vars_2D = arr_pl_M_T_K_vars_4D.reshape(
                                         -1, 
@@ -675,7 +675,7 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
         df_al.loc[:,"S2"] = df_al["S2"].apply(pd.to_numeric,
                                         downcast='float',
                                         errors='coerce').copy()
-        print("S1={}".format(df_al["S1"]))
+        #print("S1={}".format(df_al["S1"]))
         print("S1={}, df_al={}, rate={}, price={}, state_i={}, t={}, algo={}".format(
                 df_al["S1"].shape, df_al.shape, rate, price, state_i, t, algo))
         df_al_k = df_al.groupby("k")[["S1","S2"]]\
@@ -1033,6 +1033,224 @@ def plot_Perf_t_players_all_states_for_scenarios(df_ben_cst_M_T_K, t):
 
 # _____________________________________________________________________________
 #
+#           affichage Perf_t pour chaque algo  ---> debut
+# _____________________________________________________________________________
+def plot_Perf_t_all_algos(df_ra_pri, rate, price, t):
+                                
+    """
+    plot the Perf_t at each learning step for all states 
+    considering all scenarios and all algorithms.
+    each figure is for one state, one scenario, one prob_Ci, one learning_rate 
+    and one price.
+    
+    Perf_t = \sum\limits_{1\leq i \leq N} ben_i-cst_i
+    
+    x-axis : one time t
+    y-axis : Perf_t
+    """
+    algos = df_ra_pri["algo"].unique()
+    
+    tup_legends = [] 
+    
+    px = figure(plot_height = int(HEIGHT*MULT_HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    
+    for algo in algos:
+        df_al = df_ra_pri[(df_ra_pri.algo == algo)]
+        
+        title = "Perf_t at t={} (rate={}, price={})".format(
+                t, rate, price)
+        xlabel = "k step of learning" 
+        ylabel = "Perf_t" #"ben_i-cst_i"
+        label = "{}".format(algo)
+        
+        px.title.text = title
+        px.xaxis.axis_label = xlabel
+        px.yaxis.axis_label = ylabel
+        TOOLS[7] = HoverTool(tooltips=[
+                            ("algo", "@algo"),
+                            ("k", "@k"),
+                            (ylabel, "$y")
+                            ]
+                        )
+        px.tools = TOOLS
+        
+        cols = ['ben','cst']
+        # TODO lauch warning See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy self[k1] = value[k2]
+        df_al[cols] = df_al[cols].apply(pd.to_numeric, 
+                                        downcast='float', 
+                                        errors='coerce')
+                
+        df_al_k = df_al.groupby(by=["k","pl_i"])[cols]\
+                    .aggregate(np.sum)\
+                    .apply(lambda x: x[0]-x[1], axis=1).reset_index()
+        df_al_k.rename(columns={0:ylabel}, inplace=True)
+        df_al_k = df_al_k.groupby("k")[ylabel].aggregate(np.sum).reset_index()  
+        
+        df_al_k.loc[:,"algo"] = algo
+        df_al_k.loc[:,"t"] = t
+        source = ColumnDataSource(data = df_al_k)
+
+        ind_color = 0
+        if algo == "LRI1":
+            ind_color = 1 #10
+        elif algo == "LRI2":
+            ind_color = 2 #10
+        elif algo == "DETERMINIST":
+            ind_color = 3 #10
+        elif algo == "RD-DETERMINIST":
+            ind_color = 4 #10
+        elif algo == "BEST-BRUTE-FORCE":
+            ind_color = 5 #10
+        elif algo == "BAD-BRUTE-FORCE":
+            ind_color = 6 #10
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            ind_color = 7 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            ind_color = 8 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            ind_color = 9 #10
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            ind_color = 10 #10
+            
+        r1 = px.line(x="k", y=ylabel, source=source, legend_label=label,
+                line_width=2, color=COLORS[ind_color], 
+                line_dash=[0,0])
+        
+        nb_k_steps = len(list(df_al_k['k'].unique()))
+        interval = int(nb_k_steps*10/250)
+        print(".... nb_k_steps={}, interval={} .... ".format(nb_k_steps, interval))
+        ls = None
+        if nb_k_steps > interval and interval > 0:
+            ls = range(0,nb_k_steps,interval)
+        if nb_k_steps > interval and interval <= 0:
+            ls = range(0, nb_k_steps)
+        else:
+            ls = range(0, nb_k_steps)
+        # ls = range(0,nb_k_steps,interval) \
+        #             if nb_k_steps < interval \
+        #             else range(0, nb_k_steps) 
+        # ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        if int(nb_k_steps*10/250) > 0:
+            ls = range(0,nb_k_steps,int(nb_k_steps*10/250))
+        else:
+            ls = range(0,nb_k_steps,1)
+        df_al_slice = df_al[df_al.index.isin(ls)]
+        source_slice = ColumnDataSource(data = df_al_slice)
+        
+        if algo == "LRI1":
+            ind_color = 1
+            r2 = px.asterisk(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "LRI2":
+            ind_color = 2
+            r2 = px.circle(x="k", y=ylabel, size=7, source=source, 
+                      color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "DETERMINIST":
+            ind_color = 3
+            r2 = px.triangle_dot(x="k", y=ylabel, size=7, source=source, 
+                      color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "RD-DETERMINIST":
+            ind_color = 4
+            r2 = px.triangle(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+            # tup_legends.append((label, [r2] ))
+        elif algo == "BEST-BRUTE-FORCE":
+            r2 = px.diamond(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "BAD-BRUTE-FORCE":
+            r2 = px.diamond_cross(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == "MIDDLE-BRUTE-FORCE":
+            r2 = px.diamond_dot(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[0]:                                # "BEST-NASH"
+            r2 = px.square_cross(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[1]:                                # "BAD-NASH"
+            r2 = px.square_pin(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        elif algo == fct_aux.ALGO_NAMES_NASH[2]:                                # "MIDDLE-NASH"
+            r2 = px.square_x(x="k", y=ylabel, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label)
+            tup_legends.append((label, [r1,r2] ))
+        
+    legend = Legend(items= tup_legends, location="center")
+    px.legend.label_text_font_size = "8px"
+    px.legend.click_policy="hide"
+    px.add_layout(legend, 'right') 
+
+    return px               
+
+def plot_Perf_t_players_all_algos(df_ben_cst_M_T_K, t):
+    """
+    plot the Perf_t of players at each learning step k for all prob_Ci, price, 
+    learning_rate for any state
+    
+    Perf_t = \sum\limits_{1\leq i \leq N} ben_i-cst_i
+    """
+    rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
+    prices = df_ben_cst_M_T_K["prices"].unique()
+    states = df_ben_cst_M_T_K["state_i"].unique()
+    
+    dico_pxs = dict()
+    cpt = 0
+    for rate, price in it.product(rates, prices):
+        
+        mask_ra_pri_st = ((df_ben_cst_M_T_K.rate == rate) 
+                                 | (df_ben_cst_M_T_K.rate == 0)) \
+                            & (df_ben_cst_M_T_K.prices == price) \
+                            & (df_ben_cst_M_T_K.t == t) 
+        df_ra_pri = df_ben_cst_M_T_K[mask_ra_pri_st].copy()
+        
+        px_st = plot_Perf_t_all_algos(df_ra_pri, rate, price, t)
+        # return px_scen_st
+        px_st.legend.click_policy="hide"
+        
+        if (rate, price) not in dico_pxs.keys():
+            dico_pxs[(rate, price)] \
+                = [px_st]
+        else:
+            dico_pxs[(rate, price)].append(px_st)
+        cpt += 1                            
+        
+    # aggregate by state_i i.e each state_i is on new column.
+    col_px_sts = []
+    for key, px_sts in dico_pxs.items():
+        row_px_sts = row(px_sts)
+        col_px_sts.append(row_px_sts)
+    col_px_sts=column(children=col_px_sts, 
+                      sizing_mode='stretch_both')
+    return col_px_sts
+
+    # # aggregate by state_i i.e each state_i is on new column.
+    # row_px_sts = []
+    # for key, px_sts in dico_pxs.items():
+    #     col_px_sts = column(px_sts)
+    #     row_px_sts.append(col_px_sts)
+    # row_px_sts = row(children=row_px_sts, sizing_mode='stretch_both')
+        
+    # return  row_px_sts 
+# _____________________________________________________________________________
+#
+#           affichage Perf_t pour chaque state  ---> fin
+# _____________________________________________________________________________
+
+# _____________________________________________________________________________
+#
 #                   affichage  dans tab  ---> debut
 # _____________________________________________________________________________
 def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir, 
@@ -1040,6 +1258,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
     
     col_pxs_Pref_t = plot_Perf_t_players_all_states_for_scenarios(
                         df_ben_cst_M_T_K, t)
+    col_pxs_Pref_algo_t = plot_Perf_t_players_all_algos(df_ben_cst_M_T_K, t)
     col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
                                                 algos=['LRI1','LRI2'])
     # col_pxs_in_out = plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t)
@@ -1049,7 +1268,8 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
     # col_px_scen_mode_S1S2_nbplayers = plot_histo_strategies(df_arr_M_T_Ks, t)
     # col_playing_players = plot_histo_playing(df_arr_M_T_Ks, t)
     
-    tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t")
+    tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
+    tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
     tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
     # tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
     # tab_bencst=Panel(child=col_pxs_ben_cst, title="mean(ben-cst)")
@@ -1060,6 +1280,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
     #              title="number players playing/not_playing")
     
     tabs = Tabs(tabs= [ tab_Pref_t, 
+                        tab_Pref_algo_t,
                         tab_S1S2,
                         #tab_inout, 
                         #tab_bencst,

@@ -538,7 +538,7 @@ def resume_game_on_excel_file(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     return arr_pl_M_T_vars, df_arr_M_T_vars, df
 
 def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
-                              df_b0_c0_pisg_pi0_T_K, t=1, 
+                              df_b0_c0_pisg_pi0_T_K, t=1,
                               set1_m_players=10, set1_stateId0_m_players=0.75, 
                               set2_m_players=6, set2_stateId0_m_players=0.42, 
                               t_periods=2, k_steps=250, learning_rate=0.1, 
@@ -612,7 +612,7 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                             
             df_al = df_arr_M_T_Ks[mask_algo_name].copy()
             df_al = df_al[cols]
-            print("shape: df_al={}".format(df_al.shape))
+            print("shape: {}, df_al={}".format(state_i, df_al.shape))
             df_al_b0_c0 = df_b0_c0_pisg_pi0_T_K[mask_b0_c0].copy()
             df_al_b0_c0 = df_al_b0_c0[cols_b0_c0].reset_index()
             df_al_b0_c0.drop('index', axis=1, inplace=True)
@@ -961,7 +961,7 @@ def generate_Pi_Ci_Si_Simax_by_automate(set1_m_players, set2_m_players,
             
             # compute values and inject in arr_pl_M_T
             Pi_t, Ci_t, Si_t, Si_t_max = None, None, None, None
-            Si_t_max = 10
+            Si_t_max = 20
             if state_i == STATES[0]:                                            # state1 or Deficit
                 Si_t = 3
                 Ci_t = 10 + Si_t
@@ -1143,7 +1143,7 @@ def generate_Pi_Ci_Si_Simax_by_automate_2_4players(m_players=2, t_periods=2):
             
             # compute values and inject in arr_pl_M_T
             Pi_t, Ci_t, Si_t, Si_t_max = None, None, None, None
-            Si_t_max = 10
+            Si_t_max = 20
             if state_i == STATES[0]:                                            # state1 or Deficit
                 Si_t = 3
                 Ci_t = 10 + Si_t
