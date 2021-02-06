@@ -355,7 +355,8 @@ def nash_balanced_player_game_perf_t(arr_pl_M_T_vars_init,
                    pi_sg_minus_T, pi_sg_plus_T, 
                    pi_0_minus_T, pi_0_plus_T,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-                   algo=algo_name)
+                   algo=algo_name, 
+                   dico_best_steps=dict())
     
     # checkout_nash_equilibrium
     if dbg:
@@ -785,7 +786,8 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                    pi_sg_minus_T_BESTN, pi_sg_plus_T_BESTN, 
                    pi_0_minus_T_BESTN, pi_0_plus_T_BESTN,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BESTN, 
-                   algo=algo_name)
+                   algo=algo_name, 
+                   dico_best_steps=dict())
     turn_dico_stats_res_into_df_NASH(dico_stats_res_algo=dico_stats_res_BESTN, 
                                 path_to_save=path_to_save, 
                                 t_periods=t_periods, 
@@ -804,7 +806,8 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                    pi_sg_minus_T_BADN, pi_sg_plus_T_BADN, 
                    pi_0_minus_T_BADN, pi_0_plus_T_BADN,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BADN, 
-                   algo=algo_name)
+                   algo=algo_name,
+                   dico_best_steps=dict())
     turn_dico_stats_res_into_df_NASH(dico_stats_res_algo=dico_stats_res_BADN, 
                                 path_to_save=path_to_save, 
                                 t_periods=t_periods, 
@@ -822,7 +825,8 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                    pi_sg_minus_T_MIDN, pi_sg_plus_T_MIDN, 
                    pi_0_minus_T_MIDN, pi_0_plus_T_MIDN,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_MIDN, 
-                   algo=algo_name)
+                   algo=algo_name,
+                   dico_best_steps=dict())
     turn_dico_stats_res_into_df_NASH(dico_stats_res_algo=dico_stats_res_MIDN, 
                                 path_to_save=path_to_save, 
                                 t_periods=t_periods, 

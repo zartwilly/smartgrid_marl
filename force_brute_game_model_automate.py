@@ -382,7 +382,8 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                    pi_sg_minus_T, pi_sg_plus_T, 
                    pi_0_minus_T, pi_0_plus_T,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-                   algo=algo_name)
+                   algo=algo_name,
+                   dico_best_steps=dict())
     
     return arr_pl_M_T_vars_modif
     
@@ -1012,7 +1013,8 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                    pi_sg_minus_T_BESTBF, pi_sg_plus_T_BESTBF, 
                    pi_0_minus_T_BESTBF, pi_0_plus_T_BESTBF,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BESTBF, 
-                   algo=algo_name)
+                   algo=algo_name,
+                   dico_best_steps=dict())
     turn_dico_stats_res_into_df_BF(dico_stats_res_algo= dico_stats_res_BESTBF, 
                                 path_to_save = path_to_save, 
                                 t_periods = t_periods, 
@@ -1031,7 +1033,8 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                    pi_sg_minus_T_BADBF, pi_sg_plus_T_BADBF, 
                    pi_0_minus_T_BADBF, pi_0_plus_T_BADBF,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BADBF, 
-                   algo=algo_name)
+                   algo=algo_name,
+                   dico_best_steps=dict())
     turn_dico_stats_res_into_df_BF(dico_stats_res_algo= dico_stats_res_BADBF, 
                                 path_to_save = path_to_save, 
                                 t_periods = t_periods, 
@@ -1050,7 +1053,8 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                    pi_sg_minus_T_MIDBF, pi_sg_plus_T_MIDBF, 
                    pi_0_minus_T_MIDBF, pi_0_plus_T_MIDBF,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_MIDBF, 
-                   algo=algo_name)
+                   algo=algo_name,
+                   dico_best_steps=dict())
     turn_dico_stats_res_into_df_BF(dico_stats_res_algo= dico_stats_res_MIDBF, 
                                 path_to_save = path_to_save, 
                                 t_periods = t_periods, 

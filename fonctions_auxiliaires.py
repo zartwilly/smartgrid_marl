@@ -369,7 +369,8 @@ def save_variables(path_to_save, arr_pl_M_T_K_vars,
                    pi_sg_minus_T_K, pi_sg_plus_T_K, 
                    pi_0_minus_T_K, pi_0_plus_T_K,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res,
-                   algo="LRI"):
+                   algo="LRI",
+                   dico_best_steps=dict()):
     
     if algo is None:
         path_to_save = path_to_save \
@@ -408,6 +409,9 @@ def save_variables(path_to_save, arr_pl_M_T_K_vars,
     np.save(os.path.join(path_to_save, "pi_hp_minus_s.npy"), pi_hp_minus_s)
     pd.DataFrame.from_dict(dico_stats_res)\
         .to_csv(os.path.join(path_to_save, "stats_res.csv"))
+    pd.DataFrame.from_dict(dico_best_steps)\
+        .to_csv(os.path.join(path_to_save, "best_learning_steps.csv"))
+        
     
     print("$$$$ saved variables. $$$$")
     

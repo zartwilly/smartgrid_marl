@@ -16,6 +16,7 @@ import fonctions_auxiliaires as fct_aux
 from bokeh.models.tools import HoverTool, PanTool, BoxZoomTool, WheelZoomTool 
 from bokeh.models.tools import RedoTool, ResetTool, SaveTool, UndoTool
 from bokeh.models import ColumnDataSource, FactorRange
+from bokeh.models import Band
 from bokeh.plotting import figure, show, output_file, save
 from bokeh.layouts import row, column
 from bokeh.models import Panel, Tabs, Legend
@@ -212,7 +213,7 @@ def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=250,
         m_players = arr_pl_M_T_K_vars.shape[0]
         t_periods = arr_pl_M_T_K_vars.shape[1]
         k_steps = arr_pl_M_T_K_vars.shape[2] if arr_pl_M_T_K_vars.shape == 4 \
-                                             else k_steps_args
+                                             else k_steps_args                                    
                                              
         t_periods = None; tu_mtk = None; tu_tk = None; tu_m = None
         if t is None:
@@ -609,7 +610,7 @@ def plot_histo_strategies(df_arr_M_T_Ks, t):
 #
 #         moyenne de la grande proba dune mode pour chaque state  ---> debut
 # _____________________________________________________________________________ 
-def plot_max_proba_mode_onestate(df_ra_pri_st, 
+def plot_max_proba_mode_onestate_BON_A_REVENIR_QUAND_NEW_IMPLEMENTATION_NON_OK(df_ra_pri_st, 
                                 rate, price, state_i, t, 
                                 algos):
     
@@ -718,6 +719,172 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
             ls = range(0,nb_k_steps,1)
         df_al_slice = df_al[df_al.index.isin(ls)]
         source_slice = ColumnDataSource(data = df_al_slice)
+        
+        if algo == "LRI1":
+            ind_color = 3
+            r4 = px.asterisk(x="k", y=ylabel_moyS1, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS1)
+            r5 = px.asterisk(x="k", y=ylabel_moyS2, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS2)
+            # r6 = px.asterisk(x="k", y=ylabel_moyMaxS12, size=7, source=source, 
+            #             color=COLORS[ind_color], legend_label=label_moyMaxS12)
+            tup_legends.append((algo, [r1,r2,r4,r5] ))
+            # tup_legends.append((algo, [r1,r2,r3,r4,r5,r6] ))
+        elif algo == "LRI2":
+            ind_color = 4
+            r4 = px.asterisk(x="k", y=ylabel_moyS1, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS1)
+            r5 = px.asterisk(x="k", y=ylabel_moyS2, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS2)
+            # r6 = px.asterisk(x="k", y=ylabel_moyMaxS12, size=7, source=source, 
+            #             color=COLORS[ind_color], legend_label=label_moyMaxS12)
+            tup_legends.append((algo, [r1,r2,r4,r5] ))
+            # tup_legends.append((algo, [r1,r2,r3,r4,r5,r6] ))
+        
+    legend = Legend(items= tup_legends, location="center")
+    px.legend.label_text_font_size = "8px"
+    px.legend.click_policy="hide"
+    px.add_layout(legend, 'right') 
+
+    return px
+
+def plot_max_proba_mode_onestate(df_ra_pri_st, 
+                                rate, price, state_i, t, 
+                                algos):
+    
+    # algos = ["LRI1","LRI2"]
+    
+    tup_legends = [] 
+    
+    px = figure(plot_height = int(HEIGHT*MULT_HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    
+    algo_df = set(df_ra_pri_st["algo"].unique())
+    algos = set(algos).intersection(algo_df)
+    
+    for algo in algos:
+        df_al = df_ra_pri_st[(df_ra_pri_st.algo == algo)]
+        
+        title = "mean of max proba for each mode at {}, t={} (rate={}, price={})".format(
+                state_i, t, rate, price)
+        xlabel = "k step of learning" 
+        ylabel_moyS1 = "moy_S1"; 
+        ylabel_stdS1 = "std_S1";
+        ylabel_upperS1 = "upper_S1";
+        ylabel_lowerS1 = "lower_S1";
+        ylabel_moyS2 = "moy_S2";
+        ylabel_stdS2 = "std_S2"; 
+        ylabel_upperS2 = "upper_S2";
+        ylabel_lowerS2 = "lower_S2";
+        ylabel_moyMaxS12 = "moy_max_S12"
+        label_moyS1 = "moy_S1_{}".format(algo)
+        label_stdS1 = "std_S1_{}".format(algo)
+        label_upperS1 = "upper_S1_{}".format(algo)
+        label_lowerS1 = "lower_S1_{}".format(algo)
+        label_moyS2 = "moy_S2_{}".format(algo)
+        label_stdS2 = "std_S2_{}".format(algo)
+        label_upperS2 = "upper_S2_{}".format(algo)
+        label_lowerS2 = "lower_S2_{}".format(algo)
+        label_moyMaxS12 = "moy_max_S12_{}".format(algo)
+        
+        px.title.text = title
+        px.xaxis.axis_label = xlabel
+        px.yaxis.axis_label = "moy mode"
+        TOOLS[7] = HoverTool(tooltips=[
+                            ("algo", "@algo"),
+                            ("k", "@k"),
+                            ("moy_S1", "@moy_S1"),
+                            ("moy_S2", "@moy_S2"),
+                            ("lower_S1", "@lower_S1"),
+                            ("upper_S1", "@upper_S1"),
+                            ("lower_S2", "@lower_S2"),
+                            ("upper_S2", "@upper_S2"),
+                            ("moy_max_S12", "@moy_max_S12"),
+                            ("S1", "@S1"),
+                            ("S2", "@S2"),
+                            ]
+                        )
+        px.tools = TOOLS
+        
+        S1, S2 = None, None
+        if state_i == "state1":
+            S1 = fct_aux.STATE1_STRATS[0]
+            S2 = fct_aux.STATE1_STRATS[1]
+        elif state_i == "state2":
+            S1 = fct_aux.STATE2_STRATS[0]
+            S2 = fct_aux.STATE2_STRATS[1]
+        elif state_i == "state3":
+            S1 = fct_aux.STATE3_STRATS[0]
+            S2 = fct_aux.STATE3_STRATS[1]
+        
+        df_al["p_i_j_k"] = df_al["p_i_j_k"]\
+                                .apply(pd.to_numeric,
+                                       downcast='float',
+                                       errors='coerce')
+        # probleme ICI car tous les p_i_j_k ne correspondent pas a S1
+        df_al.loc[:,"S1"] = df_al["p_i_j_k"].copy()
+        df_al.loc[:,"S2"] = 1 - df_al["p_i_j_k"].copy()
+        df_al.loc[:,"S1"] = df_al["S1"].apply(pd.to_numeric,
+                                        downcast='float',
+                                        errors='coerce').copy()
+        df_al.loc[:,"S2"] = df_al["S2"].apply(pd.to_numeric,
+                                        downcast='float',
+                                        errors='coerce').copy()
+        #print("S1={}".format(df_al["S1"]))
+        print("S1={}, df_al={}, rate={}, price={}, state_i={}, t={}, algo={}".format(
+                df_al["S1"].shape, df_al.shape, rate, price, state_i, t, algo))
+        df_al_k = df_al.groupby("k")[["S1","S2"]]\
+                    .aggregate(np.mean).reset_index()
+        df_al_k = df_al.groupby("k")[["S1","S2"]]\
+                        .agg({"S1": [np.mean, np.std], 
+                              "S2": [np.mean, np.std]})\
+                        .reset_index()    
+        tuple_cols = list(df_al_k.columns)
+        dico_new_cols = dict()
+        for tu_col in tuple_cols:
+            dico_new_cols[tu_col] = tu_col[1]+"_"+tu_col[0]
+        df_al_k.columns = df_al_k.columns.to_flat_index()
+        df_al_k.rename(columns=dico_new_cols, inplace=True)  
+        
+        df_al_k['lower_S1'] = df_al_k.mean_S1 - df_al_k.std_S1
+        df_al_k['upper_S1'] = df_al_k.mean_S1 + df_al_k.std_S1
+        
+        df_al_k['lower_S2'] = df_al_k.mean_S2 - df_al_k.std_S2
+        df_al_k['upper_S2'] = df_al_k.mean_S2 + df_al_k.std_S2
+        
+        dico_rename = {"_k":"k","mean_S1":"moy_S1", "mean_S2":"moy_S2",
+                       "std_S1":"std_S1", "std_S2":"std_S2"
+                       }
+        df_al_k.rename(columns=dico_rename, inplace=True)
+        
+        df_al_k.loc[:,"algo"] = algo
+        df_al_k.loc[:,"t"] = t
+        df_al_k.loc[:,"S1"] = S1
+        df_al_k.loc[:,"S2"] = S2
+        
+        source = ColumnDataSource(data = df_al_k)
+        
+        ind_color = 0
+        r1 = px.line(x="k", y=ylabel_moyS1, source=source, 
+                     legend_label=label_moyS1,
+                     line_width=2, color=COLORS[ind_color], 
+                     line_dash=[0,0])
+        ind_color = 1
+        r2 = px.line(x="k", y=ylabel_moyS2, source=source, 
+                     legend_label=label_moyS2,
+                     line_width=2, color=COLORS[ind_color], 
+                     line_dash=[0,0])
+        band_S1 = Band(base='k', lower='lower_S1', upper='upper_S1', 
+                source=source, level='underlay',
+                fill_alpha=1.0, line_width=1, line_color='black')
+        band_S2 = Band(base='k', lower='lower_S2', upper='upper_S2', 
+                source=source, level='underlay',
+                fill_alpha=1.0, line_width=1, line_color='black')
+        #px.add_layout(band)
+        px.add_layout(band_S1)
+        px.add_layout(band_S2)
+                        
         
         if algo == "LRI1":
             ind_color = 3
@@ -1204,7 +1371,6 @@ def plot_Perf_t_players_all_algos(df_ben_cst_M_T_K, t):
     """
     rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
     prices = df_ben_cst_M_T_K["prices"].unique()
-    states = df_ben_cst_M_T_K["state_i"].unique()
     
     dico_pxs = dict()
     cpt = 0
@@ -1298,6 +1464,91 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
 #                   affichage  dans tab  ---> fin
 # _____________________________________________________________________________
 
+# _____________________________________________________________________________
+#
+#                   debug plot_max_proba_mode_onestate  ---> debut
+# _____________________________________________________________________________
+def debug_plot_max_proba_mode_onestate(df_arr_M_T_Ks, t=1):
+    rates = df_arr_M_T_Ks["rate"].unique(); rates = rates[rates!=0]
+    prices = df_arr_M_T_Ks["prices"].unique()
+    states = df_arr_M_T_Ks["state_i"].unique()
+    algos = df_arr_M_T_Ks["algo"].unique()
+    
+    rate = rates[0] if rates[0] != 0 else rates[1]
+    price = prices[0];
+    state_i = states[0]
+    algo = algos[0]
+    
+    mask_ra_pri_st_al = ((df_arr_M_T_Ks.rate == rate) 
+                                 | (df_arr_M_T_Ks.rate == 0)) \
+                    & (df_arr_M_T_Ks.prices == price) \
+                    & (df_arr_M_T_Ks.t == t) \
+                    & (df_arr_M_T_Ks.state_i == state_i) \
+                    & (df_arr_M_T_Ks.algo == algo)     
+    df_ra_pri_st_al = df_arr_M_T_Ks[mask_ra_pri_st_al].copy()
+    
+    df_al = pd.DataFrame(); 
+    # df_al["S1"] = df_ra_pri_st_al["p_i_j_k"].apply(
+    #                 pd.to_numeric,downcast='float',
+    #                 errors='coerce'); 
+    df_al["S1"] = df_ra_pri_st_al["u_i"].apply(
+                    pd.to_numeric,downcast='float',
+                    errors='coerce');
+    df_al.loc[:,"S2"] = 1 - df_al["S1"]; 
+    df_al["k"] = df_ra_pri_st_al["k"];
+    
+    df_al_k = df_al.groupby("k")[["S1","S2"]].agg(
+                                    {"S1": [np.mean, np.min, np.max, np.std], 
+                                     "S2": [np.mean, np.min, np.max, np.std]})
+    tuple_cols = list(df_al_k.columns)
+    dico_new_cols = dict()
+    for tu_col in tuple_cols:
+        dico_new_cols[tu_col] = tu_col[0]+"_"+tu_col[1]
+        
+    df_al_k.columns = df_al_k.columns.to_flat_index()
+    df_al_k.rename(columns=dico_new_cols, inplace=True)
+    
+    df_al_k['S1_lower'] = df_al_k.S1_mean - df_al_k.S1_std
+    df_al_k['S1_upper'] = df_al_k.S1_mean + df_al_k.S1_std
+    
+    df_al_k['S2_lower'] = df_al_k.S2_mean - df_al_k.S2_std
+    df_al_k['S2_upper'] = df_al_k.S2_mean + df_al_k.S2_std
+    
+    source = ColumnDataSource(df_al_k.reset_index())
+
+    TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
+    p = figure(tools=TOOLS)
+    
+    p.scatter(x='k', y='S1_mean', line_color=None, 
+              fill_alpha=0.3, size=5, source=source)
+    
+    band = Band(base='k', lower='S1_lower', upper='S1_upper', 
+                source=source, level='underlay',
+                fill_alpha=1.0, line_width=1, line_color='black')
+    p.add_layout(band)
+    
+    p.title.text = "Rolling Standard Deviation"
+    p.xgrid[0].grid_line_color=None
+    p.ygrid[0].grid_line_alpha=0.5
+    p.xaxis.axis_label = 'X'
+    p.yaxis.axis_label = 'Y'
+    
+    show(p)
+        
+        
+    
+    
+    print("shape : df_ra_pri_st_al=\n{}".format(df_al_k))
+    
+    
+    
+    
+# _____________________________________________________________________________
+#
+#                   debug plot_max_proba_mode_onestate  ---> fin
+# _____________________________________________________________________________
+
+
 #------------------------------------------------------------------------------
 #           execution
 #------------------------------------------------------------------------------
@@ -1305,6 +1556,7 @@ if __name__ == "__main__":
     ti = time.time()
     MULT_WIDTH = 2.5;
     MULT_HEIGHT = 1.2;
+    # fct_aux.N_DECIMALS = 7;
     
     pi_hp_plus = 0.2*pow(10,-3); pi_hp_minus = 0.33
     NAME_RESULT_SHOW_VARS = NAME_RESULT_SHOW_VARS.format(pi_hp_plus, pi_hp_minus)
@@ -1314,7 +1566,7 @@ if __name__ == "__main__":
     t = 1
     
     name_simu =  "simu_2701_1259"; k_steps_args = 250
-    name_simu =  "simu_DDMM_HHMM"; k_steps_args = 250
+    name_simu =  "simu_DDMM_HHMM"; k_steps_args = 2000#250
     
     algos_4_no_learning = ["DETERMINIST","RD-DETERMINIST"] \
                             + fct_aux.ALGO_NAMES_BF \
@@ -1354,5 +1606,7 @@ if __name__ == "__main__":
     #                           set2_m_players=6, set2_stateId0_m_players=0.42, 
     #                           t_periods=2, k_steps=250, learning_rate=0.1)
     ## ---------                A EFFACER               --------------
+    
+    #debug_plot_max_proba_mode_onestate(df_arr_M_T_Ks)
     
     print('runtime = {}'.format(time.time()-ti))
