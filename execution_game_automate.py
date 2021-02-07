@@ -248,16 +248,27 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                     msg, algo_name, str(learning_rate)
                                     )
             Path(path_to_save).mkdir(parents=True, exist_ok=True)
-            arr_M_T_K_vars = autoLriGameModel.lri_balanced_player_game(
-                                arr_pl_M_T_vars_init.copy(),
-                                pi_hp_plus=pi_hp_plus_elt, 
-                                pi_hp_minus=pi_hp_minus_elt,
-                                k_steps=k_steps, 
-                                learning_rate=learning_rate,
-                                p_i_j_ks=p_i_j_ks,
-                                utility_function_version=utility_function_version,
-                                path_to_save=path_to_save, 
-                                manual_debug=manual_debug, dbg=debug)
+            # arr_M_T_K_vars = autoLriGameModel.lri_balanced_player_game(
+            #                     arr_pl_M_T_vars_init.copy(),
+            #                     pi_hp_plus=pi_hp_plus_elt, 
+            #                     pi_hp_minus=pi_hp_minus_elt,
+            #                     k_steps=k_steps, 
+            #                     learning_rate=learning_rate,
+            #                     p_i_j_ks=p_i_j_ks,
+            #                     utility_function_version=utility_function_version,
+            #                     path_to_save=path_to_save, 
+            #                     manual_debug=manual_debug, dbg=debug)
+            arr_M_T_K_vars = autoLriGameModel\
+                                .lri_balanced_player_game_all_pijk_upper_08(
+                                    arr_pl_M_T_vars_init.copy(),
+                                    pi_hp_plus=pi_hp_plus_elt, 
+                                    pi_hp_minus=pi_hp_minus_elt,
+                                    k_steps=k_steps, 
+                                    learning_rate=learning_rate,
+                                    p_i_j_ks=p_i_j_ks,
+                                    utility_function_version=utility_function_version,
+                                    path_to_save=path_to_save, 
+                                    manual_debug=manual_debug, dbg=debug)
         elif algo_name == ALGOS[1]:
             # LRI2
             print("*** ALGO: {} *** ".format(algo_name))
@@ -266,16 +277,27 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                     msg, algo_name, str(learning_rate)
                                     )
             Path(path_to_save).mkdir(parents=True, exist_ok=True)
-            arr_M_T_K_vars = autoLriGameModel.lri_balanced_player_game(
-                                arr_pl_M_T_vars_init.copy(),
-                                pi_hp_plus=pi_hp_plus_elt, 
-                                pi_hp_minus=pi_hp_minus_elt,
-                                k_steps=k_steps, 
-                                learning_rate=learning_rate,
-                                p_i_j_ks=p_i_j_ks,
-                                utility_function_version=utility_function_version,
-                                path_to_save=path_to_save, 
-                                manual_debug=manual_debug, dbg=debug)
+            # arr_M_T_K_vars = autoLriGameModel.lri_balanced_player_game(
+            #                     arr_pl_M_T_vars_init.copy(),
+            #                     pi_hp_plus=pi_hp_plus_elt, 
+            #                     pi_hp_minus=pi_hp_minus_elt,
+            #                     k_steps=k_steps, 
+            #                     learning_rate=learning_rate,
+            #                     p_i_j_ks=p_i_j_ks,
+            #                     utility_function_version=utility_function_version,
+            #                     path_to_save=path_to_save, 
+            #                     manual_debug=manual_debug, dbg=debug)
+            arr_M_T_K_vars = autoLriGameModel\
+                                .lri_balanced_player_game_all_pijk_upper_08(
+                                    arr_pl_M_T_vars_init.copy(),
+                                    pi_hp_plus=pi_hp_plus_elt, 
+                                    pi_hp_minus=pi_hp_minus_elt,
+                                    k_steps=k_steps, 
+                                    learning_rate=learning_rate,
+                                    p_i_j_ks=p_i_j_ks,
+                                    utility_function_version=utility_function_version,
+                                    path_to_save=path_to_save, 
+                                    manual_debug=manual_debug, dbg=debug)
             
         elif algo_name == ALGOS[2] or algo_name == ALGOS[3]:
             # 2: DETERMINIST, 3: RANDOM DETERMINIST
