@@ -34,7 +34,7 @@ if __name__ == "__main__":
         t_periods = 2
         k_steps = 2000 #50 #250   # probleme pour k > 250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
-        learning_rates = [0.00001] #[0.01] #[0.0001]
+        learning_rates = [0.01]#[0.00001] #[0.01] #[0.0001]
         fct_aux.N_DECIMALS = 8
         
         pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
