@@ -840,7 +840,24 @@ def balanced_player_game_t(arr_pl_M_T_K_vars_modif, t, k,
             bens_t_k, csts_t_k, \
             dico_gamma_players_t_k
     
-
+def best_mode_profils_4_all_steps(arr_pl_M_T_K_vars_modif, t, 
+                                  BENs_M_T_K, CSTs_M_T_K):
+    """
+    look for the best k-step during the learning at the time t
+    """
+    dico_k_best_t = dict()
+    k_steps = arr_pl_M_T_K_vars_modif.shape[3]
+    k_best_t = 0
+    Perf_t_best = 0
+    for k in range(0, k_steps):
+        Perf_t_k = np.sum(BENs_M_T_K[:,t,k] - CSTs_M_T_K[:,t,k], axis=0)
+        if Perf_t_k > Perf_t_best:
+            print("t={}, k={}, Perf_t_k={}, old_Perf_t_best={}".format(t, k, Perf_t_k, Perf_t_best))
+            k_best_t = k;
+            Perf_t_best = Perf_t_k
+            
+    dico_k_best_t = {"k":k_best_t, "Perf_t_best":Perf_t_best}
+    return dico_k_best_t
 
 # ______________       main function of LRI   ---> debut      _________________
 def lri_balanced_player_game(arr_pl_M_T_vars_init,
@@ -1106,6 +1123,283 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
     
     return arr_pl_M_T_K_vars_modif
 
+def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
+                             pi_hp_plus=0.10, 
+                             pi_hp_minus=0.15,
+                             k_steps=5, 
+                             learning_rate=0.1,
+                             p_i_j_ks=[0.5, 0.5, 0.5],
+                             utility_function_version=1,
+                             path_to_save="tests", 
+                             manual_debug=False, dbg=False):
+    
+    m_players = arr_pl_M_T_vars_init.shape[0]
+    t_periods = arr_pl_M_T_vars_init.shape[1]
+    
+    # _______ variables' initialization --> debut ________________
+    
+    pi_sg_plus_T = np.empty(shape=(t_periods,)); 
+    pi_sg_plus_T.fill(np.nan)
+    pi_sg_minus_T = np.empty(shape=(t_periods,)); 
+    pi_sg_minus_T.fill(np.nan)
+    pi_0_plus_T = np.empty(shape=(t_periods,)); 
+    pi_0_plus_T.fill(np.nan)
+    pi_0_minus_T = np.empty(shape=(t_periods,)); 
+    pi_0_minus_T.fill(np.nan)
+    b0_s_T_K = np.empty(shape=(t_periods, k_steps)); b0_s_T_K.fill(np.nan)
+    c0_s_T_K = np.empty(shape=(t_periods, k_steps)); c0_s_T_K.fill(np.nan)
+    BENs_M_T_K = np.empty(shape=(m_players, t_periods, k_steps)); 
+    BENs_M_T_K.fill(np.nan)
+    CSTs_M_T_K = np.empty(shape=(m_players, t_periods, k_steps)); 
+    CSTs_M_T_K.fill(np.nan)
+    B_is_M = np.empty(shape=(m_players,)); B_is_M.fill(np.nan)
+    C_is_M = np.empty(shape=(m_players,)); C_is_M.fill(np.nan)
+    
+    # ____   turn arr_pl_M_T in an array of 4 dimensions   ____
+    
+    ## good time 21.3 ns for k_steps = 1000
+    arrs = []
+    for k in range(0, k_steps):
+        arrs.append(list(arr_pl_M_T_vars_init))
+    arrs = np.array(arrs, dtype=object)
+    arrs = np.transpose(arrs, [1,2,0,3])
+    ## good but slow 21.4 ns for k_steps = 1000
+    # arrs = np.broadcast_to(
+    #                         arr_pl_M_T, (k_steps,) + arr_pl_M_T.shape);
+    # arrs = np.transpose(arrs, [1,2,0,3])
+    # return arrs
+    
+    ## add initial values for the new attributs
+    arr_pl_M_T_K_vars = np.zeros((arrs.shape[0],
+                             arrs.shape[1],
+                             arrs.shape[2],
+                             arrs.shape[3]), 
+                            dtype=object)
+    arr_pl_M_T_K_vars[:,:,:,:] = arrs
+    # arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
+    #     arr_pl_M_T_K_vars[:,:,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
+        = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
+    for num_pl_i in range(0, m_players):
+        for t in range(0, t_periods):
+            arr_pl_M_T_K_vars[num_pl_i,t,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
+                arr_pl_M_T_K_vars[num_pl_i,t,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+            arr_pl_M_T_K_vars[num_pl_i,t,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]] = \
+                arr_pl_M_T_K_vars[num_pl_i,t,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]]
+        
+    # ____      run balanced sg for all num_periods at any k_step     ________
+    arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
+    
+    
+    pi_sg_plus_t0_minus_1 = pi_hp_plus-1
+    pi_sg_minus_t0_minus_1 = pi_hp_minus-1
+    pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
+    pi_sg_plus_t, pi_sg_minus_t = None, None
+        
+    dico_stats_res = dict()
+    for t in range(0, t_periods):
+        print("******* t = {} BEGIN *******".format(t))
+        
+        if manual_debug:
+            pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+            pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K #2 
+            pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
+        else:
+            pi_sg_plus_t_minus_1 = pi_sg_plus_t0_minus_1 if t == 0 \
+                                                         else pi_sg_plus_t
+            pi_sg_minus_t_minus_1 = pi_sg_minus_t0_minus_1 if t == 0 \
+                                                            else pi_sg_minus_t
+            pi_0_plus_t = round(pi_sg_plus_t_minus_1*pi_hp_plus/pi_hp_minus, 
+                                fct_aux.N_DECIMALS)
+            pi_0_minus_t = pi_sg_minus_t_minus_1
+            
+        pi_0_plus_T[t] = pi_0_plus_t
+        pi_0_minus_T[t] = pi_0_minus_t
+        
+        indices_non_playing_players = []      # indices of non-playing players because bg_min = bg_max
+        arr_bg_i_nb_repeat_k = np.empty(
+                                shape=(m_players,fct_aux.NB_REPEAT_K_MAX))
+        arr_bg_i_nb_repeat_k.fill(np.nan)
+        
+        dico_gamma_players_t = dict()
+        bool_stop_learning = False
+        nb_repeat_k = 0
+        k = 0
+        while k<k_steps and not bool_stop_learning:
+            # print("------- pi_sg_plus_t_k={}, pi_sg_minus_t_k={} -------".format(
+            #         pi_sg_plus_t_k, pi_sg_minus_t_k)) \
+            #     if dbg else None
+            
+            print(" -------  k = {}, nb_repeat_k = {}  ------- ".format(k, 
+                    nb_repeat_k)) if k%50 == 0 else None
+             
+            ### balanced_player_game_t
+            arr_pl_M_T_K_vars_modif_new, \
+            b0_t_k, c0_t_k, \
+            bens_t_k, csts_t_k, \
+            dico_gamma_players_t_k \
+                = balanced_player_game_t(arr_pl_M_T_K_vars_modif.copy(), t, k, 
+                           pi_hp_plus, pi_hp_minus, 
+                           pi_0_plus_t, pi_0_minus_t,
+                           m_players, t_periods, 
+                           manual_debug, dbg=False)
+            dico_gamma_players_t[t] = dico_gamma_players_t_k    
+            
+            ## update variables at each step because they must have to converge in the best case
+            #### update b0_s, c0_s of shape (T_PERIODS,K_STEPS) 
+            b0_s_T_K[t,k] = b0_t_k
+            c0_s_T_K[t,k] = c0_t_k
+            #### update BENs, CSTs of shape (M_PLAYERS,T_PERIODS,K_STEPS)
+            #### shape: bens_t_k: (M_PLAYERS,)
+            BENs_M_T_K[:,t,k] = bens_t_k
+            CSTs_M_T_K[:,t,k] = csts_t_k
+            
+            
+            ## compute players' utility
+        
+            arr_pl_M_T_K_vars_modif_new, \
+            arr_bg_i_nb_repeat_k, \
+            bool_bg_i_min_eq_max, \
+            indices_non_playing_players \
+                = update_p_i_j_k_by_defined_utility_funtion(
+                    arr_pl_M_T_K_vars_modif_new.copy(), 
+                    arr_bg_i_nb_repeat_k.copy(),
+                    t, k,
+                    b0_t_k, c0_t_k,
+                    bens_t_k, csts_t_k,
+                    pi_hp_minus,
+                    pi_0_plus_t, pi_0_minus_t,
+                    nb_repeat_k,
+                    learning_rate, 
+                    utility_function_version)
+            
+            if bool_bg_i_min_eq_max and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
+                k = k
+                arr_bg_i_nb_repeat_k[:,nb_repeat_k] \
+                    = arr_pl_M_T_K_vars_modif_new[
+                        :,
+                        t, k,
+                        fct_aux.AUTOMATE_INDEX_ATTRS["bg_i"]]
+                nb_repeat_k += 1
+                arr_pl_M_T_K_vars_modif[:,t,k,:] \
+                    = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
+                if nb_repeat_k == fct_aux.NB_REPEAT_K_MAX-1:
+                    print("arr_bg_i_nb_repeat_k={}".format(arr_bg_i_nb_repeat_k))
+                    
+            elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
+                arr_pl_M_T_K_vars_modif_new[
+                    indices_non_playing_players, t, k,
+                    fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
+                    = arr_pl_M_T_K_vars_modif_new[
+                        indices_non_playing_players, t, k-1,
+                        fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
+                        if k > 0 \
+                        else arr_pl_M_T_K_vars_modif_new[
+                                indices_non_playing_players, t, k,
+                                fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
+                        
+                arr_pl_M_T_K_vars_modif[:,t,k,:] \
+                    = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
+                
+                bool_stop_learning \
+                    = all(arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8) 
+                
+                k = k+1
+                nb_repeat_k = 0
+                arr_bg_i_nb_repeat_k = np.empty(shape=(m_players, 
+                                                       fct_aux.NB_REPEAT_K_MAX)
+                                                )
+                arr_bg_i_nb_repeat_k.fill(np.nan)
+            
+            else:
+                arr_pl_M_T_K_vars_modif[:,t,k,:] \
+                    = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
+                    
+                bool_stop_learning \
+                    = all(arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8)
+                
+                k = k+1
+                nb_repeat_k = 0
+                arr_bg_i_nb_repeat_k = np.empty(shape=(m_players, 
+                                                       fct_aux.NB_REPEAT_K_MAX)
+                                                )
+                arr_bg_i_nb_repeat_k.fill(np.nan)
+        
+        dico_stats_res[t] = dico_gamma_players_t
+        
+        # compute pi_sg_plus_t_k, pi_sg_minus_t_k,
+        pi_sg_plus_t, pi_sg_minus_t = \
+            fct_aux.determine_new_pricing_sg(
+                arr_pl_M_T_K_vars_modif[:,:,k_steps-1,:], 
+                pi_hp_plus, 
+                pi_hp_minus, 
+                t, 
+                dbg=dbg)
+            
+        if manual_debug:
+            pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+            pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K #2 
+            pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
+            
+        pi_sg_plus_T[t] = pi_sg_plus_t
+        pi_sg_minus_T[t] = pi_sg_minus_t
+        
+        print("******* t = {} END: k_step = {} *******".format(t, k))
+        
+    # __________        compute prices variables         ______________________
+    ## B_is, C_is of shape (M_PLAYERS, )
+    prod_M_T = arr_pl_M_T_K_vars_modif[:,:, k_steps-1, 
+                                       fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+    cons_M_T = arr_pl_M_T_K_vars_modif[:,:, k_steps-1, 
+                                       fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+    B_is_M = np.sum(b0_s_T_K[:,k_steps-1] * prod_M_T, axis=1)
+    C_is_M = np.sum(c0_s_T_K[:,k_steps-1] * cons_M_T, axis=1)
+    
+    ## BB_is, CC_is, RU_is of shape (M_PLAYERS, )
+    CONS_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
+                        :, :,
+                        k_steps-1, fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
+                     axis=1)
+    PROD_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
+                        :, :, 
+                        k_steps-1, fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
+                     axis=1)
+    BB_is_M = pi_sg_plus_T[-1] * PROD_is_M_T #np.sum(PROD_is)
+    CC_is_M = pi_sg_minus_T[-1] * CONS_is_M_T #np.sum(CONS_is)
+    RU_is_M = BB_is_M - CC_is_M
+    
+    pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
+    pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
+    
+    #__________      save computed variables locally      _____________________
+    algo_name = "LRI1" if utility_function_version == 1 else "LRI2"
+    fct_aux.save_variables(path_to_save, arr_pl_M_T_K_vars_modif, 
+            b0_s_T_K, c0_s_T_K, B_is_M, C_is_M, BENs_M_T_K, CSTs_M_T_K, 
+            BB_is_M, CC_is_M, RU_is_M, 
+            pi_sg_minus_T, pi_sg_plus_T, 
+            pi_0_minus_T, pi_0_plus_T,
+            pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+            algo=algo_name, 
+            dico_best_steps=dict())
+    turn_dico_stats_res_into_df_LRI(
+            arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars_modif, 
+            BENs_M_T_K = BENs_M_T_K, 
+            CSTs_M_T_K = CSTs_M_T_K,
+            path_to_save = path_to_save, 
+            manual_debug = manual_debug, 
+            algo_name=algo_name)
+    
+    
+    return arr_pl_M_T_K_vars_modif
+
+
 def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                              pi_hp_plus=0.10, 
                              pi_hp_minus=0.15,
@@ -1188,7 +1482,7 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
     dico_stats_res = dict()
     dico_best_steps = dict()
     for t in range(0, t_periods):
-        print("******* t = {} *******".format(t))
+        print("******* t = {} BEGIN *******".format(t))
         
         if manual_debug:
             pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
@@ -1213,9 +1507,10 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
         arr_bg_i_nb_repeat_k.fill(np.nan)
         
         dico_gamma_players_t = dict()
+        bool_stop_learning = False
         nb_repeat_k = 0
         k = 0
-        while k<k_steps:
+        while k<k_steps and not bool_stop_learning:
             # print("------- pi_sg_plus_t_k={}, pi_sg_minus_t_k={} -------".format(
             #         pi_sg_plus_t_k, pi_sg_minus_t_k)) \
             #     if dbg else None
@@ -1289,6 +1584,11 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 
+                bool_stop_learning \
+                    = all(arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8)
+                
                 k = k+1
                 nb_repeat_k = 0
                 arr_bg_i_nb_repeat_k = np.empty(shape=(m_players, 
@@ -1300,6 +1600,11 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 
+                bool_stop_learning \
+                    = all(arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8)
+                
                 k = k+1
                 nb_repeat_k = 0
                 arr_bg_i_nb_repeat_k = np.empty(shape=(m_players, 
@@ -1307,7 +1612,7 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                                                 )
                 arr_bg_i_nb_repeat_k.fill(np.nan)
        
-        k_best_t = best_mode_profils_4_all_steps(arr_pl_M_T_K_vars_modif.copy(), 
+        dico_k_best_t = best_mode_profils_4_all_steps(arr_pl_M_T_K_vars_modif.copy(), 
                                               t, BENs_M_T_K, CSTs_M_T_K)
         
         dico_stats_res[t] = dico_gamma_players_t
@@ -1315,12 +1620,12 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
         # compute pi_sg_plus_t_k, pi_sg_minus_t_k,
         pi_sg_plus_t, pi_sg_minus_t = \
             fct_aux.determine_new_pricing_sg(
-                arr_pl_M_T_K_vars_modif[:,:,k_best_t,:], 
+                arr_pl_M_T_K_vars_modif[:,:,dico_k_best_t["k"],:], 
                 pi_hp_plus, 
                 pi_hp_minus, 
                 t, 
                 dbg=dbg)
-        dico_best_steps[t] = k_best_t
+        dico_best_steps[t] = dico_k_best_t
             
         if manual_debug:
             pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
@@ -1331,33 +1636,37 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
         pi_sg_plus_T[t] = pi_sg_plus_t
         pi_sg_minus_T[t] = pi_sg_minus_t
         
+        print("******* t = {} END: k_step = {} *******".format(t, k))
+        
     # __________        compute prices variables         ______________________
     ## B_is, C_is of shape (M_PLAYERS, )
-    list_best_steps = list(dico_best_steps.values())
-    # TODO : comment selectionner tableau avec t
-    prod_M_T = arr_pl_M_T_K_vars_modif[:,:, list_best_steps, 
-                                       fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
-    cons_M_T = arr_pl_M_T_K_vars_modif[:,:, list_best_steps, 
-                                       fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
-    B_is_M = np.sum(b0_s_T_K[:, list_best_steps] * prod_M_T, axis=1)
-    C_is_M = np.sum(c0_s_T_K[:, list_best_steps] * cons_M_T, axis=1)
+    prod_M_T = np.empty(shape=(m_players, t_periods)); prod_M_T.fill(np.nan)
+    cons_M_T = np.empty(shape=(m_players, t_periods)); cons_M_T.fill(np.nan)
+    B_is_M_T = np.empty(shape=(m_players, t_periods)); B_is_M_T.fill(np.nan)
+    C_is_M_T = np.empty(shape=(m_players, t_periods)); C_is_M_T.fill(np.nan)
+    for t, dico_k_best_t in dico_best_steps.items():
+        prod_M_T[:,t] = arr_pl_M_T_K_vars_modif[
+                            :,t,dico_k_best_t["k"], 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+        cons_M_T[:,t] = arr_pl_M_T_K_vars_modif[
+                            :,t,dico_k_best_t["k"], 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+        B_is_M_T[:,t] = b0_s_T_K[t,dico_k_best_t["k"]] * prod_M_T[:,t]
+        C_is_M_T[:,t] = c0_s_T_K[t,dico_k_best_t["k"]] * cons_M_T[:,t]
+    B_is_M = np.sum(B_is_M_T, axis=1)
+    C_is_M = np.sum(C_is_M_T, axis=1)
     
     ## BB_is, CC_is, RU_is of shape (M_PLAYERS, )
-    CONS_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
-                        :, :,
-                        list_best_steps, fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
-                     axis=1)
-    PROD_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
-                        :, :, 
-                        list_best_steps, fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
-                     axis=1)
-    BB_is_M = pi_sg_plus_T[-1] * PROD_is_M_T #np.sum(PROD_is)
-    CC_is_M = pi_sg_minus_T[-1] * CONS_is_M_T #np.sum(CONS_is)
+    CONS_is_M = np.sum(cons_M_T, axis=1)
+    PROD_is_M = np.sum(prod_M_T, axis=1)
+    BB_is_M = pi_sg_plus_T[-1] * PROD_is_M 
+    CC_is_M = pi_sg_minus_T[-1] * CONS_is_M 
     RU_is_M = BB_is_M - CC_is_M
     
     pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
     pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
     
+    print("dico_best_steps={}".format(dico_best_steps))
     #__________      save computed variables locally      _____________________
     algo_name = "LRI1" if utility_function_version == 1 else "LRI2"
     fct_aux.save_variables(path_to_save, arr_pl_M_T_K_vars_modif, 
@@ -1475,7 +1784,92 @@ def test_lri_balanced_player_game():
                              dbg=False)
     return arr_pl_M_T_K_vars_modif
     
+def test_lri_balanced_player_game_all_pijk_upper_08():
+    # steps of learning
+    k_steps = 250 # 5,250
+    p_i_j_ks = [0.5, 0.5, 0.5]
     
+    pi_hp_plus = 0.2*pow(10,-3)
+    pi_hp_minus = 0.33
+    learning_rate = 0.1
+    utility_function_version=1
+    
+    manual_debug=True
+    
+    t_periods = 2
+    set1_m_players, set2_m_players = 20, 12
+    set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    set1_states, set2_states = None, None
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False #True
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance(
+                                    set1_m_players, set2_m_players, 
+                                   t_periods, 
+                                   set1_states, 
+                                   set2_states,
+                                   set1_stateId0_m_players,
+                                   set2_stateId0_m_players, 
+                                   path_to_arr_pl_M_T, used_instances)
+    # return arr_pl_M_T_vars_init
+    
+    arr_pl_M_T_K_vars_modif = lri_balanced_player_game_all_pijk_upper_08(
+                                arr_pl_M_T_vars_init,
+                                pi_hp_plus=pi_hp_plus, 
+                                 pi_hp_minus=pi_hp_minus,
+                                 k_steps=k_steps, 
+                                 learning_rate=learning_rate,
+                                 p_i_j_ks=p_i_j_ks,
+                                 utility_function_version=utility_function_version,
+                                 path_to_save="tests", 
+                                 manual_debug=manual_debug, 
+                                 dbg=False)
+    return arr_pl_M_T_K_vars_modif    
+
+def test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_step():
+    # steps of learning
+    k_steps = 250 # 5,250
+    p_i_j_ks = [0.5, 0.5, 0.5]
+    
+    pi_hp_plus = 0.2*pow(10,-3)
+    pi_hp_minus = 0.33
+    learning_rate = 0.1
+    utility_function_version=1
+    
+    manual_debug=True
+    
+    t_periods = 2
+    set1_m_players, set2_m_players = 20, 12
+    set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    set1_states, set2_states = None, None
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False #True
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance(
+                                    set1_m_players, set2_m_players, 
+                                   t_periods, 
+                                   set1_states, 
+                                   set2_states,
+                                   set1_stateId0_m_players,
+                                   set2_stateId0_m_players, 
+                                   path_to_arr_pl_M_T, used_instances)
+    # return arr_pl_M_T_vars_init
+    
+    arr_pl_M_T_K_vars_modif = lri_balanced_player_game_select_best_profil_4_all_step(
+                                arr_pl_M_T_vars_init,
+                                pi_hp_plus=pi_hp_plus, 
+                                pi_hp_minus=pi_hp_minus,
+                                k_steps=k_steps, 
+                                learning_rate=learning_rate,
+                                p_i_j_ks=p_i_j_ks,
+                                utility_function_version=utility_function_version,
+                                path_to_save="tests", 
+                                manual_debug=manual_debug, 
+                                dbg=False)
+    return arr_pl_M_T_K_vars_modif    
+
 ###############################################################################
 #                   Execution
 #
@@ -1483,6 +1877,8 @@ def test_lri_balanced_player_game():
 if __name__ == "__main__":
     ti = time.time()
     
-    arr_pl_M_T_K_vars = test_lri_balanced_player_game()
+    # arr_pl_M_T_K_vars = test_lri_balanced_player_game()
+    # arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08()
+    arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_step()
     
     print("runtime = {}".format(time.time() - ti))
