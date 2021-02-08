@@ -373,7 +373,7 @@ class Player:
         """
         if self.Pi + self.Si <= self.Ci:
             self.state_i = "state1"
-        elif self.Pi + self.Si > self.Ci and self.Pi < self.Ci:
+        elif self.Pi + self.Si > self.Ci and self.Pi <= self.Ci:
             self.state_i = "state2"
         elif self.Pi >= self.Ci:
             self.state_i = "state3"
