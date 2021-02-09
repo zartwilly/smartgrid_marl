@@ -32,10 +32,10 @@ if __name__ == "__main__":
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm="DDMM_HHMM"
         t_periods = 2
-        k_steps = 2000 #50 #250   # probleme pour k > 250
+        k_steps = 5000 #2000 #50 #250   # probleme pour k > 250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
-        learning_rates = [0.01]#[0.00001] #[0.01] #[0.0001]
-        fct_aux.N_DECIMALS = 8
+        learning_rates = [0.001]#[0.00001] #[0.01] #[0.0001]
+        fct_aux.N_DECIMALS = 10
         
         pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [0.33] #[15, 5]
