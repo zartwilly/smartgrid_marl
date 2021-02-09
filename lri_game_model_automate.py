@@ -1725,10 +1725,13 @@ def turn_dico_stats_res_into_df_LRI(
                 mode_i = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
+                p_i_j_k = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
                 Vi = ben_csts_MKs_t[num_pl_i, k]
                 
                 dico_pls["player_"+str(num_pl_i)] \
-                    = (state_i, mode_i, Vi)
+                    = (state_i, mode_i, Vi, p_i_j_k)
             dico_pls["Perf_t"] = perf_t_K_t[k]
             dico_players["step_"+str(k)+"_t_"+str(t)] = dico_pls
         
@@ -1744,7 +1747,7 @@ def turn_dico_stats_res_into_df_LRI(
 
 def test_lri_balanced_player_game():
     # steps of learning
-    k_steps = 250 # 5,250
+    k_steps = 50 #250 # 5,250
     p_i_j_ks = [0.5, 0.5, 0.5]
     
     pi_hp_plus = 0.2*pow(10,-3)
@@ -1877,8 +1880,8 @@ def test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_ste
 if __name__ == "__main__":
     ti = time.time()
     
-    # arr_pl_M_T_K_vars = test_lri_balanced_player_game()
+    arr_pl_M_T_K_vars = test_lri_balanced_player_game()
     # arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08()
-    arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_step()
+    # arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_step()
     
     print("runtime = {}".format(time.time() - ti))
