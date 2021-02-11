@@ -623,6 +623,7 @@ def update_p_i_j_k_by_defined_utility_funtion(arr_pl_M_T_K_vars_modif_new,
 def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k, 
                                        pi_0_plus_t, pi_0_minus_t, 
                                        pi_hp_plus, pi_hp_minus, 
+                                       random_mode,
                                        manual_debug, dbg):
     
     dico_gamma_players_t_k = dict()
@@ -652,14 +653,19 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         pl_i.set_R_i_old(Si_max-Si)                                             # update R_i_old
         
         # select mode for player num_pl_i
-        S1_p_i_t_k = arr_pl_M_T_K_vars_modif[num_pl_i, 
-                                    t, k, 
-                                    fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] \
-            if k == 0 \
-            else arr_pl_M_T_K_vars_modif[num_pl_i, 
-                                    t, k-1, 
-                                    fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
-        pl_i.select_mode_i(p_i=S1_p_i_t_k)
+        if random_mode:
+            S1_p_i_t_k = arr_pl_M_T_K_vars_modif[num_pl_i, 
+                                        t, k, 
+                                        fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] \
+                if k == 0 \
+                else arr_pl_M_T_K_vars_modif[num_pl_i, 
+                                        t, k-1, 
+                                        fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
+            pl_i.select_mode_i(p_i=S1_p_i_t_k)
+        else:
+            mode_i = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['mode_i']]
+            pl_i.set_mode_i(mode_i)
         
         # compute cons, prod, r_i
         pl_i.update_prod_cons_r_i()
@@ -680,6 +686,8 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
                 if t+1 < t_periods \
                 else 0
                      
+        # print("** Ci_t_plus_1_k={}, Pi_t_plus_1_k={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
+        #         Ci_t_plus_1_k, Pi_t_plus_1_k, pi_0_plus_t, pi_0_minus_t))
         pl_i.select_storage_politic(
             Ci_t_plus_1 = Ci_t_plus_1_k, 
             Pi_t_plus_1 = Pi_t_plus_1_k, 
@@ -849,6 +857,7 @@ def balanced_player_game_t(arr_pl_M_T_K_vars_modif, t, k,
                            pi_hp_plus, pi_hp_minus, 
                            pi_0_plus_t, pi_0_minus_t,
                            m_players, t_periods, 
+                           random_mode=True,
                            manual_debug=False, dbg=False):
     
     # find mode, prod, cons, r_i
@@ -856,7 +865,8 @@ def balanced_player_game_t(arr_pl_M_T_K_vars_modif, t, k,
         = balanced_player_game_4_random_mode(
             arr_pl_M_T_K_vars_modif.copy(), t, k, 
             pi_0_plus_t, pi_0_minus_t, 
-            pi_hp_plus, pi_hp_minus, 
+            pi_hp_plus, pi_hp_minus,
+            random_mode, 
             manual_debug, dbg)
     
     # compute pi_sg_{plus,minus}_t_k, pi_0_{plus,minus}_t_k
@@ -893,7 +903,8 @@ def best_mode_profils_4_all_steps(arr_pl_M_T_K_vars_modif, t,
     return dico_k_best_t
 
 def update_profile_players_by_select_mode_from_S1orS2_p_i_j_k(
-                arr_pl_M_T_K_vars_modif, t, k_stop_learning
+                arr_pl_M_T_K_vars_modif, arr_pl_M_T_K_vars, 
+                t, k_stop_learning
                 ):
     """
     for each player, affect the mode having the greater probability between 
@@ -927,6 +938,12 @@ def update_profile_players_by_select_mode_from_S1orS2_p_i_j_k(
         arr_pl_M_T_K_vars_modif[
             num_pl_i, t, k_stop_learning, 
             fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] = mode_i
+        Si = arr_pl_M_T_K_vars[
+                        num_pl_i, t, k_stop_learning, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+        arr_pl_M_T_K_vars_modif[
+                        num_pl_i, t, k_stop_learning, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = Si
         
     return arr_pl_M_T_K_vars_modif
         
@@ -1045,6 +1062,7 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
                     nb_repeat_k)) if k%50 == 0 else None
              
             ### balanced_player_game_t
+            random_mode = True
             arr_pl_M_T_K_vars_modif_new, \
             b0_t_k, c0_t_k, \
             bens_t_k, csts_t_k, \
@@ -1053,6 +1071,7 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
                            pi_hp_plus, pi_hp_minus, 
                            pi_0_plus_t, pi_0_minus_t,
                            m_players, t_periods, 
+                           random_mode,
                            manual_debug, dbg=False)
             dico_gamma_players_t[t] = dico_gamma_players_t_k    
             
@@ -1299,6 +1318,10 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             if t == 0:
                pi_0_plus_t = 2
                pi_0_minus_t = 2
+               
+        
+        print("t={}, pi_sg_plus_t={}, pi_sg_minus_t={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
+             t, pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t))
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
@@ -1322,6 +1345,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                     nb_repeat_k)) if k%50 == 0 else None
              
             ### balanced_player_game_t
+            random_mode = True
             arr_pl_M_T_K_vars_modif_new, \
             b0_t_k, c0_t_k, \
             bens_t_k, csts_t_k, \
@@ -1330,6 +1354,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                            pi_hp_plus, pi_hp_minus, 
                            pi_0_plus_t, pi_0_minus_t,
                            m_players, t_periods, 
+                           random_mode,
                            manual_debug, dbg=False)
             dico_gamma_players_t[t] = dico_gamma_players_t_k    
             
@@ -1440,8 +1465,25 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         
         arr_pl_M_T_K_vars_modif \
             = update_profile_players_by_select_mode_from_S1orS2_p_i_j_k(
-                arr_pl_M_T_K_vars_modif.copy(), t, k_stop_learning
+                arr_pl_M_T_K_vars_modif.copy(), arr_pl_M_T_K_vars, 
+                t, k_stop_learning
                 )
+        random_mode = False
+        arr_pl_M_T_K_vars_modif, \
+        b0_t_k, c0_t_k, \
+        bens_t_k, csts_t_k, \
+        dico_gamma_players_t_k \
+            = balanced_player_game_t(arr_pl_M_T_K_vars_modif.copy(), 
+                        t, k_stop_learning, 
+                        pi_hp_plus, pi_hp_minus, 
+                        pi_0_plus_t, pi_0_minus_t,
+                        m_players, t_periods, random_mode,
+                        manual_debug, dbg=False)
+        dico_gamma_players_t[t] = dico_gamma_players_t_k    
+        b0_s_T_K[t,k_stop_learning] = b0_t_k
+        c0_s_T_K[t,k_stop_learning] = c0_t_k
+        BENs_M_T_K[:,t,k_stop_learning] = bens_t_k
+        CSTs_M_T_K[:,t,k_stop_learning] = csts_t_k
         
         # compute pi_sg_plus_t_k, pi_sg_minus_t_k,
         pi_sg_plus_t, pi_sg_minus_t = \
@@ -1661,6 +1703,7 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                     nb_repeat_k)) if k%50 == 0 else None
              
             ### balanced_player_game_t
+            random_mode = True
             arr_pl_M_T_K_vars_modif_new, \
             b0_t_k, c0_t_k, \
             bens_t_k, csts_t_k, \
@@ -1669,6 +1712,7 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                            pi_hp_plus, pi_hp_minus, 
                            pi_0_plus_t, pi_0_minus_t,
                            m_players, t_periods, 
+                           random_mode,
                            manual_debug, dbg=False)
             dico_gamma_players_t[t] = dico_gamma_players_t_k    
             
