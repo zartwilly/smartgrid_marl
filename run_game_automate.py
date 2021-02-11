@@ -32,13 +32,13 @@ if __name__ == "__main__":
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm="DDMM_HHMM"
         t_periods = 2
-        k_steps = 5000 #2000 #50 #250   # probleme pour k > 250
+        k_steps = 350 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
-        learning_rates = [0.001]#[0.00001] #[0.01] #[0.0001]
+        learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
         fct_aux.N_DECIMALS = 10
         
-        pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
-        pi_hp_minus = [0.33] #[15, 5]
+        pi_hp_plus = [10] #[0.2*pow(10,-3)] #[5, 15]
+        pi_hp_minus = [20] #[0.33] #[15, 5]
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
                 + fct_aux.ALGO_NAMES_NASH \
                 + fct_aux.ALGO_NAMES_BF
@@ -51,6 +51,7 @@ if __name__ == "__main__":
         set1_m_players, set2_m_players = 10, 6
         # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
         set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+        set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.20 #0.42
         
         # ---- DEBUG A EFFACER apres debug ----
         # m_players, t_periods = 4, 2
@@ -97,8 +98,8 @@ if __name__ == "__main__":
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
                 + fct_aux.ALGO_NAMES_BF \
                 + fct_aux.ALGO_NAMES_NASH 
-        algos = ["LRI1", "LRI2"] \
-                + fct_aux.ALGO_NAMES_BF
+        # algos = ["LRI1", "LRI2"] \
+        #         + fct_aux.ALGO_NAMES_BF
                 
     else:
         algos=["LRI1", "LRI2", "DETERMINIST"] 

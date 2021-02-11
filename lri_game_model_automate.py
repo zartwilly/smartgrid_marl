@@ -20,6 +20,77 @@ import fonctions_auxiliaires as fct_aux
 ###############################################################################
 
 #_______________   definition of learning functions: debut  ___________________
+def mode_2_update_pl_i(arr_pl_M_T_K_vars_modif_new, 
+                       num_pl_i, t, k):
+    """
+    return the mode to update either S1 or S2
+    """
+    state_i = arr_pl_M_T_K_vars_modif_new[
+                        num_pl_i,
+                        t, k,
+                        fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]]
+    mode_i = arr_pl_M_T_K_vars_modif_new[
+                    num_pl_i,
+                    t, k,
+                    fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
+    S1or2, S1or2_bar = None, None
+    if state_i == "state1" and mode_i == fct_aux.STATE1_STRATS[0]:
+        S1or2 = "S1"; S1or2_bar = "S2"
+    elif state_i == "state1" and mode_i == fct_aux.STATE1_STRATS[1]:
+        S1or2 = "S2"; S1or2_bar = "S1"
+    elif state_i == "state2" and mode_i == fct_aux.STATE2_STRATS[0]:
+        S1or2 = "S1"; S1or2_bar = "S2"
+    elif state_i == "state2" and mode_i == fct_aux.STATE2_STRATS[1]:
+        S1or2 = "S2"; S1or2_bar = "S1"
+    elif state_i == "state3" and mode_i == fct_aux.STATE3_STRATS[0]:
+        S1or2 = "S1"; S1or2_bar = "S2"
+    elif state_i == "state3" and mode_i == fct_aux.STATE3_STRATS[1]:
+        S1or2 = "S2"; S1or2_bar = "S1"
+        
+    return S1or2, S1or2_bar
+
+def update_S1_S2_p_i_j_k(arr_pl_M_T_K_vars_modif_new, 
+                         u_i_t_k, 
+                         t, k, learning_rate):
+    
+    m_players = arr_pl_M_T_K_vars_modif_new.shape[0]
+    for num_pl_i in range(0, m_players):
+        S1or2, S1or2_bar = None, None
+        S1or2, S1or2_bar = mode_2_update_pl_i(
+                            arr_pl_M_T_K_vars_modif_new, 
+                            num_pl_i, 
+                            t, k)
+        
+        p_i_j_k_minus_1 = arr_pl_M_T_K_vars_modif_new[
+                        num_pl_i,
+                        t, k,
+                        fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]]\
+            if k == 0 \
+            else arr_pl_M_T_K_vars_modif_new[
+                        num_pl_i,
+                        t, k-1,
+                        fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]]
+        
+        arr_pl_M_T_K_vars_modif_new[
+            num_pl_i,
+            t, k,
+            fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]] \
+            = p_i_j_k_minus_1 \
+                + learning_rate \
+                    * u_i_t_k[num_pl_i] \
+                    * (1 - p_i_j_k_minus_1)
+                            
+        arr_pl_M_T_K_vars_modif_new[
+            num_pl_i,
+            t, k,
+            fct_aux.AUTOMATE_INDEX_ATTRS[S1or2_bar+"_p_i_j_k"]] \
+            = 1 - arr_pl_M_T_K_vars_modif_new[
+                    num_pl_i,
+                    t, k,
+                    fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]]
+            
+    return arr_pl_M_T_K_vars_modif_new
+
 def find_out_min_max_bg(arr_pl_M_T_K_vars_modif_new, 
                         arr_bg_i_nb_repeat_k, 
                         t, k):
@@ -229,35 +300,11 @@ def utility_function_version1(arr_pl_M_T_K_vars_modif_new,
     where_is_nan = np.isnan(list(u_i_t_k))
     u_i_t_k[where_is_nan] = 0
     
-    p_i_j_k_minus_1 = arr_pl_M_T_K_vars_modif_new[
-                        :,
-                        t, k,
-                        fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]\
-            if k == 0 \
-            else arr_pl_M_T_K_vars_modif_new[
-                        :,
-                        t, k-1,
-                        fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
-
-    # p_i_j_k = p_i_j_k_1 + learning_rate * u_i_t_k * (1 - p_i_j_k_1)
-    p_i_j_k = np.empty(shape=(m_players,)); p_i_j_k.fill(np.nan)
-    for num_pl_i in range(0, m_players):
-        if np.isnan(u_i_t_k[num_pl_i]):
-            p_i_j_k[num_pl_i] = p_i_j_k_minus_1[num_pl_i]
-        else:
-            p_i_j_k[num_pl_i] = p_i_j_k_minus_1[num_pl_i] \
-                                + learning_rate \
-                                    * u_i_t_k[num_pl_i] \
-                                        * (1 - p_i_j_k_minus_1[num_pl_i])
+    arr_pl_M_T_K_vars_modif_new \
+        = update_S1_S2_p_i_j_k(arr_pl_M_T_K_vars_modif_new.copy(), 
+                               u_i_t_k, 
+                               t, k, learning_rate)
     
-    u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
-    p_i_j_k = np.around(np.array(p_i_j_k, dtype=float),
-                             fct_aux.N_DECIMALS)
-    
-    arr_pl_M_T_K_vars_modif_new[
-            :,
-            t, k,
-            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = p_i_j_k
     arr_pl_M_T_K_vars_modif_new[
             :,
             t, k,
@@ -502,26 +549,12 @@ def utility_function_version2(arr_pl_M_T_K_vars_modif_new,
     where_is_nan = np.isnan(list(u_i_t_k))
     u_i_t_k[where_is_nan] = 0
     
-    p_i_j_k_minus_1 = arr_pl_M_T_K_vars_modif_new[
-                        :,
-                        t, k,
-                        fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]\
-        if k == 0 \
-        else arr_pl_M_T_K_vars_modif_new[
-                    :,
-                    t, k-1,
-                    fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
-        
-    p_i_j_k = p_i_j_k_minus_1 + learning_rate * u_i_t_k * (1 - p_i_j_k_minus_1)
+    arr_pl_M_T_K_vars_modif_new \
+        = update_S1_S2_p_i_j_k(arr_pl_M_T_K_vars_modif_new.copy(), 
+                               u_i_t_k, 
+                               t, k, learning_rate)
     
     u_i_t_k = np.around(np.array(u_i_t_k, dtype=float), fct_aux.N_DECIMALS)
-    p_i_j_k = np.around(np.array(p_i_j_k, dtype=float),
-                             fct_aux.N_DECIMALS)
-    
-    arr_pl_M_T_K_vars_modif_new[
-            :,
-            t, k,
-            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = p_i_j_k
     arr_pl_M_T_K_vars_modif_new[
             :,
             t, k,
@@ -619,14 +652,14 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         pl_i.set_R_i_old(Si_max-Si)                                             # update R_i_old
         
         # select mode for player num_pl_i
-        p_i_t_k = arr_pl_M_T_K_vars_modif[num_pl_i, 
+        S1_p_i_t_k = arr_pl_M_T_K_vars_modif[num_pl_i, 
                                     t, k, 
-                                    fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] \
             if k == 0 \
             else arr_pl_M_T_K_vars_modif[num_pl_i, 
                                     t, k-1, 
-                                    fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
-        pl_i.select_mode_i(p_i=p_i_t_k)
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
+        pl_i.select_mode_i(p_i=S1_p_i_t_k)
         
         # compute cons, prod, r_i
         pl_i.update_prod_cons_r_i()
@@ -915,7 +948,8 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
     arr_pl_M_T_K_vars[:,:,:,:] = arrs
     # arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
     #     arr_pl_M_T_K_vars[:,:,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
-    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] = 0.5
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
         = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
     for num_pl_i in range(0, m_players):
@@ -1025,16 +1059,17 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
                     print("arr_bg_i_nb_repeat_k={}".format(arr_bg_i_nb_repeat_k))
                     
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
-                arr_pl_M_T_K_vars_modif_new[
-                    indices_non_playing_players, t, k,
-                    fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
-                    = arr_pl_M_T_K_vars_modif_new[
-                        indices_non_playing_players, t, k-1,
-                        fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
-                        if k > 0 \
-                        else arr_pl_M_T_K_vars_modif_new[
-                                indices_non_playing_players, t, k,
-                                fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
+                for S1or2 in ["S1","S2"]:
+                    arr_pl_M_T_K_vars_modif_new[
+                        indices_non_playing_players, t, k,
+                        fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]] \
+                        = arr_pl_M_T_K_vars_modif_new[
+                            indices_non_playing_players, t, k-1,
+                            fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]] \
+                            if k > 0 \
+                            else arr_pl_M_T_K_vars_modif_new[
+                                    indices_non_playing_players, t, k,
+                                    fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]]
                         
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
@@ -1116,6 +1151,8 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
             arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars_modif, 
             BENs_M_T_K = BENs_M_T_K, 
             CSTs_M_T_K = CSTs_M_T_K,
+            b0_s_T_K = b0_s_T_K,
+            c0_s_T_K = c0_s_T_K,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
@@ -1178,7 +1215,8 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
     arr_pl_M_T_K_vars[:,:,:,:] = arrs
     # arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
     #     arr_pl_M_T_K_vars[:,:,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
-    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] = 0.5
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
         = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
     for num_pl_i in range(0, m_players):
@@ -1198,6 +1236,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
     pi_sg_plus_t, pi_sg_minus_t = None, None
         
     dico_stats_res = dict()
+    dico_k_stop_learnings = dict()
     for t in range(0, t_periods):
         print("******* t = {} BEGIN *******".format(t))
         
@@ -1225,6 +1264,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         
         dico_gamma_players_t = dict()
         bool_stop_learning = False
+        k_stop_learning = 0
         nb_repeat_k = 0
         k = 0
         while k<k_steps and not bool_stop_learning:
@@ -1289,24 +1329,33 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                     print("arr_bg_i_nb_repeat_k={}".format(arr_bg_i_nb_repeat_k))
                     
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
-                arr_pl_M_T_K_vars_modif_new[
-                    indices_non_playing_players, t, k,
-                    fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
-                    = arr_pl_M_T_K_vars_modif_new[
-                        indices_non_playing_players, t, k-1,
-                        fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
-                        if k > 0 \
-                        else arr_pl_M_T_K_vars_modif_new[
-                                indices_non_playing_players, t, k,
-                                fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
+                for S1or2 in ["S1","S2"]:
+                    arr_pl_M_T_K_vars_modif_new[
+                        indices_non_playing_players, t, k,
+                        fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]] \
+                        = arr_pl_M_T_K_vars_modif_new[
+                            indices_non_playing_players, t, k-1,
+                            fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]] \
+                            if k > 0 \
+                            else arr_pl_M_T_K_vars_modif_new[
+                                    indices_non_playing_players, t, k,
+                                    fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]]
                         
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 
                 bool_stop_learning \
-                    = all(arr_pl_M_T_K_vars_modif[
+                    = all(
+                        (arr_pl_M_T_K_vars_modif[
                             :,t,k,
-                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8) 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA) 
+                        | 
+                        (arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA)
+                        )
                 
                 k = k+1
                 nb_repeat_k = 0
@@ -1320,9 +1369,17 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                     
                 bool_stop_learning \
-                    = all(arr_pl_M_T_K_vars_modif[
+                    = all(
+                        (arr_pl_M_T_K_vars_modif[
                             :,t,k,
-                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8)
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA) 
+                        | 
+                        (arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA)
+                        )
                 
                 k = k+1
                 nb_repeat_k = 0
@@ -1332,11 +1389,12 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                 arr_bg_i_nb_repeat_k.fill(np.nan)
         
         dico_stats_res[t] = dico_gamma_players_t
-        
+        k_stop_learning = k-1
+        dico_k_stop_learnings[t] = {"k_stop":k_stop_learning}
         # compute pi_sg_plus_t_k, pi_sg_minus_t_k,
         pi_sg_plus_t, pi_sg_minus_t = \
             fct_aux.determine_new_pricing_sg(
-                arr_pl_M_T_K_vars_modif[:,:,k_steps-1,:], 
+                arr_pl_M_T_K_vars_modif[:,:,k_stop_learning,:], 
                 pi_hp_plus, 
                 pi_hp_minus, 
                 t, 
@@ -1351,28 +1409,53 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         pi_sg_plus_T[t] = pi_sg_plus_t
         pi_sg_minus_T[t] = pi_sg_minus_t
         
-        print("******* t = {} END: k_step = {} *******".format(t, k))
+        print("******* t = {} END: k_step = {} *******".format(t, k_stop_learning))
         
     # __________        compute prices variables         ______________________
     ## B_is, C_is of shape (M_PLAYERS, )
-    prod_M_T = arr_pl_M_T_K_vars_modif[:,:, k_steps-1, 
-                                       fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
-    cons_M_T = arr_pl_M_T_K_vars_modif[:,:, k_steps-1, 
-                                       fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
-    B_is_M = np.sum(b0_s_T_K[:,k_steps-1] * prod_M_T, axis=1)
-    C_is_M = np.sum(c0_s_T_K[:,k_steps-1] * cons_M_T, axis=1)
+    # prod_M_T = arr_pl_M_T_K_vars_modif[:,:, k_steps-1, 
+    #                                    fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+    # cons_M_T = arr_pl_M_T_K_vars_modif[:,:, k_steps-1, 
+    #                                    fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+    # B_is_M = np.sum(b0_s_T_K[:,k_steps-1] * prod_M_T, axis=1)
+    # C_is_M = np.sum(c0_s_T_K[:,k_steps-1] * cons_M_T, axis=1)
+    
+    # ## BB_is, CC_is, RU_is of shape (M_PLAYERS, )
+    # CONS_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
+    #                     :, :,
+    #                     k_steps-1, fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
+    #                  axis=1)
+    # PROD_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
+    #                     :, :, 
+    #                     k_steps-1, fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
+    #                  axis=1)
+    # BB_is_M = pi_sg_plus_T[-1] * PROD_is_M_T #np.sum(PROD_is)
+    # CC_is_M = pi_sg_minus_T[-1] * CONS_is_M_T #np.sum(CONS_is)
+    # RU_is_M = BB_is_M - CC_is_M
+    
+    # pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
+    # pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
+    prod_M_T = np.empty(shape=(m_players, t_periods)); prod_M_T.fill(np.nan)
+    cons_M_T = np.empty(shape=(m_players, t_periods)); cons_M_T.fill(np.nan)
+    B_is_M_T = np.empty(shape=(m_players, t_periods)); B_is_M_T.fill(np.nan)
+    C_is_M_T = np.empty(shape=(m_players, t_periods)); C_is_M_T.fill(np.nan)
+    for t, dico_k_stop in dico_k_stop_learnings.items():
+        prod_M_T[:,t] = arr_pl_M_T_K_vars_modif[
+                            :,t,dico_k_stop["k_stop"], 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+        cons_M_T[:,t] = arr_pl_M_T_K_vars_modif[
+                            :,t,dico_k_stop["k_stop"], 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+        B_is_M_T[:,t] = b0_s_T_K[t,dico_k_stop["k_stop"]] * prod_M_T[:,t]
+        C_is_M_T[:,t] = c0_s_T_K[t,dico_k_stop["k_stop"]] * cons_M_T[:,t]
+    B_is_M = np.sum(B_is_M_T, axis=1)
+    C_is_M = np.sum(C_is_M_T, axis=1)
     
     ## BB_is, CC_is, RU_is of shape (M_PLAYERS, )
-    CONS_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
-                        :, :,
-                        k_steps-1, fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
-                     axis=1)
-    PROD_is_M_T = np.sum(arr_pl_M_T_K_vars_modif[
-                        :, :, 
-                        k_steps-1, fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
-                     axis=1)
-    BB_is_M = pi_sg_plus_T[-1] * PROD_is_M_T #np.sum(PROD_is)
-    CC_is_M = pi_sg_minus_T[-1] * CONS_is_M_T #np.sum(CONS_is)
+    CONS_is_M = np.sum(cons_M_T, axis=1)
+    PROD_is_M = np.sum(prod_M_T, axis=1)
+    BB_is_M = pi_sg_plus_T[-1] * PROD_is_M 
+    CC_is_M = pi_sg_minus_T[-1] * CONS_is_M 
     RU_is_M = BB_is_M - CC_is_M
     
     pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
@@ -1387,11 +1470,13 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             pi_0_minus_T, pi_0_plus_T,
             pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
             algo=algo_name, 
-            dico_best_steps=dict())
+            dico_best_steps=dico_k_stop_learnings)
     turn_dico_stats_res_into_df_LRI(
             arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars_modif, 
             BENs_M_T_K = BENs_M_T_K, 
             CSTs_M_T_K = CSTs_M_T_K,
+            b0_s_T_K = b0_s_T_K,
+            c0_s_T_K = c0_s_T_K,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
@@ -1460,7 +1545,8 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
     arr_pl_M_T_K_vars[:,:,:,:] = arrs
     # arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
     #     arr_pl_M_T_K_vars[:,:,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
-    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] = 0.5
+    arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] = 0.5
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
         = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
     for num_pl_i in range(0, m_players):
@@ -1570,24 +1656,33 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                     
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
-                arr_pl_M_T_K_vars_modif_new[
-                    indices_non_playing_players, t, k,
-                    fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
-                    = arr_pl_M_T_K_vars_modif_new[
-                        indices_non_playing_players, t, k-1,
-                        fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] \
-                        if k > 0 \
-                        else arr_pl_M_T_K_vars_modif_new[
-                                indices_non_playing_players, t, k,
-                                fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
+                for S1or2 in ["S1","S2"]:
+                    arr_pl_M_T_K_vars_modif_new[
+                        indices_non_playing_players, t, k,
+                        fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]] \
+                        = arr_pl_M_T_K_vars_modif_new[
+                            indices_non_playing_players, t, k-1,
+                            fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]] \
+                            if k > 0 \
+                            else arr_pl_M_T_K_vars_modif_new[
+                                    indices_non_playing_players, t, k,
+                                    fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]]
                         
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 
                 bool_stop_learning \
-                    = all(arr_pl_M_T_K_vars_modif[
+                    = all(
+                        (arr_pl_M_T_K_vars_modif[
                             :,t,k,
-                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8)
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA) 
+                        | 
+                        (arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA)
+                        )
                 
                 k = k+1
                 nb_repeat_k = 0
@@ -1601,10 +1696,18 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 
                 bool_stop_learning \
-                    = all(arr_pl_M_T_K_vars_modif[
+                    = all(
+                        (arr_pl_M_T_K_vars_modif[
                             :,t,k,
-                            fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]] > 0.8)
-                
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA) 
+                        | 
+                        (arr_pl_M_T_K_vars_modif[
+                            :,t,k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] > 
+                            fct_aux.STOP_LEARNING_PROBA)
+                        )
+                    
                 k = k+1
                 nb_repeat_k = 0
                 arr_bg_i_nb_repeat_k = np.empty(shape=(m_players, 
@@ -1612,8 +1715,10 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
                                                 )
                 arr_bg_i_nb_repeat_k.fill(np.nan)
        
-        dico_k_best_t = best_mode_profils_4_all_steps(arr_pl_M_T_K_vars_modif.copy(), 
-                                              t, BENs_M_T_K, CSTs_M_T_K)
+        dico_k_best_t = best_mode_profils_4_all_steps(
+                            arr_pl_M_T_K_vars_modif.copy(), 
+                            t, BENs_M_T_K, CSTs_M_T_K)
+        dico_k_best_t["k_stop"] = k-1
         
         dico_stats_res[t] = dico_gamma_players_t
         
@@ -1681,6 +1786,8 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
             arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars_modif, 
             BENs_M_T_K = BENs_M_T_K, 
             CSTs_M_T_K = CSTs_M_T_K,
+            b0_s_T_K = b0_s_T_K,
+            c0_s_T_K = c0_s_T_K,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
@@ -1691,7 +1798,9 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
 # ______________       main function of LRI   ---> fin        _________________
 
 def turn_dico_stats_res_into_df_LRI(
-                            arr_pl_M_T_K_vars_modif, BENs_M_T_K, CSTs_M_T_K,
+                            arr_pl_M_T_K_vars_modif, 
+                            BENs_M_T_K, CSTs_M_T_K,
+                            b0_s_T_K, c0_s_T_K,
                             path_to_save, 
                             manual_debug=True, 
                             algo_name="LRI1"):
@@ -1718,6 +1827,8 @@ def turn_dico_stats_res_into_df_LRI(
         perf_t_K_t = np.sum(ben_csts_MKs_t, axis=0)
         for k in range(0, k_steps):
             dico_pls = dict()
+            b0_s_t_k = b0_s_T_K[t,k]
+            c0_s_t_k = c0_s_T_K[t,k]
             for num_pl_i in range(0, m_players):
                 state_i = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
@@ -1725,14 +1836,22 @@ def turn_dico_stats_res_into_df_LRI(
                 mode_i = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
-                p_i_j_k = arr_pl_M_T_K_vars_modif[
+                S1_p_i_j_k = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
-                                fct_aux.AUTOMATE_INDEX_ATTRS["p_i_j_k"]]
+                                fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
+                S2_p_i_j_k = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]]
                 Vi = ben_csts_MKs_t[num_pl_i, k]
                 
                 dico_pls["player_"+str(num_pl_i)] \
-                    = (state_i, mode_i, Vi, p_i_j_k)
+                    = {"state":state_i, "mode":mode_i, 
+                       "Vi":round(Vi, fct_aux.N_DECIMALS),
+                       "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
+                       "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS)}
             dico_pls["Perf_t"] = perf_t_K_t[k]
+            dico_pls["b0"] = b0_s_t_k
+            dico_pls["c0"] = c0_s_t_k
             dico_players["step_"+str(k)+"_t_"+str(t)] = dico_pls
         
         
@@ -1880,8 +1999,8 @@ def test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_ste
 if __name__ == "__main__":
     ti = time.time()
     
-    arr_pl_M_T_K_vars = test_lri_balanced_player_game()
-    # arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08()
+    # arr_pl_M_T_K_vars = test_lri_balanced_player_game()
+    arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08()
     # arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_step()
     
     print("runtime = {}".format(time.time() - ti))

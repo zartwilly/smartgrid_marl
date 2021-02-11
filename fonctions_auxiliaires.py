@@ -28,6 +28,7 @@ NUM_PERIODS = 50
 CHOICE_RU = 1
 N_DECIMALS = 2
 NB_REPEAT_K_MAX = 4
+STOP_LEARNING_PROBA = 0.9
 
 Ci_LOW = 10
 Ci_HIGH = 60
@@ -66,12 +67,20 @@ MANUEL_DBG_PI_0_MINUS_T_K = 3
 
 AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_set1_{}_repSet1_{}_set2_{}_repSet2_{}_periods_{}.npy"
 
-AUTOMATE_INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+AUTOMATE_INDEX_ATTRS_DBG = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
                "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
                "balanced_pl_i": 14, "formule":15, "Si_minus":16,
                "Si_plus":17, "u_i": 18, "bg_i": 19,
                "p_i_j_k": 20, "non_playing_players":21, "set":22}
+
+AUTOMATE_INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+               "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
+               "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
+               "balanced_pl_i": 14, "formule":15, "Si_minus":16,
+               "Si_plus":17, "u_i": 18, "bg_i": 19,
+               "S1_p_i_j_k": 20, "S2_p_i_j_k": 21, 
+               "non_playing_players":22, "set":23}
 
 #------------------------------------------------------------------------------
 #           definitions of class
@@ -591,8 +600,8 @@ def resume_game_on_excel_file_automate(df_arr_M_T_Ks, df_ben_cst_M_T_K,
             arr_pl_M_T_vars.shape, df_arr_M_T_vars.shape))
     
     cols = ["state_i","algo","pl_i","k","Ci","Pi","Si","Si_max","gamma_i",
-            "prod_i","cons_i","Profili","Casei","bg_i","u_i","p_i_j_k",
-            "mode_i", "r_i", "set"] #,"","","","","",]
+            "prod_i","cons_i","Profili","Casei","bg_i","u_i","S1_p_i_j_k",
+            "S2_p_i_j_k", "mode_i", "r_i", "set"] #,"","","","","",]
     cols_b0_c0 = ["b0","c0", 'pi_0_minus','pi_0_plus','pi_sg_minus','pi_sg_plus']
     
     df = pd.DataFrame(columns=cols)
