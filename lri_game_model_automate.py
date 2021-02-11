@@ -892,6 +892,45 @@ def best_mode_profils_4_all_steps(arr_pl_M_T_K_vars_modif, t,
     dico_k_best_t = {"k":k_best_t, "Perf_t_best":Perf_t_best}
     return dico_k_best_t
 
+def update_profile_players_by_select_mode_from_S1orS2_p_i_j_k(
+                arr_pl_M_T_K_vars_modif, t, k_stop_learning
+                ):
+    """
+    for each player, affect the mode having the greater probability between 
+    S1_p_i_j_k and S2_p_i_j_k
+    """
+    m_players = arr_pl_M_T_K_vars_modif.shape[0]
+    for num_pl_i in range(0, m_players):
+        S1_p_i_j_k = arr_pl_M_T_K_vars_modif[
+                        num_pl_i, t, k_stop_learning, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
+        S2_p_i_j_k = arr_pl_M_T_K_vars_modif[
+                        num_pl_i, t, k_stop_learning, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]]
+        state_i = arr_pl_M_T_K_vars_modif[
+                        num_pl_i, t, k_stop_learning, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]]
+        mode_i=None
+        if state_i == fct_aux.STATES[0] and S1_p_i_j_k >= S2_p_i_j_k:          # state1, CONS+
+            mode_i = fct_aux.STATE1_STRATS[0]
+        elif state_i == fct_aux.STATES[0] and S1_p_i_j_k < S2_p_i_j_k:         # state1, CONS-
+            mode_i = fct_aux.STATE1_STRATS[1]
+        elif state_i == fct_aux.STATES[1] and S1_p_i_j_k >= S2_p_i_j_k:        # state2, DIS
+            mode_i = fct_aux.STATE2_STRATS[0]
+        elif state_i == fct_aux.STATES[1] and S1_p_i_j_k < S2_p_i_j_k:         # state2, CONS-
+            mode_i = fct_aux.STATE2_STRATS[1]
+        elif state_i == fct_aux.STATES[2] and S1_p_i_j_k >= S2_p_i_j_k:        # state3, DIS
+            mode_i = fct_aux.STATE3_STRATS[0]
+        elif state_i == fct_aux.STATES[2] and S1_p_i_j_k < S2_p_i_j_k:         # state3, PROD
+            mode_i = fct_aux.STATE3_STRATS[1]
+            
+        arr_pl_M_T_K_vars_modif[
+            num_pl_i, t, k_stop_learning, 
+            fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] = mode_i
+        
+    return arr_pl_M_T_K_vars_modif
+        
+
 # ______________       main function of LRI   ---> debut      _________________
 def lri_balanced_player_game(arr_pl_M_T_vars_init,
                              pi_hp_plus=0.10, 
@@ -1153,6 +1192,10 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
             CSTs_M_T_K = CSTs_M_T_K,
             b0_s_T_K = b0_s_T_K,
             c0_s_T_K = c0_s_T_K,
+            pi_sg_minus_T = pi_sg_minus_T, 
+            pi_sg_plus_T = pi_sg_plus_T, 
+            pi_0_minus_T = pi_0_minus_T, 
+            pi_0_plus_T = pi_0_plus_T,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
@@ -1253,6 +1296,9 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             pi_0_plus_t = round(pi_sg_plus_t_minus_1*pi_hp_plus/pi_hp_minus, 
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
+            if t == 0:
+               pi_0_plus_t = 2
+               pi_0_minus_t = 2
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
@@ -1391,6 +1437,12 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         dico_stats_res[t] = dico_gamma_players_t
         k_stop_learning = k-1
         dico_k_stop_learnings[t] = {"k_stop":k_stop_learning}
+        
+        arr_pl_M_T_K_vars_modif \
+            = update_profile_players_by_select_mode_from_S1orS2_p_i_j_k(
+                arr_pl_M_T_K_vars_modif.copy(), t, k_stop_learning
+                )
+        
         # compute pi_sg_plus_t_k, pi_sg_minus_t_k,
         pi_sg_plus_t, pi_sg_minus_t = \
             fct_aux.determine_new_pricing_sg(
@@ -1477,6 +1529,10 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             CSTs_M_T_K = CSTs_M_T_K,
             b0_s_T_K = b0_s_T_K,
             c0_s_T_K = c0_s_T_K,
+            pi_sg_minus_T = pi_sg_minus_T, 
+            pi_sg_plus_T = pi_sg_plus_T, 
+            pi_0_minus_T = pi_0_minus_T, 
+            pi_0_plus_T = pi_0_plus_T,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
@@ -1788,6 +1844,10 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
             CSTs_M_T_K = CSTs_M_T_K,
             b0_s_T_K = b0_s_T_K,
             c0_s_T_K = c0_s_T_K,
+            pi_sg_minus_T = pi_sg_minus_T, 
+            pi_sg_plus_T = pi_sg_plus_T, 
+            pi_0_minus_T = pi_0_minus_T, 
+            pi_0_plus_T = pi_0_plus_T,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
@@ -1801,6 +1861,8 @@ def turn_dico_stats_res_into_df_LRI(
                             arr_pl_M_T_K_vars_modif, 
                             BENs_M_T_K, CSTs_M_T_K,
                             b0_s_T_K, c0_s_T_K,
+                            pi_sg_minus_T, pi_sg_plus_T, 
+                            pi_0_minus_T, pi_0_plus_T,
                             path_to_save, 
                             manual_debug=True, 
                             algo_name="LRI1"):
@@ -1842,20 +1904,28 @@ def turn_dico_stats_res_into_df_LRI(
                 S2_p_i_j_k = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]]
+                gamma_i = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
                 Vi = ben_csts_MKs_t[num_pl_i, k]
                 
                 dico_pls["player_"+str(num_pl_i)] \
                     = {"state":state_i, "mode":mode_i, 
                        "Vi":round(Vi, fct_aux.N_DECIMALS),
                        "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
-                       "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS)}
+                       "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS),
+                       "gamma":round(gamma_i, fct_aux.N_DECIMALS)}
             dico_pls["Perf_t"] = perf_t_K_t[k]
             dico_pls["b0"] = b0_s_t_k
             dico_pls["c0"] = c0_s_t_k
+            dico_pls["pi_sg_minus"] = pi_sg_minus_T[t]
+            dico_pls["pi_sg_plus"] = pi_sg_plus_T[t]
+            dico_pls["pi_0_minus"] = pi_0_minus_T[t]
+            dico_pls["pi_0_plus"] = pi_0_plus_T[t]
             dico_players["step_"+str(k)+"_t_"+str(t)] = dico_pls
         
         
-    df = pd.DataFrame.from_dict(dico_players, orient="columns").T
+    df = pd.DataFrame.from_dict(dico_players, orient="columns")
     df.to_csv(os.path.join( *[path_to_save, algo_name+"_"+"dico.csv"]))
              
     
