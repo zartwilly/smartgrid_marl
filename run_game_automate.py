@@ -26,6 +26,7 @@ if __name__ == "__main__":
     date_hhmm, Visualisation = None, None
     used_storage_det=True
     criteria_bf="Perf_t" # "In_sg_Out_sg"
+    dbg_234_players = None
     
     
     if debug:
@@ -37,24 +38,30 @@ if __name__ == "__main__":
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
         fct_aux.N_DECIMALS = 10
         
-        pi_hp_plus = [10] #[0.2*pow(10,-3)] #[5, 15]
-        pi_hp_minus = [20] #[0.33] #[15, 5]
+        pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
+        pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
+        
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
                 + fct_aux.ALGO_NAMES_NASH \
                 + fct_aux.ALGO_NAMES_BF
         
+        dbg_234_players = True #False
         used_storage_det= False #True
-        manual_debug = True
+        manual_debug = False#True
         Visualisation = True #False, True
         
         # ---- initialization of variables for generating instances ----
-        set1_m_players, set2_m_players = 10, 6
-        # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
-        set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
-        set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.20 #0.42
+        set1_m_players, set2_m_players = None, None 
+        set1_stateId0_m_players, set2_stateId0_m_players = None, None
         
-        # ---- DEBUG A EFFACER apres debug ----
-        # m_players, t_periods = 4, 2
+        if not dbg_234_players:
+            set1_m_players, set2_m_players = 10, 6
+            # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+            set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+            set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.20 #0.42
+        else:
+            # ---- DEBUG A EFFACER apres debug ----
+            m_players, t_periods = 3, 2
     else:
        # ---- new constances simu_2306_2206 --- **** debug ***** 
        date_hhmm="2306_2206"
@@ -66,6 +73,7 @@ if __name__ == "__main__":
        pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
        pi_hp_minus = [0.33] #[15, 5]
        
+       dbg_234_players = False
        used_storage_det= True #False #True
        manual_debug = False #True
        Visualisation = True #False, True
@@ -79,30 +87,33 @@ if __name__ == "__main__":
     set1_states, set2_states = None, None
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
-    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance(
-                                set1_m_players, set2_m_players, 
-                                t_periods, 
-                                set1_states, 
-                                set2_states,
-                                set1_stateId0_m_players,
-                                set2_stateId0_m_players, 
-                                path_to_arr_pl_M_T, used_instances)
-    # # ---- DEBUG A EFFACER apres debug ----
-    # arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_2_4players(
-    #                                    m_players, t_periods,
-    #                                   path_to_arr_pl_M_T, 
-    #                                   used_instances)
-    
-    algos= None #["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"] 
-    if set1_m_players + set2_m_players <= 20:
-        algos = ["LRI1", "LRI2", "DETERMINIST"] \
-                + fct_aux.ALGO_NAMES_BF \
-                + fct_aux.ALGO_NAMES_NASH 
-        # algos = ["LRI1", "LRI2"] \
-        #         + fct_aux.ALGO_NAMES_BF
-                
+    algos= None
+    arr_pl_M_T_vars_init = None 
+    if not dbg_234_players:
+        arr_pl_M_T_vars_init = fct_aux.get_or_create_instance(
+                                    set1_m_players, set2_m_players, 
+                                    t_periods, 
+                                    set1_states, 
+                                    set2_states,
+                                    set1_stateId0_m_players,
+                                    set2_stateId0_m_players, 
+                                    path_to_arr_pl_M_T, used_instances)
+        algos= None #["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"] 
+        if set1_m_players + set2_m_players <= 20:
+            algos = ["LRI1", "LRI2", "DETERMINIST"] \
+                    + fct_aux.ALGO_NAMES_BF \
+                    + fct_aux.ALGO_NAMES_NASH 
+        else:
+            algos=["LRI1", "LRI2", "DETERMINIST"] 
     else:
-        algos=["LRI1", "LRI2", "DETERMINIST"] 
+        # ---- DEBUG A EFFACER apres debug ----
+        arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_2_4players(
+                                m_players, t_periods,
+                                path_to_arr_pl_M_T, 
+                                used_instances)
+        algos = ["LRI1", "LRI2", "DETERMINIST"] \
+                    + fct_aux.ALGO_NAMES_BF \
+                    + fct_aux.ALGO_NAMES_NASH 
         
     
     # autoExeGame.execute_algos_used_Generated_instances(
