@@ -1143,11 +1143,20 @@ def generate_Pi_Ci_Si_Simax_by_automate_2_4players(m_players=2, t_periods=2):
        arr_pl_M_T_vars[0, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[0]
        arr_pl_M_T_vars[1, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[1]
        arr_pl_M_T_vars[2, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[2]
+       
+       arr_pl_M_T_vars[0, :, AUTOMATE_INDEX_ATTRS["set"]] = 1
+       arr_pl_M_T_vars[1, :, AUTOMATE_INDEX_ATTRS["set"]] = 1
+       arr_pl_M_T_vars[2, :, AUTOMATE_INDEX_ATTRS["set"]] = 2
     elif m_players == 4:
        arr_pl_M_T_vars[0, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[0]
        arr_pl_M_T_vars[1, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[1]
        arr_pl_M_T_vars[2, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[1]
        arr_pl_M_T_vars[3, :, AUTOMATE_INDEX_ATTRS["state_i"]] = STATES[2]
+       
+       arr_pl_M_T_vars[0, :, AUTOMATE_INDEX_ATTRS["set"]] = 1
+       arr_pl_M_T_vars[1, :, AUTOMATE_INDEX_ATTRS["set"]] = 1
+       arr_pl_M_T_vars[2, :, AUTOMATE_INDEX_ATTRS["set"]] = 2
+       arr_pl_M_T_vars[3, :, AUTOMATE_INDEX_ATTRS["set"]] = 2
     
     for t in range(0, t_periods):
         for num_pl_i in range(0, m_players):
