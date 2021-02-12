@@ -36,7 +36,9 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                                    fct_aux.AUTOMATE_INDEX_ATTRS['Si']] 
         Si_max = arr_pl_M_T_vars_modif[num_pl_i, t,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
-        gamma_i, prod_i, cons_i, r_i = 0, 0, 0, 0
+        gamma_i = arr_pl_M_T_vars_modif[num_pl_i, t,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['gamma_i']]
+        prod_i, cons_i, r_i = 0, 0, 0
         state_i = arr_pl_M_T_vars_modif[num_pl_i, t,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['state_i']]
         
@@ -124,40 +126,40 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
         
         # compute gamma_i
-        Pi_t_plus_1 = arr_pl_M_T_vars_modif[num_pl_i, t+1, 
-                                            fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
-                        if t+1 < t_periods \
-                        else 0
-        Ci_t_plus_1 = arr_pl_M_T_vars_modif[num_pl_i, 
-                                 t+1, 
-                                 fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
-                        if t+1 < t_periods \
-                        else 0
+        # Pi_t_plus_1 = arr_pl_M_T_vars_modif[num_pl_i, t+1, 
+        #                                     fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
+        #                 if t+1 < t_periods \
+        #                 else 0
+        # Ci_t_plus_1 = arr_pl_M_T_vars_modif[num_pl_i, 
+        #                          t+1, 
+        #                          fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
+        #                 if t+1 < t_periods \
+        #                 else 0
           
-        pl_i.select_storage_politic(
-            Ci_t_plus_1 = Ci_t_plus_1, 
-            Pi_t_plus_1 = Pi_t_plus_1, 
-            pi_0_plus = pi_0_plus_t,
-            pi_0_minus = pi_0_minus_t,
-            pi_hp_plus = pi_hp_plus, 
-            pi_hp_minus = pi_hp_minus)
+        # pl_i.select_storage_politic(
+        #     Ci_t_plus_1 = Ci_t_plus_1, 
+        #     Pi_t_plus_1 = Pi_t_plus_1, 
+        #     pi_0_plus = pi_0_plus_t,
+        #     pi_0_minus = pi_0_minus_t,
+        #     pi_hp_plus = pi_hp_plus, 
+        #     pi_hp_minus = pi_hp_minus)
         
-        gamma_i = None
-        if manual_debug:
-            gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
-            pl_i.set_gamma_i(gamma_i)
-        else:
-            gamma_i = pl_i.get_gamma_i()
+        # gamma_i = None
+        # if manual_debug:
+        #     gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
+        #     pl_i.set_gamma_i(gamma_i)
+        # else:
+        #     gamma_i = pl_i.get_gamma_i()
         
-        dico = dict()
-        if gamma_i < min(pi_0_plus_t, pi_0_minus_t)-1:
-            dico["min_pi_0"] = gamma_i
-        elif gamma_i > max(pi_hp_minus, pi_hp_plus):
-            dico["max_pi_hp"] = gamma_i
+        # dico = dict()
+        # if gamma_i < min(pi_0_plus_t, pi_0_minus_t)-1:
+        #     dico["min_pi_0"] = gamma_i
+        # elif gamma_i > max(pi_hp_minus, pi_hp_plus):
+        #     dico["max_pi_hp"] = gamma_i
             
-        dico["state_i"] = state_i; dico["mode_i"] = mode_i
-        dico["gamma_i"] = gamma_i
-        dico_gamma_players_t["player_"+str(num_pl_i)] = dico
+        # dico["state_i"] = state_i; dico["mode_i"] = mode_i
+        # dico["gamma_i"] = gamma_i
+        # dico_gamma_players_t["player_"+str(num_pl_i)] = dico
         
         
         # update variables in arr_pl_M_T_modif
@@ -165,10 +167,7 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                 ("cons_i", pl_i.get_cons_i()), ("r_i", pl_i.get_r_i()),
                 ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
                 ("Si_old", pl_i.get_Si_old()), ("mode_i", pl_i.get_mode_i()), 
-                ("balanced_pl_i", boolean), ("formule", formule), 
-                ("gamma_i", gamma_i), 
-                ("Si_minus", pl_i.get_Si_minus() ),
-                ("Si_plus", pl_i.get_Si_plus() )]
+                ("balanced_pl_i", boolean), ("formule", formule)]
         for col, val in tup_cols_values:
             arr_pl_M_T_vars_modif[num_pl_i, t, 
                                     fct_aux.AUTOMATE_INDEX_ATTRS[col]] = val
@@ -311,6 +310,13 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                pi_0_plus_t = 2
                pi_0_minus_t = 2
             
+        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_4_period_t(
+                                arr_pl_M_T_K_vars=arr_pl_M_T_vars_modif.copy(), 
+                                t=t, 
+                                pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
+                                pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                dbg=dbg)    
+            
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
         
@@ -409,24 +415,26 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     
     #__________      save computed variables locally      _____________________ 
     algo_name = "RD-DETERMINIST" if random_determinist else "DETERMINIST"
-    # fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
-    #                b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
-    #                BENs_M_T, CSTs_M_T, 
-    #                BB_is_M, CC_is_M, RU_is_M, 
-    #                pi_sg_minus_T, pi_sg_plus_T, 
-    #                pi_0_minus_T, pi_0_plus_T,
-    #                pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-    #                algo=algo_name, 
-    #                dico_best_steps=dict())
-    fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
-                   b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
-                   BENs_M_T, CSTs_M_T, 
-                   BB_is_M, CC_is_M, RU_is_M, 
-                   pi_sg_minus_T, pi_sg_plus_T, 
-                   pi_0_minus_T, pi_0_plus_T,
-                   pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
-                   algo=algo_name, 
-                   dico_best_steps=dico_mode_prof_by_players_T)
+    if dbg:
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
+                       b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
+                       BENs_M_T, CSTs_M_T, 
+                       BB_is_M, CC_is_M, RU_is_M, 
+                       pi_sg_minus_T, pi_sg_plus_T, 
+                       pi_0_minus_T, pi_0_plus_T,
+                       pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+                       algo=algo_name, 
+                       dico_best_steps=dico_mode_prof_by_players_T)
+    else:
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
+                    b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
+                    BENs_M_T, CSTs_M_T, 
+                    BB_is_M, CC_is_M, RU_is_M, 
+                    pi_sg_minus_T, pi_sg_plus_T, 
+                    pi_0_minus_T, pi_0_plus_T,
+                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+                    algo=algo_name, 
+                    dico_best_steps=dict())
         
     print("determinist game: pi_hp_plus={}, pi_hp_minus ={} ---> FIN \n"\
           .format( pi_hp_plus, pi_hp_minus))
