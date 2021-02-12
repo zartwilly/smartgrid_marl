@@ -241,6 +241,8 @@ def compute_gamma_4_period_t(arr_pl_M_T_K_vars, t,
                 gamma_i = math.floor(Z)  
                 
             arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_i
+            arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si_minus"]] = Si_t_minus
+            arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si_plus"]] = Si_t_plus
             
             bool_gamma_i = (gamma_i >= min(pi_0_minus, pi_0_plus)-1) \
                             & (gamma_i <= max(pi_hp_minus, pi_hp_plus)+1)
@@ -302,6 +304,11 @@ def compute_gamma_4_period_t(arr_pl_M_T_K_vars, t,
                 
             arr_pl_vars[num_pl_i, t, :, 
                         AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_i
+            arr_pl_vars[num_pl_i, t, :, 
+                        AUTOMATE_INDEX_ATTRS["Si_minus"]] = Si_t_minus
+            arr_pl_vars[num_pl_i, t, :, 
+                        AUTOMATE_INDEX_ATTRS["Si_plus"]] = Si_t_plus
+            
             bool_gamma_i = (gamma_i >= min(pi_0_minus, pi_0_plus)-1) \
                             & (gamma_i <= max(pi_hp_minus, pi_hp_plus)+1)
             print("GAMMA : t={}, player={}, val={}, bool_gamma_i={}, {}"\
