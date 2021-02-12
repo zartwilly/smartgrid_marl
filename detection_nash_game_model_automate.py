@@ -513,6 +513,13 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
             if t == 0:
                pi_0_plus_t = 2
                pi_0_minus_t = 2
+               
+        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_4_period_t(
+                                arr_pl_M_T_K_vars=arr_pl_M_T_vars_modif.copy(), 
+                                t=t, 
+                                pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
+                                pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                dbg=dbg) 
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
@@ -713,7 +720,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                             suff+"_Perf_t": best_key_Perf_t,
                             "nb_nash_profil_byPerf_t": 
                                 len(dico_Perft_nashProfil[best_key_Perf_t]),
-                            "dico_nash_profils":dico_nash_profils    
+                            "dico_nash_profils": dico_nash_profils    
                                 }
                 
             # pi_sg_{plus,minus} of shape (T_PERIODS,)
@@ -775,6 +782,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                 BB_is_M_BESTN = BB_is_M_algo.copy()
                 RU_is_M_BESTN = RU_is_M_algo.copy()
                 dico_stats_res_BESTN = dico_stats_res_algo.copy()
+                
             elif algo_name == fct_aux.ALGO_NAMES_NASH[1]:                         # BAD-BRUTE-FORCE
                 arr_pl_M_T_vars_modif_BADN = arr_pl_M_T_vars_nash_mode_prof_algo.copy()
                 pi_sg_plus_T_BADN[t] = pi_sg_plus_T_algo[t]
@@ -791,6 +799,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                 BB_is_M_BADN = BB_is_M_algo.copy()
                 RU_is_M_BADN = RU_is_M_algo.copy()
                 dico_stats_res_BADN = dico_stats_res_algo.copy()
+                
             elif algo_name == fct_aux.ALGO_NAMES_NASH[2]:                         # MIDDLE-BRUTE-FORCE
                 arr_pl_M_T_vars_modif_MIDN = arr_pl_M_T_vars_nash_mode_prof_algo.copy()
                 pi_sg_plus_T_MIDN[t] = pi_sg_plus_T_algo[t]
@@ -821,16 +830,8 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
                                     msg, algo_name
                                     )
-    # fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BESTN, 
-    #                b0_ts_T_BESTN, c0_ts_T_BESTN, B_is_M_BESTN, C_is_M_BESTN, 
-    #                BENs_M_T_BESTN, CSTs_M_T_BESTN, 
-    #                BB_is_M_BESTN, CC_is_M_BESTN, RU_is_M_BESTN, 
-    #                pi_sg_minus_T_BESTN, pi_sg_plus_T_BESTN, 
-    #                pi_0_minus_T_BESTN, pi_0_plus_T_BESTN,
-    #                pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BESTN, 
-    #                algo=algo_name, 
-    #                dico_best_steps=dict())
-    fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BESTN, 
+    if arr_pl_M_T_vars_modif_BESTN.shape[0] < 11:
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BESTN, 
                    b0_ts_T_BESTN, c0_ts_T_BESTN, B_is_M_BESTN, C_is_M_BESTN, 
                    BENs_M_T_BESTN, CSTs_M_T_BESTN, 
                    BB_is_M_BESTN, CC_is_M_BESTN, RU_is_M_BESTN, 
@@ -839,6 +840,16 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BESTN, 
                    algo=algo_name, 
                    dico_best_steps=dico_mode_prof_by_players_T)
+    else:
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BESTN, 
+                    b0_ts_T_BESTN, c0_ts_T_BESTN, B_is_M_BESTN, C_is_M_BESTN, 
+                    BENs_M_T_BESTN, CSTs_M_T_BESTN, 
+                    BB_is_M_BESTN, CC_is_M_BESTN, RU_is_M_BESTN, 
+                    pi_sg_minus_T_BESTN, pi_sg_plus_T_BESTN, 
+                    pi_0_minus_T_BESTN, pi_0_plus_T_BESTN,
+                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BESTN, 
+                    algo=algo_name, 
+                    dico_best_steps=dict())
     turn_dico_stats_res_into_df_NASH(dico_stats_res_algo=dico_stats_res_BESTN, 
                                 path_to_save=path_to_save, 
                                 t_periods=t_periods, 
@@ -850,16 +861,8 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
                                     msg, algo_name
                                     )
-    # fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BADN, 
-    #                b0_ts_T_BADN, c0_ts_T_BADN, B_is_M_BADN, C_is_M_BADN, 
-    #                BENs_M_T_BADN, CSTs_M_T_BADN, 
-    #                BB_is_M_BADN, CC_is_M_BADN, RU_is_M_BADN, 
-    #                pi_sg_minus_T_BADN, pi_sg_plus_T_BADN, 
-    #                pi_0_minus_T_BADN, pi_0_plus_T_BADN,
-    #                pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BADN, 
-    #                algo=algo_name,
-    #                dico_best_steps=dict())
-    fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BADN, 
+    if arr_pl_M_T_vars_modif_BADN.shape[0] < 11:
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BADN, 
                    b0_ts_T_BADN, c0_ts_T_BADN, B_is_M_BADN, C_is_M_BADN, 
                    BENs_M_T_BADN, CSTs_M_T_BADN, 
                    BB_is_M_BADN, CC_is_M_BADN, RU_is_M_BADN, 
@@ -868,26 +871,29 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BADN, 
                    algo=algo_name,
                    dico_best_steps=dico_mode_prof_by_players_T)
+    else:
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BADN, 
+                    b0_ts_T_BADN, c0_ts_T_BADN, B_is_M_BADN, C_is_M_BADN, 
+                    BENs_M_T_BADN, CSTs_M_T_BADN, 
+                    BB_is_M_BADN, CC_is_M_BADN, RU_is_M_BADN, 
+                    pi_sg_minus_T_BADN, pi_sg_plus_T_BADN, 
+                    pi_0_minus_T_BADN, pi_0_plus_T_BADN,
+                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BADN, 
+                    algo=algo_name,
+                    dico_best_steps=dict())  
     turn_dico_stats_res_into_df_NASH(dico_stats_res_algo=dico_stats_res_BADN, 
                                 path_to_save=path_to_save, 
                                 t_periods=t_periods, 
                                 manual_debug=manual_debug, 
                                 algo_name=algo_name)
+    
     algo_name = fct_aux.ALGO_NAMES_NASH[2]
     if "simu_DDMM_HHMM" in path_to_save:
         path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
                                     msg, algo_name
                                     )
-    # fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_MIDN, 
-    #                b0_ts_T_MIDN, c0_ts_T_MIDN, B_is_M_MIDN, C_is_M_MIDN, 
-    #                BENs_M_T_MIDN, CSTs_M_T_MIDN, 
-    #                BB_is_M_MIDN, CC_is_M_MIDN, RU_is_M_MIDN, 
-    #                pi_sg_minus_T_MIDN, pi_sg_plus_T_MIDN, 
-    #                pi_0_minus_T_MIDN, pi_0_plus_T_MIDN,
-    #                pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_MIDN, 
-    #                algo=algo_name,
-    #                dico_best_steps=dict())
-    fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_MIDN, 
+    if arr_pl_M_T_vars_modif_MIDN.shape[0] < 11: 
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_MIDN, 
                    b0_ts_T_MIDN, c0_ts_T_MIDN, B_is_M_MIDN, C_is_M_MIDN, 
                    BENs_M_T_MIDN, CSTs_M_T_MIDN, 
                    BB_is_M_MIDN, CC_is_M_MIDN, RU_is_M_MIDN, 
@@ -896,6 +902,16 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_MIDN, 
                    algo=algo_name,
                    dico_best_steps=dico_mode_prof_by_players_T)
+    else:
+        fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_MIDN, 
+                    b0_ts_T_MIDN, c0_ts_T_MIDN, B_is_M_MIDN, C_is_M_MIDN, 
+                    BENs_M_T_MIDN, CSTs_M_T_MIDN, 
+                    BB_is_M_MIDN, CC_is_M_MIDN, RU_is_M_MIDN, 
+                    pi_sg_minus_T_MIDN, pi_sg_plus_T_MIDN, 
+                    pi_0_minus_T_MIDN, pi_0_plus_T_MIDN,
+                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_MIDN, 
+                    algo=algo_name,
+                    dico_best_steps=dict())
     turn_dico_stats_res_into_df_NASH(dico_stats_res_algo=dico_stats_res_MIDN, 
                                 path_to_save=path_to_save, 
                                 t_periods=t_periods, 
