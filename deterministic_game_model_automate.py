@@ -286,6 +286,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
         
     # ____      game beginning for all t_period ---> debut      _____
     dico_stats_res = dict()
+    dico_mode_prof_by_players_T = dict()
     
     pi_sg_plus_t0_minus_1 = pi_hp_plus-1
     pi_sg_minus_t0_minus_1 = pi_hp_minus-1
@@ -306,6 +307,9 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
             pi_0_plus_t = round(pi_sg_plus_t_minus_1*pi_hp_plus/pi_hp_minus, 
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
+            if t == 0:
+               pi_0_plus_t = 2
+               pi_0_minus_t = 2
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
@@ -336,6 +340,45 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
         # BENs, CSTs of shape (M_PLAYERS, T_PERIODS)
         BENs_M_T[:,t] = bens_t
         CSTs_M_T[:,t] = csts_t
+        
+        # compute Perf_t
+        In_sg, Out_sg = fct_aux.compute_prod_cons_SG(
+                                arr_pl_M_T_vars_modif, 
+                                t)
+        
+        bens_csts_t = bens_t - csts_t
+        Perf_t = np.sum(bens_csts_t, axis=0)
+        for num_pl_i in range(0, m_players):
+            Vi = bens_csts_t[num_pl_i]
+            
+            dico_vars = dict()
+            dico_vars["Vi"] = round(Vi, 2)
+            dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
+            dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
+            variables = ["state_i", "mode_i", "prod_i", "cons_i", "r_i", 
+                         "gamma_i", "Pi", "Ci", "Si", "Si_old", 
+                         "Si_minus", "Si_plus"]
+            for variable in variables:
+                dico_vars[variable] = arr_pl_M_T_vars_modif[
+                                        num_pl_i, t, 
+                                        fct_aux.AUTOMATE_INDEX_ATTRS[variable]]
+                
+            dico_mode_prof_by_players_T["PLAYER_"
+                                        +str(num_pl_i)
+                                        +"_t_"+str(t)] \
+                = dico_vars
+            
+        dico_mode_prof_by_players_T["Perf_t_"+str(t)] = round(Perf_t, 2)
+        dico_mode_prof_by_players_T["b0_t_"+str(t)] = round(b0_t,2)
+        dico_mode_prof_by_players_T["c0_t_"+str(t)] = round(c0_t,2)
+        dico_mode_prof_by_players_T["Out_sg_"+str(t)] = round(Out_sg,2)
+        dico_mode_prof_by_players_T["In_sg_"+str(t)] = round(In_sg,2)
+        dico_mode_prof_by_players_T["pi_sg_plus_t_"+str(t)] = round(pi_sg_plus_t,2)
+        dico_mode_prof_by_players_T["pi_sg_minus_t_"+str(t)] = round(pi_sg_minus_t,2)
+        dico_mode_prof_by_players_T["pi_0_plus_t_"+str(t)] = round(pi_0_plus_t,2)
+        dico_mode_prof_by_players_T["pi_0_minus_t_"+str(t)] = round(pi_0_minus_t,2)
+            
+        
     # ____      game beginning for all t_period ---> fin      _____
     
     # __________        compute prices variables         ____________________
@@ -366,6 +409,15 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     
     #__________      save computed variables locally      _____________________ 
     algo_name = "RD-DETERMINIST" if random_determinist else "DETERMINIST"
+    # fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
+    #                b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
+    #                BENs_M_T, CSTs_M_T, 
+    #                BB_is_M, CC_is_M, RU_is_M, 
+    #                pi_sg_minus_T, pi_sg_plus_T, 
+    #                pi_0_minus_T, pi_0_plus_T,
+    #                pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
+    #                algo=algo_name, 
+    #                dico_best_steps=dict())
     fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
                    b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
                    BENs_M_T, CSTs_M_T, 
@@ -374,7 +426,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                    pi_0_minus_T, pi_0_plus_T,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
                    algo=algo_name, 
-                   dico_best_steps=dict())
+                   dico_best_steps=dico_mode_prof_by_players_T)
         
     print("determinist game: pi_hp_plus={}, pi_hp_minus ={} ---> FIN \n"\
           .format( pi_hp_plus, pi_hp_minus))

@@ -713,6 +713,8 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
     arr_pl_M_T_vars_modif_BESTBF = arr_pl_M_T_vars_modif.copy()
     arr_pl_M_T_vars_modif_MIDBF = arr_pl_M_T_vars_modif.copy()
     
+    dico_mode_prof_by_players_T = dict()
+    
     pi_sg_plus_t0_minus_1 = pi_hp_plus-1
     pi_sg_minus_t0_minus_1 = pi_hp_minus-1
     pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
@@ -738,6 +740,9 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
             pi_0_plus_t = round(pi_sg_plus_t_minus_1*pi_hp_plus/pi_hp_minus, 
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
+            if t == 0:
+               pi_0_plus_t = 2
+               pi_0_minus_t = 2
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
@@ -762,6 +767,10 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                     pi_0_plus_t, pi_0_minus_t,
                     manual_debug, dbg)
             
+            In_sg, Out_sg = fct_aux.compute_prod_cons_SG(
+                                arr_pl_M_T_vars_mode_prof, 
+                                t)
+            
             # compute Perf_t
             bens_csts_t = bens_t - csts_t
             Perf_t = np.sum(bens_csts_t, axis=0)
@@ -776,8 +785,34 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                             fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
                 dico_mode_prof_by_players["PLAYER_"+str(num_pl_i)+"_t_"+str(t)] \
                 = (state_i, mode_i, Vi)
-            
-            dico_mode_prof_by_players["Perf_t"] = Perf_t
+                
+                dico_vars = dict()
+                dico_vars["Vi"] = round(Vi, 2)
+                dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
+                dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
+                variables = ["state_i", "mode_i", "prod_i", "cons_i", "r_i", 
+                             "gamma_i", "Pi", "Ci", "Si", "Si_old", 
+                             "Si_minus", "Si_plus"]
+                for variable in variables:
+                    dico_vars[variable] = arr_pl_M_T_vars_mode_prof[
+                                            num_pl_i, t, 
+                                            fct_aux.AUTOMATE_INDEX_ATTRS[variable]]
+                    
+                dico_mode_prof_by_players_T["PLAYER_"
+                                            +str(num_pl_i)
+                                            +"_t_"+str(t)
+                                            +"_"+str(cpt_xxx)] \
+                    = dico_vars
+                
+            dico_mode_prof_by_players_T["Perf_t_"+str(t)+"_"+str(cpt_xxx)] = round(Perf_t, 2)
+            dico_mode_prof_by_players_T["b0_t_"+str(t)+"_"+str(cpt_xxx)] = round(b0_t,2)
+            dico_mode_prof_by_players_T["c0_t_"+str(t)+"_"+str(cpt_xxx)] = round(c0_t,2)
+            dico_mode_prof_by_players_T["Out_sg_"+str(t)+"_"+str(cpt_xxx)] = round(Out_sg,2)
+            dico_mode_prof_by_players_T["In_sg_"+str(t)+"_"+str(cpt_xxx)] = round(In_sg,2)
+            dico_mode_prof_by_players_T["pi_sg_plus_t_"+str(t)+"_"+str(cpt_xxx)] = round(pi_sg_plus_t,2)
+            dico_mode_prof_by_players_T["pi_sg_minus_t_"+str(t)+"_"+str(cpt_xxx)] = round(pi_sg_minus_t,2)
+            dico_mode_prof_by_players_T["pi_0_plus_t_"+str(t)+"_"+str(cpt_xxx)] = round(pi_0_plus_t,2)
+            dico_mode_prof_by_players_T["pi_0_minus_t_"+str(t)+"_"+str(cpt_xxx)] = round(pi_0_minus_t,2)
             
             if Perf_t in dico_mode_profs:
                 dico_mode_profs[Perf_t].append(mode_profile)
@@ -1016,7 +1051,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                    pi_0_minus_T_BESTBF, pi_0_plus_T_BESTBF,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BESTBF, 
                    algo=algo_name,
-                   dico_best_steps=dict())
+                   dico_best_steps=dico_mode_prof_by_players_T)
     turn_dico_stats_res_into_df_BF(dico_stats_res_algo= dico_stats_res_BESTBF, 
                                 path_to_save = path_to_save, 
                                 t_periods = t_periods, 
@@ -1036,7 +1071,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                    pi_0_minus_T_BADBF, pi_0_plus_T_BADBF,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BADBF, 
                    algo=algo_name,
-                   dico_best_steps=dict())
+                   dico_best_steps=dico_mode_prof_by_players_T)
     turn_dico_stats_res_into_df_BF(dico_stats_res_algo= dico_stats_res_BADBF, 
                                 path_to_save = path_to_save, 
                                 t_periods = t_periods, 
@@ -1056,7 +1091,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                    pi_0_minus_T_MIDBF, pi_0_plus_T_MIDBF,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_MIDBF, 
                    algo=algo_name,
-                   dico_best_steps=dict())
+                   dico_best_steps=dico_mode_prof_by_players_T)
     turn_dico_stats_res_into_df_BF(dico_stats_res_algo= dico_stats_res_MIDBF, 
                                 path_to_save = path_to_save, 
                                 t_periods = t_periods, 
