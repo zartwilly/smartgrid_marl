@@ -637,13 +637,11 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
                                    fct_aux.AUTOMATE_INDEX_ATTRS['Ci']]
         Si = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
                                    fct_aux.AUTOMATE_INDEX_ATTRS['Si']] 
-        # \
-        #     if k == 0 \
-        #     else arr_pl_M_T_K_vars_modif[num_pl_i, t, k-1, 
-        #                            fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
         Si_max = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
-        gamma_i, prod_i, cons_i, r_i = 0, 0, 0, 0
+        gamma_i = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['gamma_i']]
+        prod_i, cons_i, r_i = 0, 0, 0
         state_i = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['state_i']]
         
@@ -655,16 +653,17 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         # select mode for player num_pl_i
         if random_mode:
             S1_p_i_t_k = arr_pl_M_T_K_vars_modif[num_pl_i, 
-                                        t, k, 
-                                        fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] \
+                                t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] \
                 if k == 0 \
                 else arr_pl_M_T_K_vars_modif[num_pl_i, 
-                                        t, k-1, 
-                                        fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
+                                t, k-1, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
             pl_i.select_mode_i(p_i=S1_p_i_t_k)
         else:
-            mode_i = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
-                                 fct_aux.AUTOMATE_INDEX_ATTRS['mode_i']]
+            mode_i = arr_pl_M_T_K_vars_modif[num_pl_i, 
+                                t, k,
+                                fct_aux.AUTOMATE_INDEX_ATTRS['mode_i']]
             pl_i.set_mode_i(mode_i)
         
         # compute cons, prod, r_i
@@ -675,53 +674,51 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
         
         # compute gamma_i, Si_{plus,minus}
-        Pi_t_plus_1_k \
-            = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
-                                fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
-                if t+1 < t_periods \
-                else 0
-        Ci_t_plus_1_k \
-            = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
-                                fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
-                if t+1 < t_periods \
-                else 0
+        # Pi_t_plus_1_k \
+        #     = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
+        #                         fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
+        #         if t+1 < t_periods \
+        #         else 0
+        # Ci_t_plus_1_k \
+        #     = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
+        #                         fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
+        #         if t+1 < t_periods \
+        #         else 0
                      
-        # print("** Ci_t_plus_1_k={}, Pi_t_plus_1_k={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
-        #         Ci_t_plus_1_k, Pi_t_plus_1_k, pi_0_plus_t, pi_0_minus_t))
-        pl_i.select_storage_politic(
-            Ci_t_plus_1 = Ci_t_plus_1_k, 
-            Pi_t_plus_1 = Pi_t_plus_1_k, 
-            pi_0_plus = pi_0_plus_t,
-            pi_0_minus = pi_0_minus_t,
-            pi_hp_plus = pi_hp_plus, 
-            pi_hp_minus = pi_hp_minus)
+        # # print("** Ci_t_plus_1_k={}, Pi_t_plus_1_k={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
+        # #         Ci_t_plus_1_k, Pi_t_plus_1_k, pi_0_plus_t, pi_0_minus_t))
+        # pl_i.select_storage_politic(
+        #     Ci_t_plus_1 = Ci_t_plus_1_k, 
+        #     Pi_t_plus_1 = Pi_t_plus_1_k, 
+        #     pi_0_plus = pi_0_plus_t,
+        #     pi_0_minus = pi_0_minus_t,
+        #     pi_hp_plus = pi_hp_plus, 
+        #     pi_hp_minus = pi_hp_minus)
         
-        gamma_i = None
-        if manual_debug:
-            gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
-            pl_i.set_gamma_i(gamma_i)
-        else:
-            gamma_i = pl_i.get_gamma_i()
+        # gamma_i = None
+        # if manual_debug:
+        #     gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
+        #     pl_i.set_gamma_i(gamma_i)
+        # else:
+        #     gamma_i = pl_i.get_gamma_i()
         
-        dico = dict()
-        if gamma_i < min(pi_0_plus_t, pi_0_minus_t)-1:
-            dico["min_pi_0"] = gamma_i
-        elif gamma_i > max(pi_hp_minus, pi_hp_plus):
-            dico["max_pi_hp"] = gamma_i
+        # dico = dict()
+        # if gamma_i < min(pi_0_plus_t, pi_0_minus_t)-1:
+        #     dico["min_pi_0"] = gamma_i
+        # elif gamma_i > max(pi_hp_minus, pi_hp_plus):
+        #     dico["max_pi_hp"] = gamma_i
          
-        mode_i = pl_i.get_mode_i()
-        dico["state_i"] = state_i; dico["mode_i"] = mode_i
-        dico["gamma_i"] = gamma_i
-        dico_gamma_players_t_k["player_"+str(num_pl_i)] = dico
+        # mode_i = pl_i.get_mode_i()
+        # dico["state_i"] = state_i; dico["mode_i"] = mode_i
+        # dico["gamma_i"] = gamma_i
+        # dico_gamma_players_t_k["player_"+str(num_pl_i)] = dico
         
         # update variables in arr_pl_M_T_k
         tup_cols_values = [("prod_i", pl_i.get_prod_i()), 
                 ("cons_i", pl_i.get_cons_i()), ("r_i", pl_i.get_r_i()),
                 ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
                 ("Si_old", pl_i.get_Si_old()), ("mode_i", pl_i.get_mode_i()), 
-                ("balanced_pl_i", boolean), ("formule", formule), 
-                ("gamma_i", gamma_i), ("Si_minus", pl_i.get_Si_minus() ),
-                ("Si_plus", pl_i.get_Si_plus() )]
+                ("balanced_pl_i", boolean), ("formule", formule)]
         # print("player pl_{}: t={},k={}, {}, mode_i={}, gamma={}, Si_old={}, Si={}, r_i={}, prod_i={}, cons_i={}, Pi={}, Ci={}, Si_max={}".format(
         #     num_pl_i, t,k, pl_i.get_state_i(), pl_i.get_mode_i(), pl_i.get_gamma_i(), pl_i.get_Si_old(), 
         #     pl_i.get_Si(), pl_i.get_r_i(), pl_i.get_prod_i(),  pl_i.get_cons_i(),  Pi, Ci, Si_max))
@@ -1222,6 +1219,7 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
     
     return arr_pl_M_T_K_vars_modif
 
+
 def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                              pi_hp_plus=0.10, 
                              pi_hp_minus=0.15,
@@ -1275,8 +1273,6 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                              arrs.shape[3]), 
                             dtype=object)
     arr_pl_M_T_K_vars[:,:,:,:] = arrs
-    # arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = \
-    #     arr_pl_M_T_K_vars[:,:,0,fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] = 0.5
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] = 0.5
     arr_pl_M_T_K_vars[:,:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
@@ -1318,8 +1314,14 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             if t == 0:
                pi_0_plus_t = 2
                pi_0_minus_t = 2
-               
         
+        arr_pl_M_T_K_vars = fct_aux.compute_gamma_4_period_t(
+                                arr_pl_M_T_K_vars=arr_pl_M_T_K_vars.copy(), 
+                                t=t, 
+                                pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
+                                pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                dbg=dbg)
+                
         print("t={}, pi_sg_plus_t={}, pi_sg_minus_t={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
              t, pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t))
             
@@ -2025,8 +2027,8 @@ def test_lri_balanced_player_game_all_pijk_upper_08():
     k_steps = 250 # 5,250
     p_i_j_ks = [0.5, 0.5, 0.5]
     
-    pi_hp_plus = 0.2*pow(10,-3)
-    pi_hp_minus = 0.33
+    pi_hp_plus = 10 #0.2*pow(10,-3)
+    pi_hp_minus = 20 # 0.33
     learning_rate = 0.1
     utility_function_version=1
     
