@@ -966,6 +966,12 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
                             ("upper_S1", "@upper_S1"),
                             ("lower_S2", "@lower_S2"),
                             ("upper_S2", "@upper_S2"),
+                            ("std_S1", "@std_S1"), 
+                            ("std_S2", "@std_S2"),
+                            ("min_S1", "@min_S1"), 
+                            ("max_S1", "@max_S1"), 
+                            ("min_S2", "@min_S2"),
+                            ("max_S2", "@max_S2"),
                             ("moy_max_S12", "@moy_max_S12"),
                             ("S1", "@S1"),
                             ("S2", "@S2"),
@@ -1007,8 +1013,8 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
         df_al_k = df_al.groupby("k")[["S1","S2"]]\
                     .aggregate(np.mean).reset_index()
         df_al_k = df_al.groupby("k")[["S1","S2"]]\
-                        .agg({"S1": [np.mean, np.std], 
-                              "S2": [np.mean, np.std]})\
+                        .agg({"S1": [np.mean, np.std, np.min, np.max], 
+                              "S2": [np.mean, np.std, np.min, np.max]})\
                         .reset_index()    
         tuple_cols = list(df_al_k.columns)
         dico_new_cols = dict()
@@ -1024,7 +1030,9 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
         df_al_k['upper_S2'] = df_al_k.mean_S2 + df_al_k.std_S2
         
         dico_rename = {"_k":"k","mean_S1":"moy_S1", "mean_S2":"moy_S2",
-                       "std_S1":"std_S1", "std_S2":"std_S2"
+                       "std_S1":"std_S1", "std_S2":"std_S2",
+                       "amin_S1":"min_S1", "amin_S2":"min_S2",
+                       "amax_S1":"max_S1", "amax_S2":"max_S2"
                        }
         df_al_k.rename(columns=dico_rename, inplace=True)
         
