@@ -45,9 +45,9 @@ if __name__ == "__main__":
                 + fct_aux.ALGO_NAMES_NASH \
                 + fct_aux.ALGO_NAMES_BF
         
-        dbg_234_players = True #False
+        dbg_234_players = False #True #False
         used_storage_det= False #True
-        manual_debug = False#True
+        manual_debug = True #False #True
         Visualisation = True #False, True
         
         # ---- initialization of variables for generating instances ----
@@ -165,7 +165,7 @@ if __name__ == "__main__":
                                 + fct_aux.ALGO_NAMES_BF \
                                 + fct_aux.ALGO_NAMES_NASH
         algos_4_learning = ["LRI1", "LRI2"]
-        tuple_paths, prices, algos, learning_rates \
+        tuple_paths, prices, algos, learning_rates, path_2_best_learning_steps \
             = autoVizGame.get_tuple_paths_of_arrays(name_simu=name_simu, 
                                         algos_4_no_learning=algos_4_no_learning)
             
@@ -193,6 +193,7 @@ if __name__ == "__main__":
         name_dir = os.path.join("tests", name_simu)
         autoVizGame.group_plot_on_panel(
             df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir, 
+            path_2_best_learning_steps,
             autoVizGame.NAME_RESULT_SHOW_VARS)
         
         ## ____________          plot figures ---> fin            ____________
