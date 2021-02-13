@@ -415,7 +415,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     
     #__________      save computed variables locally      _____________________ 
     algo_name = "RD-DETERMINIST" if random_determinist else "DETERMINIST"
-    if dbg:
+    if arr_pl_M_T_vars_modif.shape[0]<11:
         fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
                        b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
                        BENs_M_T, CSTs_M_T, 

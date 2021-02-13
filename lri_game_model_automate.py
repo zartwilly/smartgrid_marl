@@ -1315,8 +1315,8 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                pi_0_plus_t = 2
                pi_0_minus_t = 2
         
-        arr_pl_M_T_K_vars = fct_aux.compute_gamma_4_period_t(
-                                arr_pl_M_T_K_vars=arr_pl_M_T_K_vars.copy(), 
+        arr_pl_M_T_K_vars_modif = fct_aux.compute_gamma_4_period_t(
+                                arr_pl_M_T_K_vars=arr_pl_M_T_K_vars_modif.copy(), 
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,

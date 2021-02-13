@@ -560,7 +560,11 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
-                                dbg=dbg)    
+                                dbg=dbg)
+        
+        arr_pl_M_T_vars_modif_BADBF[:,t,:] = arr_pl_M_T_vars_modif[:,t,:]
+        arr_pl_M_T_vars_modif_BESTBF[:,t,:] = arr_pl_M_T_vars_modif[:,t,:]
+        arr_pl_M_T_vars_modif_MIDBF[:,t,:] = arr_pl_M_T_vars_modif[:,t,:]
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
