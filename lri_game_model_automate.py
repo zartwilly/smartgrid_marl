@@ -1481,7 +1481,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                         pi_0_plus_t, pi_0_minus_t,
                         m_players, t_periods, random_mode,
                         manual_debug, dbg=False)
-        dico_gamma_players_t[t] = dico_gamma_players_t_k    
+        dico_gamma_players_t[t] = dico_gamma_players_t_k
         b0_s_T_K[t,k_stop_learning] = b0_t_k
         c0_s_T_K[t,k_stop_learning] = c0_t_k
         BENs_M_T_K[:,t,k_stop_learning] = bens_t_k
