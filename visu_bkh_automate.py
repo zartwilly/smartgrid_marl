@@ -148,6 +148,7 @@ def get_tuple_paths_of_arrays(name_dir="tests", name_simu="simu_1811_1754",
                 exclude_html_files=[NAME_RESULT_SHOW_VARS,"html"]):
     
     tuple_paths = []
+    path_2_best_learning_steps = []
     rep_dir_simu = os.path.join(name_dir, name_simu)
     
     prices_new = None
@@ -178,10 +179,15 @@ def get_tuple_paths_of_arrays(name_dir="tests", name_simu="simu_1811_1754",
                                      algo, learning_rate)
                     tuple_paths.append( (name_dir, name_simu, price, 
                                          algo, learning_rate) )
+                    if algo is not algos_4_no_learning:
+                        path_2_best_learning_steps.append(
+                            (name_dir, name_simu, price, 
+                             algo, learning_rate))
             else:
                 tuple_paths.append( (name_dir, name_simu, price, algo) )
                 
-    return tuple_paths, prices_new, algos_new, learning_rates_new
+    return tuple_paths, prices_new, algos_new, \
+            learning_rates_new, path_2_best_learning_steps
 
 def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=250, 
                             algos_4_no_learning=["DETERMINIST","RD-DETERMINIST",
@@ -916,6 +922,7 @@ def plot_max_proba_mode_onestate_BON_A_REVENIR_QUAND_NEW_IMPLEMENTATION_NON_OK(d
 
 def plot_max_proba_mode_onestate(df_ra_pri_st, 
                                 rate, price, state_i, t, 
+                                path_2_best_learning_steps,
                                 algos):
     
     # algos = ["LRI1","LRI2"]
@@ -930,7 +937,19 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
     algos = set(algos).intersection(algo_df)
     
     for algo in algos:
-        df_al = df_ra_pri_st[(df_ra_pri_st.algo == algo)]
+        path_2_best_learning = None
+        for path_2_best in path_2_best_learning_steps:
+            if algo == path_2_best[3]:
+                path_2_best_learning = os.path.join(*path_2_best)
+            
+        print("path_2_best_learning={}".format(path_2_best_learning))
+        df_tmp = pd.read_csv(os.path.join(path_2_best_learning,
+                                           "best_learning_steps.csv"), 
+                             sep=',', index_col=0)
+        k_stop = df_tmp.loc["k_stop",str(t)]
+            
+        df_al = df_ra_pri_st[(df_ra_pri_st.algo == algo) 
+                             & (df_ra_pri_st.k <= k_stop)]
         
         title = "mean of max proba for each mode at {}, t={} (rate={}, price={})".format(
                 state_i, t, rate, price)
@@ -1092,7 +1111,8 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
 
     return px                
         
-def plot_max_proba_mode(df_arr_M_T_Ks, t, algos=['LRI1','LRI2']):
+def plot_max_proba_mode(df_arr_M_T_Ks, t, path_2_best_learning_steps, 
+                        algos=['LRI1','LRI2']):
     """
     plot the mean of the max probability of one mode. 
     The steps of process are:
@@ -1127,7 +1147,7 @@ def plot_max_proba_mode(df_arr_M_T_Ks, t, algos=['LRI1','LRI2']):
             px_st_mode = plot_max_proba_mode_onestate(
                             df_ra_pri, 
                             rate, price, state_i, 
-                            t, algos)
+                            t, path_2_best_learning_steps, algos)
             px_st_mode.legend.click_policy="hide"
     
             if (rate, price, state_i) not in dico_pxs.keys():
@@ -1597,14 +1617,16 @@ def plot_Perf_t_players_all_algos(df_ben_cst_M_T_K, t):
 #
 #                   affichage  dans tab  ---> debut
 # _____________________________________________________________________________
-def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir, 
+def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir,
+                        path_2_best_learning_steps, 
                         NAME_RESULT_SHOW_VARS):
     
     col_pxs_Pref_t = plot_Perf_t_players_all_states_for_scenarios(
                         df_ben_cst_M_T_K, t)
     col_pxs_Pref_algo_t = plot_Perf_t_players_all_algos(df_ben_cst_M_T_K, t)
     col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
-                                                algos=['LRI1','LRI2'])
+                                               path_2_best_learning_steps, 
+                                               algos=['LRI1','LRI2'])
     # col_pxs_in_out = plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t)
     # col_pxs_ben_cst = plot_mean_ben_cst_players_all_states_for_scenarios(
     #                     df_ben_cst_M_T_K, t)
@@ -1750,7 +1772,7 @@ if __name__ == "__main__":
                             + fct_aux.ALGO_NAMES_BF \
                             + fct_aux.ALGO_NAMES_NASH
     algos_4_learning = ["LRI1", "LRI2"]
-    tuple_paths, prices, algos, learning_rates \
+    tuple_paths, prices, algos, learning_rates, path_2_best_learning_steps \
         = get_tuple_paths_of_arrays(name_simu=name_simu, 
                                     algos_4_no_learning=algos_4_no_learning)
         
@@ -1775,6 +1797,7 @@ if __name__ == "__main__":
     ## -- plot figures
     name_dir = os.path.join("tests", name_simu)
     group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, t, name_dir, 
+                        path_2_best_learning_steps, 
                         NAME_RESULT_SHOW_VARS)
     
     
