@@ -79,9 +79,19 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t,
         cpt_players_stables = 0
         dico_profils = dict()
         for num_pl_i, mode_i in enumerate(key_modes_prof):                      # 0 <= num_pl_i < m_player            
-            Vi = dico_Vi_Pref_t[RACINE_PLAYER+"_"+str(num_pl_i)]
+            Vi, ben_i, cst_i = dico_Vi_Pref_t[RACINE_PLAYER+"_"+str(num_pl_i)]
             state_i = arr_pl_M_T_vars_modif[num_pl_i, t, 
                                       fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]]
+            gamma_i = arr_pl_M_T_vars_modif[num_pl_i, t, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
+            setx = arr_pl_M_T_vars_modif[num_pl_i, t, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["set"]]
+            prod_i = arr_pl_M_T_vars_modif[num_pl_i, t, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+            cons_i = arr_pl_M_T_vars_modif[num_pl_i, t, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+            r_i = arr_pl_M_T_vars_modif[num_pl_i, t, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
             mode_i_bar = None
             mode_i_bar = find_out_opposite_mode(state_i, mode_i)
             new_key_modes_prof = list(key_modes_prof)
@@ -89,12 +99,15 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t,
             new_key_modes_prof = tuple(new_key_modes_prof)
             
             Vi_bar = None
-            Vi_bar = dico_profs_Vis_Perf_t[new_key_modes_prof]\
+            Vi_bar, ben_i_bar, cst_i_bar \
+                = dico_profs_Vis_Perf_t[new_key_modes_prof]\
                                           [RACINE_PLAYER+"_"+str(num_pl_i)]
             if Vi >= Vi_bar:
                 cpt_players_stables += 1
             dico_profils[RACINE_PLAYER+"_"+str(num_pl_i)+"_t_"+str(t)] \
-                = (state_i, mode_i, Vi)
+                = {"set":setx, "state":state_i, "mode_i":mode_i, "Vi":Vi, 
+                   "gamma_i":gamma_i, "prod":prod_i, "cons":cons_i, "r_i":r_i,
+                   "ben":ben_i, "cst":cst_i}
             
         if cpt_players_stables == len(key_modes_prof):
             nash_profils.append(key_modes_prof)
@@ -556,7 +569,9 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
             dico_Vis_Pref_t = dict()
             for num_pl_i in range(bens_csts_t.shape[0]):            # bens_csts_t.shape[0] = m_players
                 dico_Vis_Pref_t[RACINE_PLAYER+"_"+str(num_pl_i)] \
-                    = bens_csts_t[num_pl_i]
+                    = (bens_csts_t[num_pl_i], 
+                       bens_t[num_pl_i], 
+                       csts_t[num_pl_i])
                     
                 dico_vars = dict()
                 dico_vars["Vi"] = round(bens_csts_t[num_pl_i], 2)
@@ -588,6 +603,8 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
             
                     
             dico_Vis_Pref_t["Perf_t"] = Perf_t
+            dico_Vis_Pref_t["b0"] = b0_t
+            dico_Vis_Pref_t["c0"] = c0_t
             
             dico_profs_Vis_Perf_t[mode_profile] = dico_Vis_Pref_t
             cpt_profs += 1
@@ -723,8 +740,10 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                             suff+"_Perf_t": best_key_Perf_t,
                             "nb_nash_profil_byPerf_t": 
                                 len(dico_Perft_nashProfil[best_key_Perf_t]),
-                            "dico_nash_profils": dico_nash_profils    
-                                }
+                            "dico_nash_profils": dico_nash_profils,
+                            suff+"_b0_t": b0_t,
+                            suff+"_c0_t": c0_t
+                            }
                 
             # pi_sg_{plus,minus} of shape (T_PERIODS,)
             pi_sg_plus_T_algo[t] = pi_sg_plus_t
@@ -922,7 +941,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                                 algo_name=algo_name)
     
     # checkout_nash_equilibrium
-    if not manual_debug:
+    if manual_debug:
         # BEST-NASH
         algo_name = fct_aux.ALGO_NAMES_NASH[0]                          # BEST-NASH
         checkout_nash_equilibrium(arr_pl_M_T_vars_modif_BESTN.copy(), 

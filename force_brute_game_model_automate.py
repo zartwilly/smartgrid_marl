@@ -56,7 +56,11 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif,
                                        fct_aux.AUTOMATE_INDEX_ATTRS['Si']]
         Si_max = arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
                                         fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
-        gamma_i = arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
+        gamma_i = None
+        if manual_debug:
+            gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
+        else:
+            gamma_i = arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS['gamma_i']]
         prod_i, cons_i, r_i = 0, 0, 0
         mode_i = mode_profile[num_pl_i]
@@ -116,6 +120,7 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif,
                 ("cons_i", pl_i.get_cons_i()), ("r_i", pl_i.get_r_i()),
                 ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
                 ("Si_old", pl_i.get_Si_old()), ("mode_i", mode_i), 
+                ("gamma_i", gamma_i),
                 ("balanced_pl_i", boolean), ("formule", formule)]
         for col, val in tup_cols_values:
             arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
@@ -605,8 +610,25 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                 mode_i = arr_pl_M_T_vars_mode_prof[
                             num_pl_i, t, 
                             fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
+                gamma_i = arr_pl_M_T_vars_mode_prof[
+                            num_pl_i, t, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
+                setx = arr_pl_M_T_vars_mode_prof[
+                            num_pl_i, t, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["set"]]
+                prod_i = arr_pl_M_T_vars_mode_prof[
+                            num_pl_i, t, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+                cons_i = arr_pl_M_T_vars_mode_prof[
+                            num_pl_i, t, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+                r_i = arr_pl_M_T_vars_mode_prof[
+                            num_pl_i, t, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
                 dico_mode_prof_by_players["PLAYER_"+str(num_pl_i)+"_t_"+str(t)] \
-                = (state_i, mode_i, Vi)
+                = {"set":setx, "state":state_i, "mode_i":mode_i, "Vi":Vi, 
+                   "gamma_i":gamma_i, "prod":prod_i, "cons":cons_i, 'r_i':r_i,
+                   "ben": bens_t[num_pl_i], "cst":csts_t[num_pl_i]}
                 
                 dico_vars = dict()
                 dico_vars["Vi"] = round(Vi, 2)
@@ -625,7 +647,11 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                             +"_t_"+str(t)
                                             +"_"+str(cpt_xxx)] \
                     = dico_vars
-                
+            
+            dico_mode_prof_by_players["Perf_t"] = Perf_t
+            dico_mode_prof_by_players["b0"] = b0_t
+            dico_mode_prof_by_players["c0"] = c0_t  
+            
             dico_mode_prof_by_players_T["Perf_t_"+str(t)+"_"+str(cpt_xxx)] = round(Perf_t, 2)
             dico_mode_prof_by_players_T["b0_t_"+str(t)+"_"+str(cpt_xxx)] = round(b0_t,2)
             dico_mode_prof_by_players_T["c0_t_"+str(t)+"_"+str(cpt_xxx)] = round(c0_t,2)
@@ -747,7 +773,9 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                  suff+"_mode_profile": best_mode_profile,
                                  suff+"_Perf_t": best_key_Perf_t,
                                  "list_dico_best_mode_profs": 
-                                     list_dico_best_mode_profs
+                                     list_dico_best_mode_profs,
+                                suff+"_b0_t": b0_t,
+                                suff+"_c0_t": c0_t
                                 }
         
             # verification of best key quality 
