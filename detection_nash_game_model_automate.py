@@ -780,6 +780,9 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
             for num_pl, bb_i in enumerate(BB_is_M_algo):
                 if bb_i != 0:
                     print("player {}, BB_i={}".format(num_pl, bb_i))
+                if np.isnan(bb_i):
+                    print("player {},PROD_is={}, pi_sg={}".format(num_pl, 
+                          PROD_is_M_T_algo[num_pl, -t], pi_sg_plus_T_algo[-t]))
             CC_is_M_algo = pi_sg_minus_T_algo[t] * CONS_is_M_T_algo #np.sum(CONS_is)
             RU_is_M_algo = BB_is_M_algo - CC_is_M_algo
             
