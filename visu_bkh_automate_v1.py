@@ -21,6 +21,8 @@ from bokeh.plotting import figure, show, output_file, save
 from bokeh.layouts import row, column
 from bokeh.models import Panel, Tabs, Legend
 from bokeh.transform import factor_cmap
+from bokeh.transform import dodge
+
 # from bokeh.models import Select
 # from bokeh.io import curdoc
 # from bokeh.plotting import reset_output
@@ -952,13 +954,114 @@ def plot_distribution_by_states_4_periods(df_arr_M_T_Ks, k_steps_args,
     rows_dists_ts=column(children=rows_dists_ts, 
                             sizing_mode='stretch_both')
     return rows_dists_ts
-                        
-        
-    
 
 # _____________________________________________________________________________
 #
 #                   distribution by states for periods ---> fin
+# _____________________________________________________________________________
+
+# _____________________________________________________________________________
+#
+#                   utility of players for periods ---> debut
+# _____________________________________________________________________________
+#TODO : compute CONS, PROD 
+# def compute_CONS_PROD(df_arr_M_T_Ks, algo, path_2_best_learning_steps):
+#     """
+#     compute CONS, PROD for each player
+#     """
+def plot_utility(df_al_pr_ra, algo, rate, price,
+                 path_2_best_learning_steps):
+    """
+    plot the bar plot of each player relying on the real utility RU
+    """
+    
+    df_al_pr_ra["pl_i"] = df_al_pr_ra["pl_i"].astype(str)
+    idx = df_al_pr_ra["pl_i"].unique().tolist()
+    cols = ['pl_i', 'BB', 'CC', 'RU']
+    
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("RU", "@RU"),
+                            ("BB", "@BB"),
+                            ("CC", "@CC"),
+                            ]
+                        )
+    
+    px = figure(x_range=idx, 
+                y_range=(0, df_al_pr_ra[cols[1:]].values.max() + 5), 
+                plot_height = int(350), 
+                plot_width = int(WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    title = "{}: utility of players (rate:{}, price={})".format(algo, rate, price)
+    px.title.text = title
+           
+    source = ColumnDataSource(data = df_al_pr_ra)
+    
+    width= 0.2 #0.5
+    px.vbar(x=dodge('pl_i', -0.3, range=px.x_range), top=cols[1], 
+                    width=width, source=source,
+                    color="#c9d9d3", legend_label=cols[1])
+    px.vbar(x=dodge('pl_i', -0.3+width, range=px.x_range), top=cols[2], 
+                    width=width, source=source,
+                    color="#718dbf", legend_label=cols[2])
+    px.vbar(x=dodge('pl_i', -0.3+2*width, range=px.x_range), top=cols[3], 
+                   width=width, source=source,
+                   color="#e84d60", legend_label=cols[3])
+    
+    px.x_range.range_padding = width
+    px.xgrid.grid_line_color = None
+    px.legend.location = "top_left"
+    px.legend.orientation = "horizontal"
+    px.xaxis.axis_label = "players"
+    px.yaxis.axis_label = "values"
+    
+    return px
+    
+    
+    
+def plot_utilities_by_player_4_periods(df_arr_M_T_Ks, 
+                                       df_b0_c0_pisg_pi0_T_K,
+                                       df_B_C_BB_CC_RU_M, 
+                                       path_2_best_learning_steps):
+    """
+    plot the utility RU, CONS and PROD of players.
+    for each algorithm, plot the utility of each player 
+    """
+    rates = df_arr_M_T_Ks.rate.unique().tolist(); rate = rates[rates!=0]
+    prices = df_arr_M_T_Ks.prices.unique().tolist()
+    algos = df_B_C_BB_CC_RU_M.algo.unique().tolist()
+    
+    dico_pxs = dict()
+    for algo, price in it.product(algos, prices):
+        # CONS_is, PROD_is = compute_CONS_PROD(df_arr_M_T_Ks, 
+        #                                      algo, 
+        #                                      path_2_best_learning_steps)
+        mask_al_pr_ra = ((df_B_C_BB_CC_RU_M.rate == str(rate)) 
+                                 | (df_B_C_BB_CC_RU_M.rate == 0)) \
+                            & (df_B_C_BB_CC_RU_M.prices == price) \
+                            & (df_B_C_BB_CC_RU_M.algo == algo)     
+        df_al_pr_ra = df_B_C_BB_CC_RU_M[mask_al_pr_ra].copy()
+        
+        pxs_al_pr_ra = plot_utility(
+                            df_al_pr_ra, algo, rate, price,
+                            path_2_best_learning_steps)
+        
+        if (algo, price, rate) not in dico_pxs.keys():
+            dico_pxs[(algo, price, rate)] \
+                = [pxs_al_pr_ra]
+        else:
+            dico_pxs[(algo, price, rate)].append(pxs_al_pr_ra)
+        
+    rows_RU_CONS_PROD_ts = list()
+    for key, pxs_al_pr_ra in dico_pxs.items():
+        col_px_sts = column(pxs_al_pr_ra)
+        rows_RU_CONS_PROD_ts.append(col_px_sts)
+    rows_RU_CONS_PROD_ts=column(children=rows_RU_CONS_PROD_ts, 
+                                sizing_mode='stretch_both')
+    return rows_RU_CONS_PROD_ts
+
+# _____________________________________________________________________________
+#
+#                   utility of players for periods ---> fin
 # _____________________________________________________________________________
 
 # _____________________________________________________________________________
@@ -973,7 +1076,13 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     rows_dists_ts = plot_distribution_by_states_4_periods(
                         df_arr_M_T_Ks, k_steps_args,
                         path_2_best_learning_steps)
-    #                     df_ben_cst_M_T_K, t)
+    
+    rows_RU_CONS_PROD_ts = plot_utilities_by_player_4_periods(
+                            df_arr_M_T_Ks, 
+                            df_b0_c0_pisg_pi0_T_K,
+                            df_B_C_BB_CC_RU_M, 
+                            path_2_best_learning_steps)
+    
     # col_pxs_Pref_t = plot_Perf_t_players_all_states_for_scenarios(
     #                     df_ben_cst_M_T_K, t)
     # col_pxs_Pref_algo_t = plot_Perf_t_players_all_algos(df_ben_cst_M_T_K, t)
@@ -988,6 +1097,8 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     # col_playing_players = plot_histo_playing(df_arr_M_T_Ks, t)
     
     tab_dists_ts = Panel(child=rows_dists_ts, title="distribution by state")
+    tab_RU_CONS_PROD_ts = Panel(child=rows_RU_CONS_PROD_ts, 
+                                title="utility of players")
     # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
     # tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
     # tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
@@ -1000,7 +1111,8 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     #              title="number players playing/not_playing")
     
     tabs = Tabs(tabs= [ 
-                        tab_dists_ts
+                        tab_dists_ts,
+                        tab_RU_CONS_PROD_ts
                         #tab_Pref_t, 
                         #tab_Pref_algo_t,
                         #tab_S1S2,
