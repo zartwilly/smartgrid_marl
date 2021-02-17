@@ -964,12 +964,133 @@ def plot_distribution_by_states_4_periods(df_arr_M_T_Ks, k_steps_args,
 #
 #                   utility of players for periods ---> debut
 # _____________________________________________________________________________
-#TODO : compute CONS, PROD 
-# def compute_CONS_PROD(df_arr_M_T_Ks, algo, path_2_best_learning_steps):
-#     """
-#     compute CONS, PROD for each player
-#     """
-def plot_utility(df_al_pr_ra, algo, rate, price,
+def compute_CONS_PROD(df_prod_cons, algo, path_2_best_learning_steps):
+    """
+    compute CONS, PROD 
+    """
+    k_stop = None;
+    path_2_best_learning = None
+    if algo in ["LRI1", "LRI2"]:
+        for path_2_best in path_2_best_learning_steps:
+            if algo == path_2_best[3]:
+                path_2_best_learning = os.path.join(*path_2_best)        
+        df_tmp = pd.read_csv(os.path.join(path_2_best_learning,
+                                           "best_learning_steps.csv"), 
+                             sep=',', index_col=0)
+    else:
+        k_step_max=df_prod_cons.k.unique().max()
+        t_periods = df_prod_cons.t.unique().tolist()
+        dico = dict()
+        for t in t_periods:
+            dico[str(t)] = {"k_stop":k_step_max}
+        df_tmp = pd.DataFrame.from_dict(dico)
+        #k_stop = df_prod_cons.k.unique().max()
+    
+    # print("df_tmp: index={}, cols={}".format(df_tmp.index, df_tmp.columns))
+    
+    list_of_players = df_prod_cons.pl_i.unique().tolist()
+    cols = ['pl_i', 'PROD_i', 'CONS_i']
+    df_PROD_CONS = pd.DataFrame(columns=cols, 
+                                index=list_of_players)
+    for num_pl_i in list_of_players:
+        sum_prod_pl_i = 0; sum_cons_pl_i = 0
+        for t in df_prod_cons.t.unique().tolist():
+            k_stop = df_tmp.loc["k_stop",str(t)]
+            mask_pli_kstop = (df_prod_cons.t == t) \
+                             & (df_prod_cons.k == k_stop) \
+                             & (df_prod_cons.pl_i == num_pl_i)
+            # print("df_prod_cons[mask_pli_kstop]={}".format(df_prod_cons[mask_pli_kstop].shape))
+            # df_prod_cons_mask = df_prod_cons[mask_pli_kstop]
+            # print("pl_{}, prod_i={}, value={}".format(num_pl_i, 
+            #       df_prod_cons_mask["prod_i"], df_prod_cons_mask["prod_i"].values[0] ))
+            # sum_prod_pl_i += df_prod_cons[mask_pli_kstop].loc[num_pl_i,"prod_i"]
+            # sum_cons_pl_i += df_prod_cons[mask_pli_kstop].loc[num_pl_i,"cons_i"]
+            sum_prod_pl_i += df_prod_cons[mask_pli_kstop]["prod_i"].values[0]
+            sum_cons_pl_i += df_prod_cons[mask_pli_kstop]["cons_i"].values[0]
+        # print('pl_{}, sum_prod_pl_i={}, sum_cons_pl_i={}'.format(
+        #         num_pl_i, sum_prod_pl_i, sum_cons_pl_i))
+        df_PROD_CONS.loc[num_pl_i, "PROD_i"] = sum_prod_pl_i
+        df_PROD_CONS.loc[num_pl_i, "CONS_i"] = sum_cons_pl_i
+        df_PROD_CONS.loc[num_pl_i, "pl_i"] = num_pl_i
+        
+    return df_PROD_CONS
+
+def plot_CONS_PROD(df_prod_cons, algo, rate, price,
+                   path_2_best_learning_steps):
+    """
+    plot CONS, PROD for each player
+    """
+    k_stop = None;
+    path_2_best_learning = None
+    if algo in ["LRI1", "LRI2"]:
+        for path_2_best in path_2_best_learning_steps:
+            if algo == path_2_best[3]:
+                path_2_best_learning = os.path.join(*path_2_best)
+    else:
+        k_stop = df_prod_cons.k.unique().max()
+            
+    print("path_2_best_learning={}".format(path_2_best_learning))
+    df_tmp = pd.read_csv(os.path.join(path_2_best_learning,
+                                       "best_learning_steps.csv"), 
+                         sep=',', index_col=0)
+    
+    list_of_players = df_prod_cons.pl_i.unique().tolist()
+    cols = ['pl_i', 'PROD_i', 'CONS_i']
+    df_PROD_CONS = pd.DataFrame(columns=cols, 
+                                index=list_of_players)
+    for num_pl_i in list_of_players:
+        sum_prod_pl_i = 0; sum_cons_pl_i = 0
+        for t in df_prod_cons.t.unique().tolist():
+            k_stop = df_tmp.loc["k_stop",str(t)]
+            mask_pli_kstop = (df_prod_cons.t == t) \
+                             & (df_prod_cons.k == k_stop) \
+                             & (df_prod_cons.pl_i == num_pl_i)
+            sum_prod_pl_i += df_prod_cons[mask_pli_kstop]["prod_i"]
+            sum_cons_pl_i += df_prod_cons[mask_pli_kstop]["cons_i"]
+        df_PROD_CONS.loc[num_pl_i, "PROD_i"] = sum_prod_pl_i
+        df_PROD_CONS.loc[num_pl_i, "CONS_i"] = sum_cons_pl_i
+        df_PROD_CONS.loc[num_pl_i, "pl_i"] = num_pl_i
+        
+    # plot
+    df_PROD_CONS["pl_i"] = df_PROD_CONS["pl_i"].astype(str)
+    idx = df_PROD_CONS["pl_i"].unique().tolist()
+    
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("pl_i", "@pl_i"),
+                            ("PROD_i", "@PROD_i"),
+                            ("CONS_i", "@CONS_i"),
+                            ]
+                        )
+    
+    px = figure(x_range=idx, 
+                y_range=(0, df_PROD_CONS[cols[1:]].values.max() + 5), 
+                plot_height = int(350), 
+                plot_width = int(WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    title = "{}: PROD/CONS of players (rate:{}, price={})"\
+                .format(algo, rate, price)
+    px.title.text = title
+           
+    source = ColumnDataSource(data = df_PROD_CONS)
+    
+    width= 0.2 #0.5
+    px.vbar(x=dodge('pl_i', -0.3, range=px.x_range), top=cols[1], 
+                    width=width, source=source,
+                    color="#c9d9d3", legend_label=cols[1])
+    px.vbar(x=dodge('pl_i', -0.3+width, range=px.x_range), top=cols[2], 
+                    width=width, source=source,
+                    color="#718dbf", legend_label=cols[2])
+    
+    px.x_range.range_padding = width
+    px.xgrid.grid_line_color = None
+    px.legend.location = "top_left"
+    px.legend.orientation = "horizontal"
+    px.xaxis.axis_label = "players"
+    px.yaxis.axis_label = "values"
+    
+    return px, df_PROD_CONS
+            
+def plot_utility_OLD(df_al_pr_ra, algo, rate, price,
                  path_2_best_learning_steps):
     """
     plot the bar plot of each player relying on the real utility RU
@@ -1016,7 +1137,61 @@ def plot_utility(df_al_pr_ra, algo, rate, price,
     
     return px
     
+def plot_utility(df_res, algo, rate, price,
+                 path_2_best_learning_steps):
+    """
+    plot the bar plot of each player relying on the real utility RU
+    """
     
+    df_res["pl_i"] = df_res["pl_i"].astype(str)
+    idx = df_res["pl_i"].unique().tolist()
+    cols = ['pl_i', 'BB', 'CC', 'RU', "CONS_i", "PROD_i"]
+    
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("pl_i", "@pl_i"),
+                            ("RU", "@RU"),
+                            ("BB", "@BB"),
+                            ("CC", "@CC"),
+                            ("CONS_i", "@CONS_i"),
+                            ("PROD_i", "@PROD_i")
+                            ]
+                        )
+    
+    px = figure(x_range=idx, 
+                y_range=(0, df_res[cols[1:]].values.max() + 5), 
+                plot_height = int(350), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    title = "{}: utility of players (rate:{}, price={})".format(algo, rate, price)
+    px.title.text = title
+           
+    source = ColumnDataSource(data = df_res)
+    
+    width= 0.2 #0.5
+    px.vbar(x=dodge('pl_i', -0.3, range=px.x_range), top=cols[1], 
+                    width=width, source=source,
+                    color="#2E8B57", legend_label=cols[1])
+    px.vbar(x=dodge('pl_i', -0.3+width, range=px.x_range), top=cols[2], 
+                    width=width, source=source,
+                    color="#718dbf", legend_label=cols[2])
+    px.vbar(x=dodge('pl_i', -0.3+2*width, range=px.x_range), top=cols[3], 
+                   width=width, source=source,
+                   color="#e84d60", legend_label=cols[3])
+    px.vbar(x=dodge('pl_i', -0.3+3*width, range=px.x_range), top=cols[4], 
+                   width=width, source=source,
+                   color="#ddb7b1", legend_label=cols[4])
+    px.vbar(x=dodge('pl_i', -0.3+5*width, range=px.x_range), top=cols[5], 
+                   width=width, source=source,
+                   color="#FFD700", legend_label=cols[5])
+    
+    px.x_range.range_padding = width
+    px.xgrid.grid_line_color = None
+    px.legend.location = "top_left"
+    px.legend.orientation = "horizontal"
+    px.xaxis.axis_label = "players"
+    px.yaxis.axis_label = "values"
+    
+    return px
     
 def plot_utilities_by_player_4_periods(df_arr_M_T_Ks, 
                                        df_b0_c0_pisg_pi0_T_K,
@@ -1035,15 +1210,55 @@ def plot_utilities_by_player_4_periods(df_arr_M_T_Ks,
         # CONS_is, PROD_is = compute_CONS_PROD(df_arr_M_T_Ks, 
         #                                      algo, 
         #                                      path_2_best_learning_steps)
+        # mask_al_pr_ra = ((df_B_C_BB_CC_RU_M.rate == str(rate)) 
+        #                          | (df_B_C_BB_CC_RU_M.rate == 0)) \
+        #                     & (df_B_C_BB_CC_RU_M.prices == price) \
+        #                     & (df_B_C_BB_CC_RU_M.algo == algo)     
+        
+        # mask_al_pr_ra_prod_cons = ((df_arr_M_T_Ks.rate == str(rate)) 
+        #                            | (df_arr_M_T_Ks.rate == 0)) \
+        #                             & (df_arr_M_T_Ks.prices == price) \
+        #                             & (df_arr_M_T_Ks.algo == algo)  
+        
+        # df_al_pr_ra = df_B_C_BB_CC_RU_M[mask_al_pr_ra].copy()
+        # pxs_al_pr_ra = plot_utility(
+        #                     df_al_pr_ra, algo, rate, price,
+        #                     path_2_best_learning_steps)
+        
+        # df_prod_cons = df_arr_M_T_Ks[mask_al_pr_ra_prod_cons].copy()
+        # df_PROD_CONS = compute_CONS_PROD(df_prod_cons, algo, 
+        #                                  path_2_best_learning_steps)
+        
+        # pxs_prod_cons, df_PROD_CONS = plot_CONS_PROD(
+        #                                 df_prod_cons, algo, rate, price,
+        #                                 path_2_best_learning_steps)
+        
+        ######################################################################
+        print("ALGO={}".format(algo))
         mask_al_pr_ra = ((df_B_C_BB_CC_RU_M.rate == str(rate)) 
                                  | (df_B_C_BB_CC_RU_M.rate == 0)) \
                             & (df_B_C_BB_CC_RU_M.prices == price) \
                             & (df_B_C_BB_CC_RU_M.algo == algo)     
+        
+        mask_al_pr_ra_prod_cons = ((df_arr_M_T_Ks.rate == str(rate)) 
+                                   | (df_arr_M_T_Ks.rate == 0)) \
+                                    & (df_arr_M_T_Ks.prices == price) \
+                                    & (df_arr_M_T_Ks.algo == algo)  
+        
         df_al_pr_ra = df_B_C_BB_CC_RU_M[mask_al_pr_ra].copy()
         
+        df_prod_cons = df_arr_M_T_Ks[mask_al_pr_ra_prod_cons].copy()
+        df_PROD_CONS = compute_CONS_PROD(df_prod_cons, algo, 
+                                         path_2_best_learning_steps)
+        print("{}: df_PROD_CONS={}, df_al_pr_ra={}".format(
+            algo, df_PROD_CONS.shape, df_al_pr_ra.shape))
+        # merge on column pl_i
+        df_res = pd.merge(df_al_pr_ra, df_PROD_CONS, on="pl_i")
         pxs_al_pr_ra = plot_utility(
-                            df_al_pr_ra, algo, rate, price,
+                            df_res, algo, rate, price,
                             path_2_best_learning_steps)
+        
+        ######################################################################
         
         if (algo, price, rate) not in dico_pxs.keys():
             dico_pxs[(algo, price, rate)] \
