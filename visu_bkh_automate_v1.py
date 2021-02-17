@@ -32,7 +32,7 @@ from bokeh.transform import dodge
 # Importing a pallette
 from bokeh.palettes import Category20
 #from bokeh.palettes import Spectral5 
-#from bokeh.palettes import Viridis256
+from bokeh.palettes import Viridis256
 
 
 from bokeh.models.annotations import Title
@@ -1281,6 +1281,194 @@ def plot_utilities_by_player_4_periods(df_arr_M_T_Ks,
 
 # _____________________________________________________________________________
 #
+#               Evolution of players' PROD, CONS over periods ---> debut
+# _____________________________________________________________________________
+def compute_CONS_PROD_NEW(df_prod_cons, algo, path_2_best_learning_steps):
+    """
+    compute the CONS and PROD for players 
+    return 3 dfs such as:
+        df_PROD_CONS : contains sum of players' PROD and CONS
+        df_PROD: contains players' PROD by time, shape: (m_players, t_periods)
+        df_CONS: contains players' CONS by time, shape: (m_players, t_periods)
+    """
+    k_stop = None;
+    path_2_best_learning = None
+    if algo in ["LRI1", "LRI2"]:
+        for path_2_best in path_2_best_learning_steps:
+            if algo == path_2_best[3]:
+                path_2_best_learning = os.path.join(*path_2_best)        
+        df_tmp = pd.read_csv(os.path.join(path_2_best_learning,
+                                           "best_learning_steps.csv"), 
+                             sep=',', index_col=0)
+    else:
+        k_step_max=df_prod_cons.k.unique().max()
+        t_periods = df_prod_cons.t.unique().tolist()
+        dico = dict()
+        for t in t_periods:
+            dico[str(t)] = {"k_stop":k_step_max}
+        df_tmp = pd.DataFrame.from_dict(dico)
+        
+    t_periods = df_prod_cons.t.unique().tolist()
+    list_of_players = df_prod_cons.pl_i.unique().tolist()
+    list_of_players_str = list(map(str,list_of_players))
+    t_periods_str = list(map(str, t_periods))
+    
+    cols = ['pl_i', 'PROD_i', 'CONS_i']
+    df_PROD_CONS = pd.DataFrame(columns=cols, 
+                                index=list_of_players)
+    df_PROD = pd.DataFrame(columns=t_periods_str, 
+                           index=list_of_players_str)
+    df_CONS = pd.DataFrame(columns=t_periods, 
+                           index=list_of_players_str)
+    
+    for num_pl_i in list_of_players:
+        sum_prod_pl_i = 0; sum_cons_pl_i = 0
+        for t in t_periods:
+            k_stop = df_tmp.loc["k_stop",str(t)]
+            mask_pli_kstop = (df_prod_cons.t == t) \
+                             & (df_prod_cons.k == k_stop) \
+                             & (df_prod_cons.pl_i == num_pl_i)
+            prod_i = df_prod_cons[mask_pli_kstop]["prod_i"].values[0]
+            cons_i = df_prod_cons[mask_pli_kstop]["cons_i"].values[0]
+            
+            sum_prod_pl_i += prod_i
+            sum_cons_pl_i += cons_i
+            
+            df_PROD.loc[str(num_pl_i), str(t)] = prod_i
+            df_CONS.loc[str(num_pl_i), str(t)] = cons_i
+        
+        df_PROD_CONS.loc[num_pl_i, "PROD_i"] = sum_prod_pl_i
+        df_PROD_CONS.loc[num_pl_i, "CONS_i"] = sum_cons_pl_i
+        df_PROD_CONS.loc[num_pl_i, "pl_i"] = num_pl_i
+        
+    # turn df_PROD to dico with key="player_num_pl_i", value=dico of time
+    dico_players_PROD, dico_players_CONS = dict(), dict()
+    for num_pl_i in df_PROD.index.tolist():
+        dico_t_PROD = {"t":[],"PROD_i":[],"pl_i":[]}
+        dico_t_CONS = {"t":[],"CONS_i":[],"pl_i":[]}
+        for t in df_PROD.columns.tolist(): 
+            dico_t_PROD["t"].append(t)
+            dico_t_PROD["pl_i"].append(num_pl_i)
+            dico_t_PROD["PROD_i"].append(df_PROD.loc[num_pl_i, t])
+            
+            dico_t_CONS["t"].append(t)
+            dico_t_CONS["pl_i"].append(num_pl_i)
+            dico_t_CONS["CONS_i"].append(df_CONS.loc[num_pl_i, t])
+        dico_players_PROD["player_"+str(num_pl_i)] = dico_t_PROD
+        dico_players_CONS["player_"+str(num_pl_i)] = dico_t_CONS
+        
+            
+    return df_PROD_CONS, df_PROD, df_CONS, dico_players_PROD, dico_players_CONS
+    
+def plot_evolution_PROD_CONS(df_PROD, df_CONS, 
+                             dico_players_PROD, dico_players_CONS,
+                             algo, rate, price,
+                             path_2_best_learning_steps):
+    
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("pl_i", "@pl_i"),
+                            ("t", "@t"),
+                            ("PROD_i", "@PROD_i"),
+                            ("CONS_i", "@CONS_i")
+                            ]
+                        )
+    
+    px_PROD = figure(plot_height = int(HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    px_CONS = figure(plot_height = int(HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    
+    title_PROD = "{}: evolution PROD' players (rate:{}, price={})".format(
+                    algo, rate, price)
+    title_CONS = "{}: evolution CONS' players (rate:{}, price={})".format(
+                    algo, rate, price)
+    px_PROD.title.text = title_PROD
+    px_CONS.title.text = title_CONS
+           
+    print("{}: df_PROD={}, df_CONS={}".format(
+          algo, df_PROD.shape, df_CONS.shape))
+    
+    ind_color = 0
+    for player_i, dico_t_PROD in dico_players_PROD.items():
+        ind_color += 10
+        source_PROD = ColumnDataSource(data = dico_t_PROD)
+        px_PROD.line(x="t", y="PROD_i", source=source_PROD, 
+                legend_label=player_i,
+                line_width=2, color=Viridis256[ind_color%256], 
+                line_dash=[0,0])
+    ind_color = 0
+    for player_i, dico_t_CONS in dico_players_CONS.items():
+        ind_color += 10
+        source_CONS = ColumnDataSource(data = dico_t_CONS)
+        px_CONS.line(x="t", y="CONS_i", source=source_CONS, 
+                legend_label=player_i,
+                line_width=2, color=Viridis256[ind_color%256], 
+                line_dash=[0,0])
+        
+    px_CONS.legend.click_policy="hide"
+    px_PROD.legend.click_policy="hide"
+    px_PROD.xaxis.axis_label = "periods"
+    px_CONS.xaxis.axis_label = "periods"
+    px_PROD.yaxis.axis_label = "prod_i"
+    px_CONS.yaxis.axis_label = "cons_i"
+    
+    return px_PROD, px_CONS
+        
+    
+def plot_evolution_over_time_PROD_CONS(df_arr_M_T_Ks, 
+                                       df_b0_c0_pisg_pi0_T_K,
+                                       path_2_best_learning_steps):
+    """
+    show the evolution of players' PROD, CONS over the time
+    """
+    
+    rates = df_arr_M_T_Ks.rate.unique().tolist(); rate = rates[rates!=0]
+    prices = df_arr_M_T_Ks.prices.unique().tolist()
+    algos = df_B_C_BB_CC_RU_M.algo.unique().tolist()
+    
+    dico_pxs = dict()
+    for algo, price in it.product(algos, prices):
+        mask_al_pr_ra_prod_cons = ((df_arr_M_T_Ks.rate == str(rate)) 
+                                   | (df_arr_M_T_Ks.rate == 0)) \
+                                    & (df_arr_M_T_Ks.prices == price) \
+                                    & (df_arr_M_T_Ks.algo == algo)  
+        
+        df_prod_cons = df_arr_M_T_Ks[mask_al_pr_ra_prod_cons].copy()
+        df_PROD_CONS, df_PROD, df_CONS, dico_players_PROD, dico_players_CONS \
+            = compute_CONS_PROD_NEW(df_prod_cons, algo, 
+                                    path_2_best_learning_steps)
+        
+        pxs_PROD, pxs_CONS = plot_evolution_PROD_CONS(
+                                df_PROD, df_CONS, 
+                                dico_players_PROD, dico_players_CONS,
+                                algo, rate, price,
+                                path_2_best_learning_steps)
+        pxs_PROD.legend.click_policy="hide"
+        pxs_CONS.legend.click_policy="hide"
+        
+        if (algo, price, rate) not in dico_pxs.keys():
+            dico_pxs[(algo, price, rate)] \
+                = [pxs_PROD, pxs_CONS]
+        else:
+            dico_pxs[(algo, price, rate)].extend([pxs_PROD, pxs_CONS])
+        
+    rows_CONS_PROD_ts = list()
+    for key, pxs_CONS_PROD in dico_pxs.items():
+        col_px_sts = column(pxs_CONS_PROD)
+        rows_CONS_PROD_ts.append(col_px_sts)
+    rows_CONS_PROD_ts=column(children=rows_CONS_PROD_ts, 
+                                sizing_mode='stretch_both')
+    return rows_CONS_PROD_ts
+    
+# _____________________________________________________________________________
+#
+#               Evolution of players' PROD, CONS over periods ---> fin
+# _____________________________________________________________________________
+
+# _____________________________________________________________________________
+#
 #                   affichage  dans tab  ---> debut
 # _____________________________________________________________________________
 def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
@@ -1291,12 +1479,25 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     rows_dists_ts = plot_distribution_by_states_4_periods(
                         df_arr_M_T_Ks, k_steps_args,
                         path_2_best_learning_steps)
+    print("DIstribution of players: TERMINEE")
     
     rows_RU_CONS_PROD_ts = plot_utilities_by_player_4_periods(
                             df_arr_M_T_Ks, 
                             df_b0_c0_pisg_pi0_T_K,
                             df_B_C_BB_CC_RU_M, 
                             path_2_best_learning_steps)
+    print("Utility of RU: TERMINEE")
+    rows_CONS_PROD_ts = plot_evolution_over_time_PROD_CONS(
+                                    df_arr_M_T_Ks, 
+                                    df_b0_c0_pisg_pi0_T_K,
+                                    path_2_best_learning_steps)
+    print("Evolution of CONS and PROD: TERMINEE")
+    # rows_PISG_b0c0_ts = plot_evolution_over_time_PISG_b0c0(
+    #                                 df_arr_M_T_Ks, 
+    #                                 df_b0_c0_pisg_pi0_T_K,
+    #                                 path_2_best_learning_steps)
+    # print("Evolution of PI_SG, b0, c0: TERMINEE")
+    
     
     # col_pxs_Pref_t = plot_Perf_t_players_all_states_for_scenarios(
     #                     df_ben_cst_M_T_K, t)
@@ -1314,6 +1515,11 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     tab_dists_ts = Panel(child=rows_dists_ts, title="distribution by state")
     tab_RU_CONS_PROD_ts = Panel(child=rows_RU_CONS_PROD_ts, 
                                 title="utility of players")
+    tab_CONS_PROD_ts = Panel(child=rows_CONS_PROD_ts, 
+                                title="evolution of PROD and CONS")
+    # tab_PISG_b0c0_ts = Panel(child=rows_PISG_b0c0_ts, 
+    #                             title="evolution of pi_sg,b0,c0")
+    
     # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
     # tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
     # tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
@@ -1327,7 +1533,9 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     
     tabs = Tabs(tabs= [ 
                         tab_dists_ts,
-                        tab_RU_CONS_PROD_ts
+                        tab_RU_CONS_PROD_ts,
+                        tab_CONS_PROD_ts
+                        #tab_PISG_b0c0_ts
                         #tab_Pref_t, 
                         #tab_Pref_algo_t,
                         #tab_S1S2,
