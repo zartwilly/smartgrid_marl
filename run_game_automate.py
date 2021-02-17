@@ -47,7 +47,7 @@ if __name__ == "__main__":
         
         dbg_234_players = False #True #False
         used_storage_det= False #True
-        manual_debug = True #False #True
+        manual_debug = False #True #False #True
         Visualisation = True #False, True
         
         # ---- initialization of variables for generating instances ----
@@ -57,8 +57,15 @@ if __name__ == "__main__":
         if not dbg_234_players:
             set1_m_players, set2_m_players = 10, 6
             # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
-            set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
-            set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.20 #0.42
+            # set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #scenario1, name = T2_Scenario1_set1_10_repSet1_0.75_set2_6_repSet2_0.42
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.20 #scenario0
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.75 #scenario2, name = T2_Scenario2_set1_10_repSet1_0.75_set2_6_repSet2_0.75
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.85 #scenario3, name = T2_Scenario3_set1_10_repSet1_0.75_set2_6_repSet2_0.85 
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.95 #scenario4, name = T2_Scenario4_set1_10_repSet1_0.75_set2_6_repSet2_0.95
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.30, 0.20 #scenario5, name = T2_Scenario5_set1_10_repSet1_0.30_set2_6_repSet2_0.20
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.5, 0.42  #scenario6, name = T2_Scenario6_set1_10_repSet1_0.50_set2_6_repSet2_0.42
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.95, 0.75  #scenario7, name = T2_Scenario7_set1_10_repSet1_0.95_set2_6_repSet2_0.75
+            set1_stateId0_m_players, set2_stateId0_m_players = 0.95, 0.95  #scenario8, name = T2_Scenario8_set1_10_repSet1_0.95_set2_6_repSet2_0.95
         else:
             # ---- DEBUG A EFFACER apres debug ----
             m_players, t_periods = 3, 2
