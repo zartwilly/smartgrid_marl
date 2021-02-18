@@ -14,6 +14,8 @@ import itertools as it
 import smartgrids_players as players
 import fonctions_auxiliaires as fct_aux
 
+from pathlib import Path
+
 ###############################################################################
 #                   definition  des fonctions
 #
@@ -727,7 +729,63 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
                                     fct_aux.AUTOMATE_INDEX_ATTRS[col]] = val
             
     return arr_pl_M_T_K_vars_modif, dico_gamma_players_t_k
+
+def balanced_player_game_4_mode_profil(arr_pl_M_T_K_vars_modif, 
+                                        mode_profile,
+                                        t, k, 
+                                        pi_0_plus_t, pi_0_minus_t, 
+                                        pi_hp_plus, pi_hp_minus,
+                                        manual_debug, dbg):
+    
+    dico_gamma_players_t_k = dict()
+    
+    m_players = arr_pl_M_T_K_vars_modif.shape[0]
+    for num_pl_i in range(0, m_players):
+        Pi = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Pi']]
+        Ci = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Ci']]
+        Si = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Si']] 
+        Si_max = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
+        gamma_i = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['gamma_i']]
+        prod_i, cons_i, r_i = 0, 0, 0
+        state_i = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['state_i']]
         
+        pl_i = None
+        pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                              prod_i, cons_i, r_i, state_i)
+        pl_i.set_R_i_old(Si_max-Si)                                              # update R_i_old
+        
+        mode_i = mode_profile[num_pl_i]
+        
+        # select mode for player num_pl_i
+        mode_i = mode_profile[num_pl_i]
+        pl_i.set_mode_i(mode_i)
+        
+        # compute cons, prod, r_i
+        pl_i.update_prod_cons_r_i()
+
+        
+        # is pl_i balanced?
+        boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
+        
+        # update variables in arr_pl_M_T_k
+        tup_cols_values = [("prod_i", pl_i.get_prod_i()), 
+                ("cons_i", pl_i.get_cons_i()), ("r_i", pl_i.get_r_i()),
+                ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
+                ("Si_old", pl_i.get_Si_old()), ("mode_i", pl_i.get_mode_i()), 
+                ("balanced_pl_i", boolean), ("formule", formule)]
+        for col, val in tup_cols_values:
+            arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
+                                    fct_aux.AUTOMATE_INDEX_ATTRS[col]] = val
+            
+    return arr_pl_M_T_K_vars_modif, dico_gamma_players_t_k
+
+
 def compute_gamma_4_players(arr_pl_M_T_K_vars_modif, t, k, 
                             pi_0_plus_t_k, pi_0_minus_t_k,
                             pi_hp_plus, pi_hp_minus,
@@ -864,6 +922,41 @@ def balanced_player_game_t(arr_pl_M_T_K_vars_modif, t, k,
             pi_0_plus_t, pi_0_minus_t, 
             pi_hp_plus, pi_hp_minus,
             random_mode, 
+            manual_debug, dbg)
+    
+    # compute pi_sg_{plus,minus}_t_k, pi_0_{plus,minus}_t_k
+    arr_pl_M_T_K_vars_modif, \
+    b0_t_k, c0_t_k, \
+    bens_t_k, csts_t_k \
+        = compute_prices_inside_SG(arr_pl_M_T_K_vars_modif, t, k,
+                                     pi_hp_plus, pi_hp_minus, 
+                                     pi_0_plus_t, pi_0_minus_t, 
+                                     manual_debug, dbg)
+        
+    return arr_pl_M_T_K_vars_modif, \
+            b0_t_k, c0_t_k, \
+            bens_t_k, csts_t_k, \
+            dico_gamma_players_t_k
+            
+def balanced_player_game_t_4_mode_profil_prices_SG(
+                        arr_pl_M_T_K_vars_modif, 
+                        mode_profile,
+                        t, k, 
+                        pi_hp_plus, pi_hp_minus, 
+                        pi_0_plus_t, pi_0_minus_t,
+                        m_players, t_periods, 
+                        random_mode,
+                        manual_debug, dbg=False):
+    """
+    """
+    # find mode, prod, cons, r_i
+    arr_pl_M_T_K_vars_modif, dico_gamma_players_t_k \
+        = balanced_player_game_4_mode_profil(
+            arr_pl_M_T_K_vars_modif.copy(), 
+            mode_profile,
+            t, k, 
+            pi_0_plus_t, pi_0_minus_t, 
+            pi_hp_plus, pi_hp_minus,
             manual_debug, dbg)
     
     # compute pi_sg_{plus,minus}_t_k, pi_0_{plus,minus}_t_k
@@ -1580,6 +1673,12 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
+    checkout_nash_4_profils_by_periods(
+            arr_pl_M_T_K_vars_modif.copy(),
+            pi_hp_plus, pi_hp_minus, 
+            pi_0_minus_T, pi_0_plus_T, t_periods, 
+            dico_k_stop_learnings, 
+            manual_debug, algo_name, path_to_save)
     
     
     return arr_pl_M_T_K_vars_modif
@@ -1902,7 +2001,121 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
     return arr_pl_M_T_K_vars_modif
 
 # ______________       main function of LRI   ---> fin        _________________
+def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
+                                       pi_hp_plus, pi_hp_minus, 
+                                       pi_0_minus_T, pi_0_plus_T, 
+                                       t_periods, dico_k_stop_learnings,
+                                       manual_debug, algo_name, path_to_save):
+    """
+    verify if the profil at time t is a Nash balanced.
+    """
+    m_players = arr_pl_M_T_K_vars_modif.shape[0]
+    
+    # create a result dataframe of checking players' stability and nash equilibrium
+    cols = [["players", "states", "nash_modes"]]\
+            +[['Vis_t{}'.format(str(t)), 'Vis_bar_t{}'.format(str(t)), 
+               'res_t{}'.format(str(t))] 
+              for t in range(0, t_periods)]
+    cols = [col for subcol in cols for col in subcol]
+    
+    id_players = list(range(0, m_players))
+    df_res = pd.DataFrame(index=id_players, columns=cols)
+    
 
+    for t in range(0, t_periods):
+        pi_0_plus_t, pi_0_minus_t = pi_0_plus_T[t], pi_0_minus_T[t]
+        k_stop = dico_k_stop_learnings[t]["k_stop"]
+        possibles_modes = fct_aux.possibles_modes_players_automate(
+                                arr_pl_M_T_K_vars_modif.copy(), t=t, k=k_stop)
+        
+        dico_profs_Vis_Perf_t = dict()
+        cpt_profs = 0
+        
+        mode_profiles = it.product(*possibles_modes)
+        for mode_profile in mode_profiles:
+            # dico_gamme_t = dict()
+            # arr_pl_M_T_vars_mode_prof, \
+            # b0_t, c0_t, \
+            # bens_t, csts_t, \
+            # pi_sg_plus_t, pi_sg_minus_t, \
+            # dico_gamme_t \
+            #     = autoBfGameModel.balanced_player_game_4_mode_profil_prices_SG(
+            #         arr_pl_M_T_K_vars_modif.copy(),
+            #         mode_profile, t,
+            #         pi_hp_plus, pi_hp_minus,
+            #         pi_0_plus_t, pi_0_minus_t,
+            #         manual_debug, dbg=False)
+            dico_gamma_players_t_k = dict()
+            random_mode = False
+            arr_pl_M_T_K_vars_modif_mode_prof, \
+            b0_t_k, c0_t_k, \
+            bens_t_k, csts_t_k, \
+            dico_gamma_players_t_k \
+                = balanced_player_game_t_4_mode_profil_prices_SG(
+                        arr_pl_M_T_K_vars_modif.copy(), 
+                        mode_profile,
+                        t, k_stop, 
+                        pi_hp_plus, pi_hp_minus, 
+                        pi_0_plus_t, pi_0_minus_t,
+                        m_players, t_periods, 
+                        random_mode,
+                        manual_debug, dbg=False)
+                
+            bens_csts_t_k = bens_t_k - csts_t_k
+            Perf_t = np.sum(bens_csts_t_k, axis=0)
+            dico_Vis_Pref_t = dict()
+            for num_pl_i in range(bens_csts_t_k.shape[0]):                      # bens_csts_t_k.shape[0] = m_players
+                dico_Vis_Pref_t[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
+                    = bens_csts_t_k[num_pl_i]
+            dico_Vis_Pref_t["Perf_t"] = Perf_t
+            
+            dico_profs_Vis_Perf_t[mode_profile] = dico_Vis_Pref_t
+            cpt_profs += 1
+            
+            if cpt_profs%5000 == 0:
+                print("cpt_prof={}".format(cpt_profs))
+        
+        
+        # stabilité de chaque joueur
+        modes_profil = list(arr_pl_M_T_K_vars_modif[
+                                :, t, k_stop, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] )
+        for num_pl_i in range(0, m_players):
+            state_i = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k_stop, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] 
+            mode_i = modes_profil[num_pl_i]
+            mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
+            
+            opposite_modes_profil = modes_profil.copy()
+            opposite_modes_profil[num_pl_i] = mode_i_bar
+            opposite_modes_profil = tuple(opposite_modes_profil)
+            
+            df_res.loc[num_pl_i, "players"] = "player_"+str(num_pl_i)
+            df_res.loc[num_pl_i, "nash_modes"] = mode_i
+            df_res.loc[num_pl_i, "states"] = state_i
+            
+            Vi = None
+            Vi = dico_profs_Vis_Perf_t[tuple(modes_profil)]\
+                                      [fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)]
+            Vi_bar = None
+            Vi_bar = dico_profs_Vis_Perf_t[opposite_modes_profil]\
+                                      [fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)]
+            df_res.loc[num_pl_i, 'Vis_t{}'.format(t)] = Vi
+            df_res.loc[num_pl_i, 'Vis_bar_t{}'.format(t)] = Vi_bar
+            if Vi >= Vi_bar:
+                df_res.loc[num_pl_i, 'res_t{}'.format(t)] = "STABLE"
+            else:
+                df_res.loc[num_pl_i, 'res_t{}'.format(t)] = "INSTABLE"
+                
+    # save to excel file
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    df_res.to_excel(os.path.join(
+                *[path_to_save,
+                  "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
+                index=False )
+        
+    
 def turn_dico_stats_res_into_df_LRI(
                             arr_pl_M_T_K_vars_modif, 
                             BENs_M_T_K, CSTs_M_T_K,
@@ -2034,10 +2247,14 @@ def test_lri_balanced_player_game_all_pijk_upper_08():
     
     manual_debug=True
     
+    # t_periods = 2
+    # set1_m_players, set2_m_players = 20, 12
+    # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    # #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
     t_periods = 2
-    set1_m_players, set2_m_players = 20, 12
-    set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
-    #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    set1_m_players, set2_m_players = 10, 6
+    set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #scenario1, name = T2_Scenario1_set1_10_repSet1_0.75_set2_6_repSet2_0.42
     set1_states, set2_states = None, None
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
@@ -2070,8 +2287,8 @@ def test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_ste
     k_steps = 250 # 5,250
     p_i_j_ks = [0.5, 0.5, 0.5]
     
-    pi_hp_plus = 0.2*pow(10,-3)
-    pi_hp_minus = 0.33
+    pi_hp_plus = 10 #0.2*pow(10,-3)
+    pi_hp_minus = 20 #0.33
     learning_rate = 0.1
     utility_function_version=1
     
