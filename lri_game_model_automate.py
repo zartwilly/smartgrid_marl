@@ -2254,14 +2254,14 @@ def test_lri_balanced_player_game_all_pijk_upper_08():
     learning_rate = 0.1
     utility_function_version=1
     
-    manual_debug=True
+    manual_debug= False #True
     
     # t_periods = 2
     # set1_m_players, set2_m_players = 20, 12
     # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     # #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
     
-    t_periods = 2
+    t_periods = 3
     set1_m_players, set2_m_players = 10, 6
     set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #scenario1, name = T2_Scenario1_set1_10_repSet1_0.75_set2_6_repSet2_0.42
     set1_states, set2_states = None, None
