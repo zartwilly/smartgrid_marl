@@ -450,7 +450,8 @@ def compute_prices_br(arr_pl_M_T_K_vars, t, k,
 def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
     diff_energy_cons_t = 0
     diff_energy_prod_t = 0
-    for k in range(0, t+1):
+    T = t+1
+    for k in range(0, T):
         energ_k_prod = \
             fct_positive(
             sum_list1=sum(arr_pl_M_T[:, k, INDEX_ATTRS["prod_i"]]),
@@ -477,15 +478,15 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
                 t,k,unique, counts, sum_prod_k, sum_cons_k, diff_sum_prod_cons_k)) \
             if dbg==True else None
     
-    sum_cons = sum(sum(arr_pl_M_T[:, :t+1, INDEX_ATTRS["cons_i"]].astype(np.float64)))
-    sum_prod = sum(sum(arr_pl_M_T[:, :t+1, INDEX_ATTRS["prod_i"]].astype(np.float64)))
+    sum_cons = sum(sum(arr_pl_M_T[:, :T, INDEX_ATTRS["cons_i"]].astype(np.float64)))
+    sum_prod = sum(sum(arr_pl_M_T[:, :T, INDEX_ATTRS["prod_i"]].astype(np.float64)))
     
     print("NAN: cons={}, prod={}".format(
-            np.isnan(arr_pl_M_T[:, :t+1, INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
-            np.isnan(arr_pl_M_T[:, :t+1, INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
+            np.isnan(arr_pl_M_T[:, :T, INDEX_ATTRS["cons_i"]].astype(np.float64)).any(),
+            np.isnan(arr_pl_M_T[:, :T, INDEX_ATTRS["prod_i"]].astype(np.float64)).any())
         ) if dbg else None
-    arr_cons = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, INDEX_ATTRS["cons_i"]].astype(np.float64)))
-    arr_prod = np.argwhere(np.isnan(arr_pl_M_T[:, :t+1, INDEX_ATTRS["prod_i"]].astype(np.float64)))
+    arr_cons = np.argwhere(np.isnan(arr_pl_M_T[:, :T, INDEX_ATTRS["cons_i"]].astype(np.float64)))
+    arr_prod = np.argwhere(np.isnan(arr_pl_M_T[:, :T, INDEX_ATTRS["prod_i"]].astype(np.float64)))
     
     if arr_cons.size != 0:
         for arr in arr_cons:
@@ -495,10 +496,13 @@ def determine_new_pricing_sg(arr_pl_M_T, pi_hp_plus, pi_hp_minus, t, dbg=False):
                 arr_pl_M_T[arr[0], arr[1], INDEX_ATTRS["Ci"]],
                 arr_pl_M_T[arr[0], arr[1], INDEX_ATTRS["Si"]]))
     
+    # print("sum_cons={}, sum_prod={}".format(sum_cons, sum_prod))
+    # print("diff_energy_cons_t={}, diff_energy_prod_t={}".format(diff_energy_cons_t, diff_energy_prod_t))
     new_pi_sg_minus_t = round(pi_hp_minus*diff_energy_cons_t / sum_cons, N_DECIMALS)  \
                     if sum_cons != 0 else np.nan
     new_pi_sg_plus_t = round(pi_hp_plus*diff_energy_prod_t / sum_prod, N_DECIMALS) \
                         if sum_prod != 0 else np.nan
+    # print("new_pi_sg_minus_t={}, new_pi_sg_plus_t={}".format(new_pi_sg_minus_t, new_pi_sg_plus_t))                    
                             
     return new_pi_sg_plus_t, new_pi_sg_minus_t
 
