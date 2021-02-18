@@ -631,7 +631,6 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
     dico_gamma_players_t_k = dict()
     
     m_players = arr_pl_M_T_K_vars_modif.shape[0]
-    t_periods = arr_pl_M_T_K_vars_modif.shape[1]
     for num_pl_i in range(0, m_players):
         Pi = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
                                    fct_aux.AUTOMATE_INDEX_ATTRS['Pi']]
@@ -1050,7 +1049,7 @@ def lri_balanced_player_game(arr_pl_M_T_vars_init,
                              manual_debug=False, dbg=False):
     
     m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
+    t_periods = arr_pl_M_T_vars_init.shape[1] - 1
     
     # _______ variables' initialization --> debut ________________
     
@@ -1324,7 +1323,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                              manual_debug=False, dbg=False):
     
     m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
+    t_periods = arr_pl_M_T_vars_init.shape[1] - 1
     
     # _______ variables' initialization --> debut ________________
     
@@ -1643,8 +1642,8 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
     ## BB_is, CC_is, RU_is of shape (M_PLAYERS, )
     CONS_is_M = np.sum(cons_M_T, axis=1)
     PROD_is_M = np.sum(prod_M_T, axis=1)
-    BB_is_M = pi_sg_plus_T[-1] * PROD_is_M 
-    CC_is_M = pi_sg_minus_T[-1] * CONS_is_M 
+    BB_is_M = pi_sg_plus_T[t_periods-1] * PROD_is_M 
+    CC_is_M = pi_sg_minus_T[t_periods-1] * CONS_is_M 
     RU_is_M = BB_is_M - CC_is_M
     
     pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
@@ -1662,6 +1661,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             dico_best_steps=dico_k_stop_learnings)
     turn_dico_stats_res_into_df_LRI(
             arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars_modif, 
+            t_periods = t_periods,
             BENs_M_T_K = BENs_M_T_K, 
             CSTs_M_T_K = CSTs_M_T_K,
             b0_s_T_K = b0_s_T_K,
@@ -1670,6 +1670,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             pi_sg_plus_T = pi_sg_plus_T, 
             pi_0_minus_T = pi_0_minus_T, 
             pi_0_plus_T = pi_0_plus_T,
+            dico_k_stop_learnings = dico_k_stop_learnings,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
@@ -1700,7 +1701,7 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
     """
     
     m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
+    t_periods = arr_pl_M_T_vars_init.shape[1] - 1
     
     # _______ variables' initialization --> debut ________________
     
@@ -1996,6 +1997,12 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
+    checkout_nash_4_profils_by_periods(
+            arr_pl_M_T_K_vars_modif.copy(),
+            pi_hp_plus, pi_hp_minus, 
+            pi_0_minus_T, pi_0_plus_T, t_periods, 
+            dico_best_steps, 
+            manual_debug, algo_name, path_to_save)
     
     
     return arr_pl_M_T_K_vars_modif
@@ -2023,6 +2030,7 @@ def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
     
 
     for t in range(0, t_periods):
+        print("**** CHECKOUT STABILITY PLAYERS t={} ****".format(t))
         pi_0_plus_t, pi_0_minus_t = pi_0_plus_T[t], pi_0_minus_T[t]
         k_stop = dico_k_stop_learnings[t]["k_stop"]
         possibles_modes = fct_aux.possibles_modes_players_automate(
@@ -2117,11 +2125,12 @@ def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
         
     
 def turn_dico_stats_res_into_df_LRI(
-                            arr_pl_M_T_K_vars_modif, 
+                            arr_pl_M_T_K_vars_modif, t_periods,
                             BENs_M_T_K, CSTs_M_T_K,
                             b0_s_T_K, c0_s_T_K,
                             pi_sg_minus_T, pi_sg_plus_T, 
                             pi_0_minus_T, pi_0_plus_T,
+                            dico_k_stop_learnings, 
                             path_to_save, 
                             manual_debug=True, 
                             algo_name="LRI1"):
@@ -2140,13 +2149,13 @@ def turn_dico_stats_res_into_df_LRI(
 
     """
     m_players = arr_pl_M_T_K_vars_modif.shape[0]
-    t_periods = arr_pl_M_T_K_vars_modif.shape[1]
-    k_steps = arr_pl_M_T_K_vars_modif.shape[2]
+    #k_steps = arr_pl_M_T_K_vars_modif.shape[2]
     dico_players = dict()
     for t in range(0, t_periods):
         ben_csts_MKs_t = BENs_M_T_K[:,t,:] - CSTs_M_T_K[:,t,:]
         perf_t_K_t = np.sum(ben_csts_MKs_t, axis=0)
-        for k in range(0, k_steps):
+        k_stop = dico_k_stop_learnings[t]["k_stop"]
+        for k in range(0, k_stop):
             dico_pls = dict()
             b0_s_t_k = b0_s_T_K[t,k]
             c0_s_t_k = c0_s_T_K[t,k]
