@@ -95,6 +95,37 @@ class NumpyEncoder(json.JSONEncoder):
 #           definitions of functions
 #------------------------------------------------------------------------------
 
+# _________        determine opposite mode_i: debut       _____________________
+def find_out_opposite_mode(state_i, mode_i):
+    """
+    look for the opposite mode of the player.
+    for example, 
+    if state_i = state1, the possible modes are CONS+ and CONS-
+    the opposite mode of CONS+ is CONS- and this of CONS- is CONS+
+    """
+    mode_i_bar = None
+    if state_i == STATES[0] \
+        and mode_i == STATE1_STRATS[0]:                                        # state1, CONS+
+        mode_i_bar = STATE1_STRATS[1]                                          # CONS-
+    elif state_i == STATES[0] \
+        and mode_i == STATE1_STRATS[1]:                                        # state1, CONS-
+        mode_i_bar = STATE1_STRATS[0]                                          # CONS+
+    elif state_i == STATES[1] \
+        and mode_i == STATE2_STRATS[0]:                                        # state2, DIS
+        mode_i_bar = STATE2_STRATS[1]                                          # CONS-
+    elif state_i == STATES[1] \
+        and mode_i == STATE2_STRATS[1]:                                        # state2, CONS-
+        mode_i_bar = STATE2_STRATS[0]                                          # DIS
+    elif state_i == STATES[2] \
+        and mode_i == STATE3_STRATS[0]:                                        # state3, DIS
+        mode_i_bar = STATE3_STRATS[1]                                          # PROD
+    elif state_i == STATES[2] \
+        and mode_i == STATE3_STRATS[1]:                                        # state3, PROD
+        mode_i_bar = STATE3_STRATS[0]                                          # DIS
+
+    return mode_i_bar
+# _________        determine opposite mode_i: fin         _____________________
+
 def fct_positive(sum_list1, sum_list2):
     """
     sum_list1 : sum of items in the list1
