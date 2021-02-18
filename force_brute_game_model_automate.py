@@ -46,7 +46,6 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif,
     arr_pl_M_T_vars_mode_prof = arr_pl_M_T_vars_modif.copy()
     
     m_players = arr_pl_M_T_vars_modif.shape[0]
-    t_periods = arr_pl_M_T_vars_modif.shape[1]
     for num_pl_i in range(0, m_players):
         Pi = arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS['Pi']]
@@ -184,7 +183,7 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
           .format(algo_name, pi_hp_plus, pi_hp_minus))
         
     m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
+    t_periods = arr_pl_M_T_vars_init.shape[1] - 1
     
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
@@ -427,7 +426,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
           .format(pi_hp_plus, pi_hp_minus))
         
     m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
+    t_periods = arr_pl_M_T_vars_init.shape[1] - 1
     
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
@@ -819,7 +818,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
             PROD_is_M_T_algo = np.sum(arr_pl_M_T_vars_modif_algo[:,:, 
                                                  fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
                                  axis=1)
-            BB_is_M_algo = pi_sg_plus_T_algo[-t] * PROD_is_M_T_algo #np.sum(PROD_is)
+            BB_is_M_algo = pi_sg_plus_T_algo[t] * PROD_is_M_T_algo #np.sum(PROD_is)
             for num_pl, bb_i in enumerate(BB_is_M_algo):
                 if bb_i != 0:
                     print("player {}, BB_i={}".format(num_pl, bb_i))
@@ -1005,7 +1004,7 @@ def turn_dico_stats_res_into_df_BF(dico_stats_res_algo, path_to_save, t_periods=
 
     """
     df = None
-    for t in range(0,t_periods):
+    for t in range(0, t_periods):
         list_dico_best_bf = dico_stats_res_algo[t]["list_dico_best_mode_profs"]
         dico_best_bf = dict()
         for cpt, dico_best_bf_items in list_dico_best_bf:
