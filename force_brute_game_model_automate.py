@@ -804,25 +804,27 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
     
             # __________        compute prices variables         ____________________
             # B_is, C_is of shape (M_PLAYERS, )
-            prod_i_M_T_algo = arr_pl_M_T_vars_modif_algo[:,:, 
-                                               fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
-            cons_i_M_T_algo = arr_pl_M_T_vars_modif_algo[:,:, 
-                                               fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+            prod_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
+                                    :,:t_periods, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+            cons_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
+                                    :,:t_periods, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
             B_is_M_algo = np.sum(b0_ts_T_algo * prod_i_M_T_algo, axis=1)
             C_is_M_algo = np.sum(c0_ts_T_algo * cons_i_M_T_algo, axis=1)
             
             # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
-            CONS_is_M_T_algo = np.sum(arr_pl_M_T_vars_modif_algo[:,:, 
-                                                 fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
-                                 axis=1)
-            PROD_is_M_T_algo = np.sum(arr_pl_M_T_vars_modif_algo[:,:, 
-                                                 fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
-                                 axis=1)
-            BB_is_M_algo = pi_sg_plus_T_algo[t] * PROD_is_M_T_algo #np.sum(PROD_is)
+            CONS_is_M_algo = np.sum(cons_i_M_T_algo, axis=1)
+            PROD_is_M_algo = np.sum(prod_i_M_T_algo, axis=1)
+            
+            print("{}, t={}, pi_sg_plus_T={}, pi_sg_minus_T={} \n".format(
+                    algo_name, t, pi_sg_plus_T_algo[t], pi_sg_minus_T_algo[t]))
+            
+            BB_is_M_algo = pi_sg_plus_T_algo[t] * PROD_is_M_algo #np.sum(PROD_is)
             for num_pl, bb_i in enumerate(BB_is_M_algo):
                 if bb_i != 0:
                     print("player {}, BB_i={}".format(num_pl, bb_i))
-            CC_is_M_algo = pi_sg_minus_T_algo[t] * CONS_is_M_T_algo #np.sum(CONS_is)
+            CC_is_M_algo = pi_sg_minus_T_algo[t] * CONS_is_M_algo #np.sum(CONS_is)
             RU_is_M_algo = BB_is_M_algo - CC_is_M_algo
             
             pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
@@ -1080,7 +1082,7 @@ def test_brute_force_game_USE_DICT_MODE_PROFIL(criteria):
     debug = False
     criteria_bf = "Perf_t"
     
-    t_periods = 2
+    t_periods = 3
     set1_m_players, set2_m_players = 20, 12
     set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42

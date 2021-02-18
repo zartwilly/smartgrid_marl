@@ -389,25 +389,23 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     
     # __________        compute prices variables         ____________________
     # B_is, C_is of shape (M_PLAYERS, )
-    prod_i_M_T = arr_pl_M_T_vars_modif[:,:, 
+    prod_i_M_T = arr_pl_M_T_vars_modif[:,:t_periods, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
-    cons_i_M_T = arr_pl_M_T_vars_modif[:,:, 
+    cons_i_M_T = arr_pl_M_T_vars_modif[:,:t_periods, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+    
     B_is_M = np.sum(b0_ts_T * prod_i_M_T, axis=1)
     C_is_M = np.sum(c0_ts_T * cons_i_M_T, axis=1)
     
     # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
-    CONS_is_M_T = np.sum(arr_pl_M_T_vars_modif[:,:, 
-                                         fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
-                         axis=1)
-    PROD_is_M_T = np.sum(arr_pl_M_T_vars_modif[:,:, 
-                                         fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
-                         axis=1)
-    BB_is_M = pi_sg_plus_T[t_periods-1] * PROD_is_M_T #np.sum(PROD_is)
+    CONS_is_M = np.sum(cons_i_M_T, axis=1)
+    PROD_is_M = np.sum(prod_i_M_T, axis=1)
+    
+    BB_is_M = pi_sg_plus_T[t_periods-1] * PROD_is_M #np.sum(PROD_is)
     for num_pl, bb_i in enumerate(BB_is_M):
         if bb_i != 0:
             print("player {}, BB_i={}".format(num_pl, bb_i))
-    CC_is_M = pi_sg_minus_T[t_periods-1] * CONS_is_M_T #np.sum(CONS_is)
+    CC_is_M = pi_sg_minus_T[t_periods-1] * CONS_is_M #np.sum(CONS_is)
     RU_is_M = BB_is_M - CC_is_M
     
     pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
@@ -450,8 +448,8 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
 #------------------------------------------------------------------------------
 def test_DETERMINIST_balanced_player_game():
     
-    pi_hp_plus = 0.2*pow(10,-3)
-    pi_hp_minus = 0.33
+    pi_hp_plus = 10 #0.2*pow(10,-3)
+    pi_hp_minus = 20 #0.33
     random_determinist = False #True #False
     used_storage = False #True #False
     
@@ -461,6 +459,12 @@ def test_DETERMINIST_balanced_player_game():
     set1_m_players, set2_m_players = 20, 12
     set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
+    t_periods = 3
+    set1_m_players, set2_m_players = 10, 6
+    # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42
+    
     set1_states, set2_states = None, None
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
