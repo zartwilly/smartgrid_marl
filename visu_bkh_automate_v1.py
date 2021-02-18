@@ -1423,7 +1423,7 @@ def plot_evolution_over_time_PROD_CONS(df_arr_M_T_Ks,
     
     rates = df_arr_M_T_Ks.rate.unique().tolist(); rate = rates[rates!=0]
     prices = df_arr_M_T_Ks.prices.unique().tolist()
-    algos = df_B_C_BB_CC_RU_M.algo.unique().tolist()
+    algos = df_arr_M_T_Ks.algo.unique().tolist()
     
     dico_pxs = dict()
     for algo, price in it.product(algos, prices):
@@ -1962,6 +1962,7 @@ def plot_max_proba_mode(df_arr_M_T_Ks, t, path_2_best_learning_steps,
 #                   affichage  dans tab  ---> debut
 # _____________________________________________________________________________
 def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+                        df_B_C_BB_CC_RU_M,
                         df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir,
                         df_LRI_12, df_k_stop,
@@ -2109,6 +2110,7 @@ if __name__ == "__main__":
     ## -- plot figures
     name_dir = os.path.join("tests", name_simu)
     group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+                        df_B_C_BB_CC_RU_M,
                         df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir, 
                         df_LRI_12, df_k_stop,
