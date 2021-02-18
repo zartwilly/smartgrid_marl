@@ -30,34 +30,34 @@ RACINE_PLAYER = "player"
 #                       definition of functions
 #
 #------------------------------------------------------------------------------
-def find_out_opposite_mode(state_i, mode_i):
-    """
-    look for the opposite mode of the player.
-    for example, 
-    if state_i = state1, the possible modes are CONS+ and CONS-
-    the opposite mode of CONS+ is CONS- and this of CONS- is CONS+
-    """
-    mode_i_bar = None
-    if state_i == fct_aux.STATES[0] \
-        and mode_i == fct_aux.STATE1_STRATS[0]:                         # state1, CONS+
-        mode_i_bar = fct_aux.STATE1_STRATS[1]                           # CONS-
-    elif state_i == fct_aux.STATES[0] \
-        and mode_i == fct_aux.STATE1_STRATS[1]:                         # state1, CONS-
-        mode_i_bar = fct_aux.STATE1_STRATS[0]                           # CONS+
-    elif state_i == fct_aux.STATES[1] \
-        and mode_i == fct_aux.STATE2_STRATS[0]:                         # state2, DIS
-        mode_i_bar = fct_aux.STATE2_STRATS[1]                           # CONS-
-    elif state_i == fct_aux.STATES[1] \
-        and mode_i == fct_aux.STATE2_STRATS[1]:                         # state2, CONS-
-        mode_i_bar = fct_aux.STATE2_STRATS[0]                           # DIS
-    elif state_i == fct_aux.STATES[2] \
-        and mode_i == fct_aux.STATE3_STRATS[0]:                         # state3, DIS
-        mode_i_bar = fct_aux.STATE3_STRATS[1]                           # PROD
-    elif state_i == fct_aux.STATES[2] \
-        and mode_i == fct_aux.STATE3_STRATS[1]:                         # state3, PROD
-        mode_i_bar = fct_aux.STATE3_STRATS[0]                           # DIS
+# def find_out_opposite_mode(state_i, mode_i):
+#     """
+#     look for the opposite mode of the player.
+#     for example, 
+#     if state_i = state1, the possible modes are CONS+ and CONS-
+#     the opposite mode of CONS+ is CONS- and this of CONS- is CONS+
+#     """
+#     mode_i_bar = None
+#     if state_i == fct_aux.STATES[0] \
+#         and mode_i == fct_aux.STATE1_STRATS[0]:                         # state1, CONS+
+#         mode_i_bar = fct_aux.STATE1_STRATS[1]                           # CONS-
+#     elif state_i == fct_aux.STATES[0] \
+#         and mode_i == fct_aux.STATE1_STRATS[1]:                         # state1, CONS-
+#         mode_i_bar = fct_aux.STATE1_STRATS[0]                           # CONS+
+#     elif state_i == fct_aux.STATES[1] \
+#         and mode_i == fct_aux.STATE2_STRATS[0]:                         # state2, DIS
+#         mode_i_bar = fct_aux.STATE2_STRATS[1]                           # CONS-
+#     elif state_i == fct_aux.STATES[1] \
+#         and mode_i == fct_aux.STATE2_STRATS[1]:                         # state2, CONS-
+#         mode_i_bar = fct_aux.STATE2_STRATS[0]                           # DIS
+#     elif state_i == fct_aux.STATES[2] \
+#         and mode_i == fct_aux.STATE3_STRATS[0]:                         # state3, DIS
+#         mode_i_bar = fct_aux.STATE3_STRATS[1]                           # PROD
+#     elif state_i == fct_aux.STATES[2] \
+#         and mode_i == fct_aux.STATE3_STRATS[1]:                         # state3, PROD
+#         mode_i_bar = fct_aux.STATE3_STRATS[0]                           # DIS
 
-    return mode_i_bar
+#     return mode_i_bar
 
 def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, 
                                  arr_pl_M_T_vars_modif, t):
@@ -93,7 +93,7 @@ def detect_nash_balancing_profil(dico_profs_Vis_Perf_t,
             r_i = arr_pl_M_T_vars_modif[num_pl_i, t, 
                                     fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
             mode_i_bar = None
-            mode_i_bar = find_out_opposite_mode(state_i, mode_i)
+            mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
             new_key_modes_prof = list(key_modes_prof)
             new_key_modes_prof[num_pl_i] = mode_i_bar
             new_key_modes_prof = tuple(new_key_modes_prof)
@@ -1732,7 +1732,7 @@ def checkout_nash_equilibrium(arr_pl_M_T_vars_modif,
             df_res.loc[num_pl_i, "nash_modes"] = mode_i
             df_res.loc[num_pl_i, "states"] = state_i
             
-            mode_i_bar = find_out_opposite_mode(state_i, mode_i)
+            mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
             opposite_modes_profil = nash_modes_profil.copy()
             opposite_modes_profil[num_pl_i] = mode_i_bar
             opposite_modes_profil= tuple(opposite_modes_profil)
@@ -1863,7 +1863,7 @@ def checkout_nash_equilibrium_OLD(arr_pl_M_T_vars_modif, path_to_variable,
             df_res.loc[num_pl_i, "nash_modes"] = mode_i
             df_res.loc[num_pl_i, "states"] = state_i
             
-            mode_i_bar = find_out_opposite_mode(state_i, mode_i)
+            mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
             opposite_modes_profil = nash_modes_profil.copy()
             opposite_modes_profil[num_pl_i] = mode_i_bar
             opposite_modes_profil= tuple(opposite_modes_profil)
