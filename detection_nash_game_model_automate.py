@@ -435,7 +435,6 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL_OLD(
         
         
     # ____      game beginning for all t_period ---> debut      _____
-    dico_stats_res = dict()
     
     arr_pl_M_T_vars_modif_BADN = None
     arr_pl_M_T_vars_modif_BESTN = None
@@ -983,7 +982,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
           .format(pi_hp_plus, pi_hp_minus))
         
     m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
+    t_periods = arr_pl_M_T_vars_init.shape[1] - 1
     
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
@@ -1025,7 +1024,6 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         
         
     # ____      game beginning for all t_period ---> debut      _____
-    dico_stats_res = dict()
     
     arr_pl_M_T_vars_modif_BADN = None
     arr_pl_M_T_vars_modif_BESTN = None
@@ -1365,13 +1363,13 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                 PROD_is_M_algo = np.sum(arr_pl_M_T_vars_nash_mode_prof_algo[:,:, 
                                             fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
                                      axis=1)
-                BB_is_M_algo = pi_sg_plus_T_algo[-t] * PROD_is_M_algo #np.sum(PROD_is)
+                BB_is_M_algo = pi_sg_plus_T_algo[t] * PROD_is_M_algo #np.sum(PROD_is)
                 for num_pl, bb_i in enumerate(BB_is_M_algo):
                     if bb_i != 0:
                         print("player {}, BB_i={}".format(num_pl, bb_i))
                     if np.isnan(bb_i):
                         print("player {},PROD_is={}, pi_sg={}".format(num_pl, 
-                              PROD_is_M_algo[num_pl], pi_sg_plus_T_algo[-t]))
+                              PROD_is_M_algo[num_pl], pi_sg_plus_T_algo[t]))
                 CC_is_M_algo = pi_sg_minus_T_algo[t] * CONS_is_M_algo #np.sum(CONS_is)
                 RU_is_M_algo = BB_is_M_algo - CC_is_M_algo
                 
@@ -1623,7 +1621,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         algo_name = fct_aux.ALGO_NAMES_NASH[0]                          # BEST-NASH
         checkout_nash_equilibrium(arr_pl_M_T_vars_modif_BESTN.copy(), 
                                   pi_hp_plus, pi_hp_minus, 
-                                  pi_0_plus_T, pi_0_minus_T,
+                                  pi_0_plus_T, pi_0_minus_T, t_periods,
                                   manual_debug,
                                   algo_name)
         
@@ -1631,7 +1629,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         algo_name = fct_aux.ALGO_NAMES_NASH[1]                          # BAD-NASH
         checkout_nash_equilibrium(arr_pl_M_T_vars_modif_BADN.copy(), 
                                   pi_hp_plus, pi_hp_minus, 
-                                  pi_0_plus_T, pi_0_minus_T,
+                                  pi_0_plus_T, pi_0_minus_T, t_periods,
                                   manual_debug,
                                   algo_name)
         
@@ -1639,7 +1637,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         algo_name = fct_aux.ALGO_NAMES_NASH[2]                          # MIDDLE-NASH
         checkout_nash_equilibrium(arr_pl_M_T_vars_modif_MIDN.copy(), 
                                   pi_hp_plus, pi_hp_minus, 
-                                  pi_0_plus_T, pi_0_minus_T,
+                                  pi_0_plus_T, pi_0_minus_T, t_periods,
                                   manual_debug,
                                   algo_name)
         
@@ -1651,7 +1649,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
 
 def checkout_nash_equilibrium(arr_pl_M_T_vars_modif, 
                               pi_hp_plus, pi_hp_minus, 
-                              pi_0_plus_T, pi_0_minus_T,
+                              pi_0_plus_T, pi_0_minus_T, t_periods,
                               manual_debug,
                               algo_name="BEST-NASH"):
     """
@@ -1664,7 +1662,7 @@ def checkout_nash_equilibrium(arr_pl_M_T_vars_modif,
     """
 
     m_players = arr_pl_M_T_vars_modif.shape[0]
-    t_periods = arr_pl_M_T_vars_modif.shape[1]
+    # t_periods = arr_pl_M_T_vars_modif.shape[1]
 
     print("**** CHECKOUT STABILITY PLAYERS ****")
     print("SHAPE: arr_pl_M_T_vars={}, pi_0_plus_T={}, pi_0_minus_T={},".format(
@@ -1933,8 +1931,8 @@ def test_nash_balanced_player_game_perf_t(algo_name="BEST-NASH"):
     
     fct_aux.N_DECIMALS = 6
     
-    pi_hp_plus = 0.2*pow(10,-3) #[5, 15]
-    pi_hp_minus = 0.33 #[15, 5]
+    pi_hp_plus = 10 #0.2*pow(10,-3) #[5, 15]
+    pi_hp_minus = 20 #0.33 #[15, 5]
     
     manual_debug=True
     debug = False
@@ -1981,8 +1979,8 @@ def test_nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL():
     
     fct_aux.N_DECIMALS = 6
     
-    pi_hp_plus = 0.2*pow(10,-3) #[5, 15]
-    pi_hp_minus = 0.33 #[15, 5]
+    pi_hp_plus = 10 #0.2*pow(10,-3) #[5, 15]
+    pi_hp_minus = 20 #0.33 #[15, 5]
     
     manual_debug= False #True
     debug = False
