@@ -1703,6 +1703,262 @@ def plot_Perf_t_players_all_algos(df_ben_cst_M_T_K, t,
 #           affichage Perf_t pour chaque state  ---> fin
 # _____________________________________________________________________________
 
+# _____________________________________________________________________________ 
+#
+#         moyenne de la grande proba dune mode pour chaque state  ---> debut
+# _____________________________________________________________________________ 
+              
+def plot_max_proba_mode_onestate(df_ra_pri_st, 
+                                rate, price, state_i, t, 
+                                path_2_best_learning_steps,
+                                algos):
+    
+    tup_legends = [] 
+    
+    px = figure(plot_height = int(HEIGHT*MULT_HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    
+    algo_df = set(df_ra_pri_st["algo"].unique())
+    algos = set(algos).intersection(algo_df)
+    
+    for algo in algos:
+        path_2_best_learning = None
+        for path_2_best in path_2_best_learning_steps:
+            if algo == path_2_best[3]:
+                path_2_best_learning = os.path.join(*path_2_best)
+            
+        print("path_2_best_learning={}".format(path_2_best_learning))
+        df_tmp = pd.read_csv(os.path.join(path_2_best_learning,
+                                           "best_learning_steps.csv"), 
+                             sep=',', index_col=0)
+        k_stop = df_tmp.loc["k_stop",str(t)]
+            
+        df_al = df_ra_pri_st[(df_ra_pri_st.algo == algo) 
+                             & (df_ra_pri_st.k <= k_stop)]
+        
+        title = "mean of max proba for each mode at {}, t={} (rate={}, price={})".format(
+                state_i, t, rate, price)
+        xlabel = "k step of learning" 
+        ylabel_moyS1 = "moy_S1"; 
+        ylabel_moyS2 = "moy_S2";
+        label_moyS2 = "moy_S2_{}".format(algo)
+        label_moyS1 = "moy_S1_{}".format(algo)
+        
+        # label_stdS1 = "std_S1_{}".format(algo)
+        # label_upperS1 = "upper_S1_{}".format(algo)
+        # label_lowerS1 = "lower_S1_{}".format(algo)
+        # ylabel_stdS2 = "std_S2"; 
+        # ylabel_upperS2 = "upper_S2";
+        # ylabel_lowerS2 = "lower_S2";
+        # ylabel_moyMaxS12 = "moy_max_S12"
+        # ylabel_stdS1 = "std_S1";
+        # ylabel_upperS1 = "upper_S1";
+        # ylabel_lowerS1 = "lower_S1";
+        # label_stdS2 = "std_S2_{}".format(algo)
+        # label_upperS2 = "upper_S2_{}".format(algo)
+        # label_lowerS2 = "lower_S2_{}".format(algo)
+        # label_moyMaxS12 = "moy_max_S12_{}".format(algo)
+        
+        px.title.text = title
+        px.xaxis.axis_label = xlabel
+        px.yaxis.axis_label = "moy mode"
+        TOOLS[7] = HoverTool(tooltips=[
+                            ("algo", "@algo"),
+                            ("k", "@k"),
+                            ("moy_S1", "@moy_S1"),
+                            ("moy_S2", "@moy_S2"),
+                            ("lower_S1", "@lower_S1"),
+                            ("upper_S1", "@upper_S1"),
+                            ("lower_S2", "@lower_S2"),
+                            ("upper_S2", "@upper_S2"),
+                            ("std_S1", "@std_S1"), 
+                            ("std_S2", "@std_S2"),
+                            ("min_S1", "@min_S1"), 
+                            ("max_S1", "@max_S1"), 
+                            ("min_S2", "@min_S2"),
+                            ("max_S2", "@max_S2"),
+                            ("moy_max_S12", "@moy_max_S12"),
+                            ("S1", "@S1"),
+                            ("S2", "@S2"),
+                            ]
+                        )
+        px.tools = TOOLS
+        
+        S1, S2 = None, None
+        if state_i == "state1":
+            S1 = fct_aux.STATE1_STRATS[0]
+            S2 = fct_aux.STATE1_STRATS[1]
+        elif state_i == "state2":
+            S1 = fct_aux.STATE2_STRATS[0]
+            S2 = fct_aux.STATE2_STRATS[1]
+        elif state_i == "state3":
+            S1 = fct_aux.STATE3_STRATS[0]
+            S2 = fct_aux.STATE3_STRATS[1]
+        
+        df_al["S1_p_i_j_k"] = df_al["S1_p_i_j_k"]\
+                                .apply(pd.to_numeric,
+                                       downcast='float',
+                                       errors='coerce')
+        df_al["S2_p_i_j_k"] = df_al["S2_p_i_j_k"]\
+                                .apply(pd.to_numeric,
+                                       downcast='float',
+                                       errors='coerce')
+        # probleme ICI car tous les p_i_j_k ne correspondent pas a S1
+        df_al.loc[:,"S1"] = df_al["S1_p_i_j_k"].copy()
+        df_al.loc[:,"S2"] = df_al["S2_p_i_j_k"].copy()
+        df_al.loc[:,"S1"] = df_al["S1"].apply(pd.to_numeric,
+                                        downcast='float',
+                                        errors='coerce').copy()
+        df_al.loc[:,"S2"] = df_al["S2"].apply(pd.to_numeric,
+                                        downcast='float',
+                                        errors='coerce').copy()
+        #print("S1={}".format(df_al["S1"]))
+        print("S1={}, df_al={}, rate={}, price={}, state_i={}, t={}, algo={}".format(
+                df_al["S1"].shape, df_al.shape, rate, price, state_i, t, algo))
+        df_al_k = df_al.groupby("k")[["S1","S2"]]\
+                    .aggregate(np.mean).reset_index()
+        df_al_k = df_al.groupby("k")[["S1","S2"]]\
+                        .agg({"S1": [np.mean, np.std, np.min, np.max], 
+                              "S2": [np.mean, np.std, np.min, np.max]})\
+                        .reset_index()    
+        tuple_cols = list(df_al_k.columns)
+        dico_new_cols = dict()
+        for tu_col in tuple_cols:
+            dico_new_cols[tu_col] = tu_col[1]+"_"+tu_col[0]
+        df_al_k.columns = df_al_k.columns.to_flat_index()
+        df_al_k.rename(columns=dico_new_cols, inplace=True)  
+        
+        df_al_k['lower_S1'] = df_al_k.mean_S1 - df_al_k.std_S1
+        df_al_k['upper_S1'] = df_al_k.mean_S1 + df_al_k.std_S1
+        
+        df_al_k['lower_S2'] = df_al_k.mean_S2 - df_al_k.std_S2
+        df_al_k['upper_S2'] = df_al_k.mean_S2 + df_al_k.std_S2
+        
+        dico_rename = {"_k":"k","mean_S1":"moy_S1", "mean_S2":"moy_S2",
+                       "std_S1":"std_S1", "std_S2":"std_S2",
+                       "amin_S1":"min_S1", "amin_S2":"min_S2",
+                       "amax_S1":"max_S1", "amax_S2":"max_S2"
+                       }
+        df_al_k.rename(columns=dico_rename, inplace=True)
+        
+        df_al_k.loc[:,"algo"] = algo
+        df_al_k.loc[:,"t"] = t
+        df_al_k.loc[:,"S1"] = S1
+        df_al_k.loc[:,"S2"] = S2
+        
+        source = ColumnDataSource(data = df_al_k)
+        
+        ind_color = 0
+        r1 = px.line(x="k", y=ylabel_moyS1, source=source, 
+                     legend_label=label_moyS1,
+                     line_width=2, color=COLORS[ind_color], 
+                     line_dash=[0,0])
+        ind_color = 1
+        r2 = px.line(x="k", y=ylabel_moyS2, source=source, 
+                     legend_label=label_moyS2,
+                     line_width=2, color=COLORS[ind_color], 
+                     line_dash=[0,0])
+        band_S1 = Band(base='k', lower='lower_S1', upper='upper_S1', 
+                source=source, level='underlay',
+                fill_alpha=1.0, line_width=1, line_color='black')
+        band_S2 = Band(base='k', lower='lower_S2', upper='upper_S2', 
+                source=source, level='underlay',
+                fill_alpha=1.0, line_width=1, line_color='black')
+        #px.add_layout(band)
+        px.add_layout(band_S1)
+        px.add_layout(band_S2)
+                        
+        
+        if algo == "LRI1":
+            ind_color = 3
+            r4 = px.asterisk(x="k", y=ylabel_moyS1, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS1)
+            r5 = px.asterisk(x="k", y=ylabel_moyS2, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS2)
+            # r6 = px.asterisk(x="k", y=ylabel_moyMaxS12, size=7, source=source, 
+            #             color=COLORS[ind_color], legend_label=label_moyMaxS12)
+            tup_legends.append((algo, [r1,r2,r4,r5] ))
+            # tup_legends.append((algo, [r1,r2,r3,r4,r5,r6] ))
+        elif algo == "LRI2":
+            ind_color = 4
+            r4 = px.asterisk(x="k", y=ylabel_moyS1, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS1)
+            r5 = px.asterisk(x="k", y=ylabel_moyS2, size=7, source=source, 
+                        color=COLORS[ind_color], legend_label=label_moyS2)
+            # r6 = px.asterisk(x="k", y=ylabel_moyMaxS12, size=7, source=source, 
+            #             color=COLORS[ind_color], legend_label=label_moyMaxS12)
+            tup_legends.append((algo, [r1,r2,r4,r5] ))
+            # tup_legends.append((algo, [r1,r2,r3,r4,r5,r6] ))
+        
+    legend = Legend(items= tup_legends, location="center")
+    px.legend.label_text_font_size = "8px"
+    px.legend.click_policy="hide"
+    px.add_layout(legend, 'right') 
+
+    return px                
+        
+def plot_max_proba_mode(df_arr_M_T_Ks, t, path_2_best_learning_steps, 
+                        algos=['LRI1','LRI2']):
+    """
+    plot the mean of the max probability of one mode. 
+    The steps of process are:
+        * select all players having state_i = stateX, X in {1,2,3}
+        * compute the mean of each mode for each k_step moy_S_1_X, moy_S_2_X
+        * select the max of each mode for each k_step max_S_1_X, max_S_2_X
+        * compute the mean of max of each mode for each k_step ie
+            moy_max_S_12_X = (max_S_1_X - max_S_2_X)/2
+        * plot the curves of moy_S_1_X, moy_S_2_X and moy_max_S_12_X
+        
+    x-axis : k_step
+    y-axis : moy
+
+    """
+    rates = df_arr_M_T_Ks["rate"].unique(); rates = rates[rates!=0]
+    prices = df_arr_M_T_Ks["prices"].unique()
+    states = df_arr_M_T_Ks["state_i"].unique()
+    
+    dico_pxs = dict()
+    cpt = 0
+    for rate, price, state_i\
+        in it.product(rates, prices, states):
+        
+        mask_ra_pri = ((df_arr_M_T_Ks.rate == rate) 
+                                         | (df_arr_M_T_Ks.rate == 0)) \
+                            & (df_arr_M_T_Ks.prices == price) \
+                            & (df_arr_M_T_Ks.t == t) \
+                            & (df_arr_M_T_Ks.state_i == state_i)    
+        df_ra_pri = df_arr_M_T_Ks[mask_ra_pri].copy()
+        
+        if df_ra_pri.shape[0] != 0:
+            px_st_mode = plot_max_proba_mode_onestate(
+                            df_ra_pri, 
+                            rate, price, state_i, 
+                            t, path_2_best_learning_steps, algos)
+            px_st_mode.legend.click_policy="hide"
+    
+            if (rate, price, state_i) not in dico_pxs.keys():
+                dico_pxs[(rate, price, state_i)] \
+                    = [px_st_mode]
+            else:
+                dico_pxs[(rate, price, state_i)].append(px_st_mode)
+            cpt += 1
+        
+    # aggregate by state_i i.e each state_i is on new column.
+    col_px_st_S1S2s = []
+    for key, px_st_mode in dico_pxs.items():
+        row_pxs = row(px_st_mode)
+        col_px_st_S1S2s.append(row_pxs)
+    col_px_st_S1S2s=column(children=col_px_st_S1S2s, 
+                           sizing_mode='stretch_both')  
+    # show(col_px_scen_st_S1S2s)
+    
+    return col_px_st_S1S2s
+     
+# _____________________________________________________________________________
+#
+#        moyenne de la grande proba dune mode pour chaque state  ---> fin
+# _____________________________________________________________________________
 
 # _____________________________________________________________________________
 #
@@ -1744,9 +2000,10 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                             df_ben_cst_M_T_K, t, 
                             df_LRI_12, df_k_stop)
     print("Performance Perf_t all algos: TERMINEE")
-    # col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
-    #                                            path_2_best_learning_steps, 
-    #                                            algos=['LRI1','LRI2'])
+    col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
+                                                path_2_best_learning_steps, 
+                                                algos=['LRI1','LRI2'])
+    print("affichage S1, S2 p_ijk : TERMINEE")
     # col_pxs_in_out = plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t)
     # col_pxs_ben_cst = plot_mean_ben_cst_players_all_states_for_scenarios(
     #                     df_ben_cst_M_T_K, t)
@@ -1764,7 +2021,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     
     # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
     tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
-    # tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
+    tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
     # tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
     # tab_bencst=Panel(child=col_pxs_ben_cst, title="mean(ben-cst)")
     # tab_sts=Panel(child=col_px_scen_sts, title="number players")
@@ -1778,6 +2035,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                         tab_RU_CONS_PROD_ts,
                         tab_CONS_PROD_ts,
                         tab_Pref_algo_t,
+                        tab_S1S2,
                         #tab_PISG_b0c0_ts
                         #tab_Pref_t, 
                         #tab_Pref_algo_t,
