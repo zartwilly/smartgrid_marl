@@ -579,13 +579,12 @@ def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=250,
         rate = tuple_path[4] if algo in algos_4_learning else 0
         
         m_players = arr_pl_M_T_K_vars.shape[0]
-        t_periods = arr_pl_M_T_K_vars.shape[1]
         k_steps = arr_pl_M_T_K_vars.shape[2] if arr_pl_M_T_K_vars.shape == 4 \
                                              else k_steps_args                                    
         #for t in range(0, t_periods):                                     
         t_periods = None; tu_mtk = None; tu_tk = None; tu_m = None
         if t is None:
-            t_periods = arr_pl_M_T_K_vars.shape[1]
+            t_periods = arr_pl_M_T_K_vars.shape[1] - 1
             tu_mtk = list(it.product([algo], [rate], [price],
                                      range(0, m_players), 
                                      range(0, t_periods), 
@@ -1193,8 +1192,7 @@ def plot_utility(df_res, algo, rate, price,
     
     return px
     
-def plot_utilities_by_player_4_periods(df_arr_M_T_Ks, 
-                                       df_b0_c0_pisg_pi0_T_K,
+def plot_utilities_by_player_4_periods(df_arr_M_T_Ks,
                                        df_B_C_BB_CC_RU_M, 
                                        path_2_best_learning_steps):
     """
@@ -1417,8 +1415,7 @@ def plot_evolution_PROD_CONS(df_PROD, df_CONS,
     return px_PROD, px_CONS
         
     
-def plot_evolution_over_time_PROD_CONS(df_arr_M_T_Ks, 
-                                       df_b0_c0_pisg_pi0_T_K,
+def plot_evolution_over_time_PROD_CONS(df_arr_M_T_Ks,
                                        path_2_best_learning_steps):
     """
     show the evolution of players' PROD, CONS over the time
@@ -1965,6 +1962,7 @@ def plot_max_proba_mode(df_arr_M_T_Ks, t, path_2_best_learning_steps,
 #                   affichage  dans tab  ---> debut
 # _____________________________________________________________________________
 def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+                        df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir,
                         df_LRI_12, df_k_stop,
                         path_2_best_learning_steps, 
@@ -1976,14 +1974,12 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     print("Distribution of players: TERMINEE")
     
     rows_RU_CONS_PROD_ts = plot_utilities_by_player_4_periods(
-                            df_arr_M_T_Ks, 
-                            df_b0_c0_pisg_pi0_T_K,
+                            df_arr_M_T_Ks,
                             df_B_C_BB_CC_RU_M, 
                             path_2_best_learning_steps)
     print("Utility of RU: TERMINEE")
     rows_CONS_PROD_ts = plot_evolution_over_time_PROD_CONS(
                                     df_arr_M_T_Ks, 
-                                    df_b0_c0_pisg_pi0_T_K,
                                     path_2_best_learning_steps)
     print("Evolution of CONS and PROD: TERMINEE")
     # rows_PISG_b0c0_ts = plot_evolution_over_time_PISG_b0c0(
@@ -2113,6 +2109,7 @@ if __name__ == "__main__":
     ## -- plot figures
     name_dir = os.path.join("tests", name_simu)
     group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+                        df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir, 
                         df_LRI_12, df_k_stop,
                         path_2_best_learning_steps, 
