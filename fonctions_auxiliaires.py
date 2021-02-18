@@ -63,6 +63,8 @@ MANUEL_DBG_PI_SG_MINUS_T_K = 10
 MANUEL_DBG_PI_0_PLUS_T_K = 2 
 MANUEL_DBG_PI_0_MINUS_T_K = 3
 
+RACINE_PLAYER = "player"
+
 #_________________            AUTOMATE CONSTANCES           ________________
 
 AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_set1_{}_repSet1_{}_set2_{}_repSet2_{}_periods_{}.npy"
