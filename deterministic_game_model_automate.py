@@ -247,7 +247,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
           .format( pi_hp_plus, pi_hp_minus))
         
     m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
+    t_periods = arr_pl_M_T_vars_init.shape[1] - 1
     
     # _______ variables' initialization --> debut ________________
     pi_sg_plus_t, pi_sg_minus_t = 0, 0
@@ -403,11 +403,11 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     PROD_is_M_T = np.sum(arr_pl_M_T_vars_modif[:,:, 
                                          fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
                          axis=1)
-    BB_is_M = pi_sg_plus_T[-1] * PROD_is_M_T #np.sum(PROD_is)
+    BB_is_M = pi_sg_plus_T[t_periods-1] * PROD_is_M_T #np.sum(PROD_is)
     for num_pl, bb_i in enumerate(BB_is_M):
         if bb_i != 0:
             print("player {}, BB_i={}".format(num_pl, bb_i))
-    CC_is_M = pi_sg_minus_T[-1] * CONS_is_M_T #np.sum(CONS_is)
+    CC_is_M = pi_sg_minus_T[t_periods-1] * CONS_is_M_T #np.sum(CONS_is)
     RU_is_M = BB_is_M - CC_is_M
     
     pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
