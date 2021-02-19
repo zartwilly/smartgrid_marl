@@ -1495,7 +1495,7 @@ def plot_Perf_t_all_algos(df_ra_pri, rate, price, t, df_LRI_12):
     
     tup_legends = [] 
     
-    px = figure(plot_height = int(HEIGHT*MULT_HEIGHT), 
+    px = figure(plot_height = int(HEIGHT), 
                 plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
                 toolbar_location="above")
     
@@ -1712,7 +1712,7 @@ def plot_max_proba_mode_onestate(df_ra_pri_st,
     
     tup_legends = [] 
     
-    px = figure(plot_height = int(HEIGHT*MULT_HEIGHT), 
+    px = figure(plot_height = int(HEIGHT), 
                 plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
                 toolbar_location="above")
     
