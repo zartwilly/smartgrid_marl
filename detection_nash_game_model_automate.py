@@ -1333,6 +1333,10 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                                 }
                     
                 # pi_sg_{plus,minus} of shape (T_PERIODS,)
+                if np.isnan(pi_sg_plus_t):
+                    pi_sg_plus_t = 0
+                if np.isnan(pi_sg_minus_t):
+                    pi_sg_minus_t = 0
                 pi_sg_plus_T_algo[t] = pi_sg_plus_t
                 pi_sg_minus_T_algo[t] = pi_sg_minus_t
                 pi_0_plus_T_algo[t] = pi_0_plus_t
