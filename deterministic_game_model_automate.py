@@ -336,6 +336,10 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
         dico_stats_res[t] = dico_gamme_t
         
         # pi_sg_{plus,minus} of shape (T_PERIODS,)
+        if np.isnan(pi_sg_plus_t):
+            pi_sg_plus_t = 0
+        if np.isnan(pi_sg_minus_t):
+            pi_sg_minus_t = 0
         pi_sg_plus_T[t] = pi_sg_plus_t
         pi_sg_minus_T[t] = pi_sg_minus_t
         
