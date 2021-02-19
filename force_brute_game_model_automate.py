@@ -787,6 +787,10 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
             print("b0_t={}, c0_t={}, Out_sg={},In_sg={} \n".format(b0_t, c0_t, Out_sg, In_sg))
             
             # pi_sg_{plus,minus} of shape (T_PERIODS,)
+            if np.isnan(pi_sg_plus_t):
+                pi_sg_plus_t = 0
+            if np.isnan(pi_sg_minus_t):
+                pi_sg_minus_t = 0
             pi_sg_plus_T_algo[t] = pi_sg_plus_t
             pi_sg_minus_T_algo[t] = pi_sg_minus_t
             pi_0_plus_T_algo[t] = pi_0_plus_t
