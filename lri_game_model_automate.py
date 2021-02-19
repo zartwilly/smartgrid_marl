@@ -1594,6 +1594,10 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K #2 
             pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
             
+        if np.isnan(pi_sg_plus_t):
+            pi_sg_plus_t = 0
+        if np.isnan(pi_sg_minus_t):
+            pi_sg_minus_t = 0
         pi_sg_plus_T[t] = pi_sg_plus_t
         pi_sg_minus_T[t] = pi_sg_minus_t
         
@@ -1674,12 +1678,18 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
             path_to_save = path_to_save, 
             manual_debug = manual_debug, 
             algo_name=algo_name)
-    checkout_nash_4_profils_by_periods(
-            arr_pl_M_T_K_vars_modif.copy(),
-            pi_hp_plus, pi_hp_minus, 
-            pi_0_minus_T, pi_0_plus_T, t_periods, 
-            dico_k_stop_learnings, 
-            manual_debug, algo_name, path_to_save)
+    # checkout_nash_4_profils_by_periods(
+    #         arr_pl_M_T_K_vars_modif.copy(),
+    #         pi_hp_plus, pi_hp_minus, 
+    #         pi_0_minus_T, pi_0_plus_T, t_periods, 
+    #         dico_k_stop_learnings, 
+    #         manual_debug, algo_name, path_to_save)
+    checkout_nash_4_profils_by_periods_NEW(arr_pl_M_T_K_vars_modif.copy(),
+                                        pi_hp_plus, pi_hp_minus, 
+                                        pi_0_minus_T, pi_0_plus_T, 
+                                        BENs_M_T_K, CSTs_M_T_K,
+                                        t_periods, dico_k_stop_learnings,
+                                        manual_debug, algo_name, path_to_save)
     
     
     return arr_pl_M_T_K_vars_modif
@@ -2008,6 +2018,8 @@ def lri_balanced_player_game_select_best_profil_4_all_step(arr_pl_M_T_vars_init,
     return arr_pl_M_T_K_vars_modif
 
 # ______________       main function of LRI   ---> fin        _________________
+
+## ____________________ checkout LRI profil --> debut _________________________
 def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
                                        pi_hp_plus, pi_hp_minus, 
                                        pi_0_minus_T, pi_0_plus_T, 
@@ -2041,18 +2053,6 @@ def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
         
         mode_profiles = it.product(*possibles_modes)
         for mode_profile in mode_profiles:
-            # dico_gamme_t = dict()
-            # arr_pl_M_T_vars_mode_prof, \
-            # b0_t, c0_t, \
-            # bens_t, csts_t, \
-            # pi_sg_plus_t, pi_sg_minus_t, \
-            # dico_gamme_t \
-            #     = autoBfGameModel.balanced_player_game_4_mode_profil_prices_SG(
-            #         arr_pl_M_T_K_vars_modif.copy(),
-            #         mode_profile, t,
-            #         pi_hp_plus, pi_hp_minus,
-            #         pi_0_plus_t, pi_0_minus_t,
-            #         manual_debug, dbg=False)
             dico_gamma_players_t_k = dict()
             random_mode = False
             arr_pl_M_T_K_vars_modif_mode_prof, \
@@ -2122,7 +2122,104 @@ def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
                 *[path_to_save,
                   "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
                 index=False )
+    
+    
+def checkout_nash_4_profils_by_periods_NEW(arr_pl_M_T_K_vars_modif,
+                                       pi_hp_plus, pi_hp_minus, 
+                                       pi_0_minus_T, pi_0_plus_T, 
+                                       BENs_M_T_K, CSTs_M_T_K,
+                                       t_periods, dico_k_stop_learnings,
+                                       manual_debug, algo_name, path_to_save):
+    """
+    verify if the profil at time t is a Nash balanced.
+    """
+    m_players = arr_pl_M_T_K_vars_modif.shape[0]
+    
+    # create a result dataframe of checking players' stability and nash equilibrium
+    cols = [["players", "states", "nash_modes"]]\
+            +[['Vis_t{}'.format(str(t)), 'Vis_bar_t{}'.format(str(t)), 
+               'res_t{}'.format(str(t))] 
+              for t in range(0, t_periods)]
+    cols = [col for subcol in cols for col in subcol]
+    
+    id_players = list(range(0, m_players))
+    df_res = pd.DataFrame(index=id_players, columns=cols)
+    
+
+    for t in range(0, t_periods):
+        print("**** CHECKOUT STABILITY PLAYERS t={} ****".format(t))
+        pi_0_plus_t, pi_0_minus_t = pi_0_plus_T[t], pi_0_minus_T[t]
+        k_stop = dico_k_stop_learnings[t]["k_stop"]
+        bens_t_k, csts_t_k = BENs_M_T_K[:,t,k_stop], CSTs_M_T_K[:,t,k_stop]
         
+        
+        # stabilité de chaque joueur
+        modes_profil = list(arr_pl_M_T_K_vars_modif[
+                                :, t, k_stop, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] )
+        #print("profil={}".format(modes_profil))
+        for num_pl_i in range(0, m_players):
+            state_i = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k_stop, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] 
+            mode_i = modes_profil[num_pl_i]
+            mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
+            
+            opposite_modes_profil = modes_profil.copy()
+            opposite_modes_profil[num_pl_i] = mode_i_bar
+            opposite_modes_profil = tuple(opposite_modes_profil)
+            
+            df_res.loc[num_pl_i, "players"] = "player_"+str(num_pl_i)
+            df_res.loc[num_pl_i, "nash_modes"] = mode_i
+            df_res.loc[num_pl_i, "states"] = state_i
+            
+            
+            random_mode = False
+            arr_pl_M_T_K_vars_modif_mode_prof_BAR, \
+            b0_t_k_bar, c0_t_k_bar, \
+            bens_t_k_bar, csts_t_k_bar, \
+            dico_gamma_players_t_k \
+                = balanced_player_game_t_4_mode_profil_prices_SG(
+                        arr_pl_M_T_K_vars_modif.copy(), 
+                        opposite_modes_profil,
+                        t, k_stop, 
+                        pi_hp_plus, pi_hp_minus, 
+                        pi_0_plus_t, pi_0_minus_t,
+                        m_players, t_periods, 
+                        random_mode,
+                        manual_debug, dbg=False)
+        
+                                      
+            bens_csts_t_k = bens_t_k - csts_t_k
+            Perf_t = np.sum(bens_csts_t_k, axis=0)
+            Vi = Perf_t
+            
+            bens_csts_t_k_bar = bens_t_k_bar - csts_t_k_bar
+            Perf_t_bar = np.sum(bens_csts_t_k_bar, axis=0)
+            Vi_bar = Perf_t_bar
+            
+            df_res.loc[num_pl_i, 'Vis_t{}'.format(t)] = Vi
+            df_res.loc[num_pl_i, 'Vis_bar_t{}'.format(t)] = Vi_bar
+            res = None
+            if Vi >= Vi_bar:
+                res = "STABLE"
+                df_res.loc[num_pl_i, 'res_t{}'.format(t)] = "STABLE"
+            else:
+                res = "INSTABLE"
+                df_res.loc[num_pl_i, 'res_t{}'.format(t)] = "INSTABLE"
+            
+            # print("Pl_{}: {}, Vi={}, Vi_bar={}, mode={}, mode_bar={}".format(
+            #     num_pl_i, res, round(Vi,2), round(Vi_bar,2), mode_i, mode_i_bar))
+    
+                
+    # save to excel file
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    df_res.to_excel(os.path.join(
+                *[path_to_save,
+                  "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
+                index=False )
+## ____________________ checkout LRI profil -->  fin  _________________________
+
     
 def turn_dico_stats_res_into_df_LRI(
                             arr_pl_M_T_K_vars_modif, t_periods,
@@ -2261,7 +2358,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08():
     # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     # #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
     
-    t_periods = 3
+    t_periods = 30
     set1_m_players, set2_m_players = 10, 6
     set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #scenario1, name = T2_Scenario1_set1_10_repSet1_0.75_set2_6_repSet2_0.42
     set1_states, set2_states = None, None
