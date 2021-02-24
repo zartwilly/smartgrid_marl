@@ -33,11 +33,11 @@ if __name__ == "__main__":
     if debug:
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm="DDMM_HHMM"
-        t_periods = 15 #3
-        k_steps = 350 #5000 #2000 #50 #250
+        t_periods = 30 #35 #55 #117 #15 #3
+        k_steps = 250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
-        fct_aux.N_DECIMALS = 10
+        fct_aux.N_DECIMALS = 8
         
         pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         if not dbg_234_players:
             set1_m_players, set2_m_players = 10, 6
             # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
-            set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #scenario1, name = T2_Scenario1_set1_10_repSet1_0.75_set2_6_repSet2_0.42
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #scenario0, name = T2_Scenario1_set1_10_repSet1_0.75_set2_6_repSet2_0.42
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.20 #scenario0
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.75 #scenario2, name = T2_Scenario2_set1_10_repSet1_0.75_set2_6_repSet2_0.75
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.85 #scenario3, name = T2_Scenario3_set1_10_repSet1_0.75_set2_6_repSet2_0.85 
@@ -68,8 +68,8 @@ if __name__ == "__main__":
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.95, 0.75  #scenario7, name = T2_Scenario7_set1_10_repSet1_0.95_set2_6_repSet2_0.75
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.95, 0.95  #scenario8, name = T2_Scenario8_set1_10_repSet1_0.95_set2_6_repSet2_0.95
             set1_stateId0_m_players, set2_stateId0_m_players = 0.9, 0.0 #scenario1
-            set1_stateId0_m_players, set2_stateId0_m_players = 1.0, 0.8 #scenario2
-            set1_stateId0_m_players, set2_stateId0_m_players = 0.5, 0.5 #scenario3
+            #set1_stateId0_m_players, set2_stateId0_m_players = 1.0, 0.8 #scenario2
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.5, 0.5 #scenario3
         else:
             # ---- DEBUG A EFFACER apres debug ----
             m_players, t_periods = 3, 2
@@ -112,8 +112,9 @@ if __name__ == "__main__":
         algos= None #["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"] 
         if set1_m_players + set2_m_players <= 20:
             algos = ["LRI1", "LRI2", "DETERMINIST"] \
-                    + fct_aux.ALGO_NAMES_BF \
-                    + fct_aux.ALGO_NAMES_NASH 
+                    + fct_aux.ALGO_NAMES_BF 
+                    # \
+                    # + fct_aux.ALGO_NAMES_NASH 
         else:
             algos=["LRI1", "LRI2", "DETERMINIST"] 
     else:
