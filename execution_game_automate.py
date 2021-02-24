@@ -147,8 +147,17 @@ def execute_algos_used_Generated_instances(arr_pl_M_T_vars_init,
             # 0: BEST_BRUTE_FORCE (BF) , 1:BAD_BF, 2: MIDDLE_BF
             print("*** ALGO: {} *** ".format(algo_name))
             Path(path_to_save).mkdir(parents=True, exist_ok=True)
-            arr_M_T_vars = autoBfGameModel.bf_balanced_player_game(
-                                arr_pl_M_T_vars_init.copy(),
+            # arr_M_T_vars = autoBfGameModel.bf_balanced_player_game(
+            #                     arr_pl_M_T_vars_init.copy(),
+            #                     pi_hp_plus=pi_hp_plus_elt, 
+            #                     pi_hp_minus=pi_hp_minus_elt,
+            #                     algo_name=algo_name,
+            #                     path_to_save=path_to_save, 
+            #                     manual_debug=manual_debug, 
+            #                     criteria_bf=criteria_bf, dbg=debug)
+            arr_M_T_vars = autoBfGameModel\
+                .bf_balanced_player_game_USE_DICT_MODE_PROFIL_SANS_DICO_COMBINAISON(
+                    arr_pl_M_T_vars_init.copy(),
                                 pi_hp_plus=pi_hp_plus_elt, 
                                 pi_hp_minus=pi_hp_minus_elt,
                                 algo_name=algo_name,
