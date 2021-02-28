@@ -896,7 +896,8 @@ def plot_distribution(df_al_pr_ra, algo, rate, price,
                             ("nb_players", "@nb_players")
                             ]
                         )
-    px= figure(x_range=FactorRange(*x), plot_height=350, 
+    px= figure(x_range=FactorRange(*x), 
+               plot_height=350, plot_width = int(WIDTH*MULT_WIDTH),
                title="number of players, ({}, rate={}, price={})".format(
                   algo, rate, price),
                 toolbar_location=None, tools=TOOLS)
@@ -905,7 +906,8 @@ def plot_distribution(df_al_pr_ra, algo, rate, price,
     
     source = ColumnDataSource(data=data)
     px.vbar(x='x', top='nb_players', width=0.9, source=source, 
-            fill_color=factor_cmap('x', palette=Category20[20], 
+            fill_color=factor_cmap('x', 
+                                   palette=Category20[20], 
                                    factors=list(df_state["t"].unique()), 
                                    start=0, end=1))
     
@@ -1179,7 +1181,7 @@ def plot_utility(df_res, algo, rate, price,
     px.vbar(x=dodge('pl_i', -0.3+3*width, range=px.x_range), top=cols[4], 
                    width=width, source=source,
                    color="#ddb7b1", legend_label=cols[4])
-    px.vbar(x=dodge('pl_i', -0.3+5*width, range=px.x_range), top=cols[5], 
+    px.vbar(x=dodge('pl_i', -0.3+4*width, range=px.x_range), top=cols[5], 
                    width=width, source=source,
                    color="#FFD700", legend_label=cols[5])
     
@@ -1255,7 +1257,7 @@ def plot_utilities_by_player_4_periods(df_arr_M_T_Ks,
         pxs_al_pr_ra = plot_utility(
                             df_res, algo, rate, price,
                             path_2_best_learning_steps)
-        
+        pxs_al_pr_ra.legend.click_policy="hide"
         ######################################################################
         
         if (algo, price, rate) not in dico_pxs.keys():
@@ -1468,7 +1470,110 @@ def plot_evolution_over_time_PROD_CONS(df_arr_M_T_Ks,
 #
 #               Evolution of pi_sg, b0, c0 over periods ---> debut
 # _____________________________________________________________________________
-# TODO
+def plot_price_by_algo(df_ra_pri_al, df_LRI_12, rate, price, algo):
+    cols = df_b0_c0_pisg_pi0_T_K.columns[4:]
+    t_periods = list(df_ra_pri_al.t.unique())
+    df_t = pd.DataFrame(index=t_periods, columns=cols)
+    for t in t_periods:
+        k_max = None
+        if algo in ['LRI1', 'LRI2']:
+            k_max = df_LRI_12.loc[algo+'_k_stop',str(t)]
+        else:
+            k_max = df_ra_pri_al.k.max()
+        index = df_ra_pri_al[(df_ra_pri_al.k == k_max) 
+                             & (df_ra_pri_al.t == t)].index[0]
+        for col in cols:
+            df_t.loc[t, col] = df_b0_c0_pisg_pi0_T_K.loc[index, col]
+    df_t = df_t.reset_index()
+    df_t.rename(columns={"k":"k_max", 'index':"t"}, inplace=True)
+    df_t["t"] = df_t["t"].astype(str)
+    
+    TOOLS[7] = HoverTool(tooltips=[
+                    ("t", "@t"),
+                    ("k", "@k_max"),
+                    ("b0", "@b0"), ("c0", "@c0"),
+                    ("pi_0_-", "@pi_0_minus"), ("pi_0_+", "@pi_0_plus"),
+                    ("pi_sg_-", "@pi_sg_minus"), ("pi_sg_+", "@pi_sg_plus")
+                    ]
+                )
+    idx = df_t.t.unique().tolist()
+    px = figure(x_range=idx, 
+                y_range=(0, df_t[cols[1:]].values.max() + 5), 
+                plot_height = int(350), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    title = "{}: prices over time (rate:{}, price={})".format(
+                    algo, rate, price)
+    px.title.text = title
+    
+    source = ColumnDataSource(data = df_t)
+    
+    width= 0.1 #0.5
+    px.vbar(x=dodge('t', -0.3, range=px.x_range), top=cols[1], 
+                    width=width, source=source,
+                    color="#2E8B57", legend_label=cols[1])
+    px.vbar(x=dodge('t', -0.3+1*width, range=px.x_range), top=cols[2], 
+                    width=width, source=source,
+                    color="#718dbf", legend_label=cols[2])
+    px.vbar(x=dodge('t', -0.3+2*width, range=px.x_range), top=cols[3], 
+                   width=width, source=source,
+                   color="#e84d60", legend_label=cols[3])
+    px.vbar(x=dodge('t', -0.3+3*width, range=px.x_range), top=cols[4], 
+                   width=width, source=source,
+                   color="#ddb7b1", legend_label=cols[4])
+    px.vbar(x=dodge('t', -0.3+4*width, range=px.x_range), top=cols[5], 
+                   width=width, source=source,
+                   color="#FFD700", legend_label=cols[5])
+    px.vbar(x=dodge('t', -0.3+5*width, range=px.x_range), top=cols[6], 
+                   width=width, source=source,
+                   color="#d95f0e", legend_label=cols[6])
+    
+    px.x_range.range_padding = width
+    px.xgrid.grid_line_color = None
+    px.legend.location = "top_left"
+    px.legend.orientation = "horizontal"
+    px.xaxis.axis_label = "t_periods"
+    px.yaxis.axis_label = "values"
+    
+    return px
+    
+    
+def plot_evolution_over_time_PISG_b0c0(df_arr_M_T_Ks, 
+                                       df_b0_c0_pisg_pi0_T_K,
+                                       df_LRI_12):
+    rates = df_b0_c0_pisg_pi0_T_K["rate"].unique(); rates = rates[rates!=0]
+    prices = df_b0_c0_pisg_pi0_T_K["prices"].unique()
+    algos = df_b0_c0_pisg_pi0_T_K["algo"].unique()
+    
+    dico_pxs = dict()
+    cpt = 0
+    for rate, price, algo in it.product(rates, prices, algos):
+        
+        mask_ra_pri_al = ((df_b0_c0_pisg_pi0_T_K.rate == rate) 
+                                 | (df_b0_c0_pisg_pi0_T_K.rate == 0)) \
+                            & (df_b0_c0_pisg_pi0_T_K.prices == price) \
+                            & (df_b0_c0_pisg_pi0_T_K.algo == algo)
+        df_ra_pri_al = df_b0_c0_pisg_pi0_T_K[mask_ra_pri_al].copy()
+        
+        px_al = plot_price_by_algo(df_ra_pri_al, df_LRI_12, rate, price, algo)
+        px_al.legend.click_policy="hide"
+        
+        if (rate, price, algo) not in dico_pxs.keys():
+            dico_pxs[(rate, price, algo)] \
+                = [px_al]
+        else:
+            dico_pxs[(rate, price, algo)].append(px_al)
+        cpt += 1                            
+        
+    # aggregate by algo i.e each algo is on new column.
+    col_px_als = []
+    for key, px_als in dico_pxs.items():
+        row_px_als = row(px_als)
+        col_px_als.append(row_px_als)
+    col_px_als=column(children=col_px_als, 
+                      sizing_mode='stretch_both')
+    return col_px_als
+    
 # _____________________________________________________________________________
 #
 #               Evolution of pi_sg, b0, c0 over periods ---> fin
@@ -1979,15 +2084,16 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                             df_B_C_BB_CC_RU_M, 
                             path_2_best_learning_steps)
     print("Utility of RU: TERMINEE")
+    
     rows_CONS_PROD_ts = plot_evolution_over_time_PROD_CONS(
                                     df_arr_M_T_Ks, 
                                     path_2_best_learning_steps)
     print("Evolution of CONS and PROD: TERMINEE")
-    # rows_PISG_b0c0_ts = plot_evolution_over_time_PISG_b0c0(
-    #                                 df_arr_M_T_Ks, 
-    #                                 df_b0_c0_pisg_pi0_T_K,
-    #                                 path_2_best_learning_steps)
-    # print("Evolution of PI_SG, b0, c0: TERMINEE")
+    
+    rows_PISG_b0c0_ts = plot_evolution_over_time_PISG_b0c0(df_arr_M_T_Ks, 
+                                        df_b0_c0_pisg_pi0_T_K,
+                                        df_LRI_12)
+    print("Evolution of PI_SG, b0, c0: TERMINEE")
     
     
     # col_pxs_Pref_t = plot_Perf_t_players_all_states_for_scenarios(
@@ -1997,10 +2103,12 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                             df_ben_cst_M_T_K, t, 
                             df_LRI_12, df_k_stop)
     print("Performance Perf_t all algos: TERMINEE")
+    
     col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
                                                 path_2_best_learning_steps, 
                                                 algos=['LRI1','LRI2'])
     print("affichage S1, S2 p_ijk : TERMINEE")
+    
     # col_pxs_in_out = plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t)
     # col_pxs_ben_cst = plot_mean_ben_cst_players_all_states_for_scenarios(
     #                     df_ben_cst_M_T_K, t)
@@ -2013,10 +2121,10 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                                 title="utility of players")
     tab_CONS_PROD_ts = Panel(child=rows_CONS_PROD_ts, 
                                 title="evolution of PROD and CONS")
-    # tab_PISG_b0c0_ts = Panel(child=rows_PISG_b0c0_ts, 
-    #                             title="evolution of pi_sg,b0,c0")
+    tab_PISG_b0c0_ts = Panel(child=rows_PISG_b0c0_ts, 
+                             title="evolution of pi_sg,b0,c0")
     
-    # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
+    # # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
     tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
     tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
     # tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
@@ -2033,7 +2141,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                         tab_CONS_PROD_ts,
                         tab_Pref_algo_t,
                         tab_S1S2,
-                        #tab_PISG_b0c0_ts
+                        tab_PISG_b0c0_ts
                         #tab_Pref_t, 
                         #tab_Pref_algo_t,
                         #tab_S1S2,
@@ -2072,7 +2180,8 @@ if __name__ == "__main__":
     name_simu =  "simu_2701_1259"; k_steps_args = 250
     name_simu =  "simu_DDMM_HHMM"; k_steps_args = 50#2000#250
     name_simu = "simu_DDMM_HHMM_T2_scenario8_set1_10_repSet1_0.95_set2_6_repSet2_0.95"
-    k_steps_args = 350 #2000#250
+    name_simu = "simu_DDMM_HHMM_T30_Scenario3"
+    k_steps_args = 250 #350 #2000#250
     
     
     algos_4_no_learning = ["DETERMINIST","RD-DETERMINIST"] \
