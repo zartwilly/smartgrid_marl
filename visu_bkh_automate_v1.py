@@ -1417,7 +1417,7 @@ def plot_evolution_PROD_CONS(df_PROD, df_CONS,
     return px_PROD, px_CONS
         
     
-def plot_evolution_over_time_PROD_CONS(df_arr_M_T_Ks,
+def plot_evolution_players_PROD_CONS_over_time(df_arr_M_T_Ks,
                                        path_2_best_learning_steps):
     """
     show the evolution of players' PROD, CONS over the time
@@ -1464,6 +1464,116 @@ def plot_evolution_over_time_PROD_CONS(df_arr_M_T_Ks,
 # _____________________________________________________________________________
 #
 #               Evolution of players' PROD, CONS over periods ---> fin
+# _____________________________________________________________________________
+
+# _____________________________________________________________________________
+#
+#               Evolution of PROD, CONS over periods ---> debut
+# _____________________________________________________________________________
+def plot_evolution_PROD_CONS_by_algo(df_PROD_CONS,
+                                     algo, rate, price):
+    df_PROD_CONS["t"] = df_PROD_CONS["t"].astype(str)
+    idx = df_PROD_CONS.t.unique().tolist()
+    cols = ['k', 'PROD', 'CONS']
+    
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("t", "@t"),
+                            ("PROD", "@PROD"),
+                            ("CONS", "@CONS")
+                            ]
+                        )
+    px = figure(x_range=idx, 
+                y_range=(0, df_PROD_CONS[cols[1:]].values.max() + 5), 
+                plot_height = int(350), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    title = "{}: PROD, CONS (rate:{}, price={})".format(algo, rate, price)
+    px.title.text = title
+           
+    source = ColumnDataSource(data = df_PROD_CONS)
+    
+    width= 0.2 #0.5
+    px.vbar(x=dodge('t', -0.3, range=px.x_range), top=cols[1], 
+                    width=width, source=source,
+                    color="#2E8B57", legend_label=cols[1])
+    px.vbar(x=dodge('t', -0.3+width, range=px.x_range), top=cols[2], 
+                    width=width, source=source,
+                    color="#718dbf", legend_label=cols[2])
+    
+    px.x_range.range_padding = width
+    px.xgrid.grid_line_color = None
+    px.legend.location = "top_left"
+    px.legend.orientation = "horizontal"
+    px.xaxis.axis_label = "players"
+    px.yaxis.axis_label = "values"
+    
+    return px
+
+def compute_CONS_PROD_by_periods(df_prod_cons, algo, df_LRI_12):
+    cols = ['t','k','PROD','CONS']
+    t_periods = list(df_prod_cons.t.unique())
+    df_PROD_CONS = pd.DataFrame(index=t_periods, columns=cols)
+    for t in t_periods:
+        k_max = None
+        if algo in ['LRI1', 'LRI2']:
+            k_max = df_LRI_12.loc[algo+'_k_stop',str(t)]
+        else:
+            k_max = df_prod_cons.k.max()
+        mask_t_kmax = (df_prod_cons.k == k_max) & (df_prod_cons.t == t)
+        df_t_k = df_prod_cons[mask_t_kmax]
+        prod = df_t_k.prod_i.sum()
+        cons = df_t_k.cons_i.sum()
+        df_PROD_CONS.loc[t, cols[0]] = t
+        df_PROD_CONS.loc[t, cols[1]] = k_max
+        df_PROD_CONS.loc[t, cols[2]] = prod
+        df_PROD_CONS.loc[t, cols[3]] = cons
+        
+    return df_PROD_CONS
+        
+    
+def plot_evolution_PROD_CONS_over_time(df_arr_M_T_Ks,
+                                       df_LRI_12):
+    """
+    show the evolution of PROD, CONS over the time
+    """
+    
+    rates = df_arr_M_T_Ks.rate.unique().tolist(); rate = rates[rates!=0]
+    prices = df_arr_M_T_Ks.prices.unique().tolist()
+    algos = df_arr_M_T_Ks.algo.unique().tolist()
+    
+    dico_pxs = dict()
+    for algo, price in it.product(algos, prices):
+        mask_al_pr_ra = ((df_arr_M_T_Ks.rate == str(rate)) 
+                                   | (df_arr_M_T_Ks.rate == 0)) \
+                            & (df_arr_M_T_Ks.prices == price) \
+                            & (df_arr_M_T_Ks.algo == algo)
+        df_prod_cons = df_arr_M_T_Ks[mask_al_pr_ra].copy()
+        df_PROD_CONS = compute_CONS_PROD_by_periods(
+                        df_prod_cons, algo, 
+                        df_LRI_12)
+        
+        pxs_PROD_CONS = plot_evolution_PROD_CONS_by_algo(
+                            df_PROD_CONS,
+                            algo, rate, price)
+        pxs_PROD_CONS.legend.click_policy="hide"
+        
+        if (algo, price, rate) not in dico_pxs.keys():
+            dico_pxs[(algo, price, rate)] \
+                = [pxs_PROD_CONS]
+        else:
+            dico_pxs[(algo, price, rate)].extend([pxs_PROD_CONS])
+        
+    rows_CONS_PROD_ts = list()
+    for key, pxs_CONS_PROD in dico_pxs.items():
+        col_px_sts = column(pxs_CONS_PROD)
+        rows_CONS_PROD_ts.append(col_px_sts)
+    rows_CONS_PROD_ts=column(children=rows_CONS_PROD_ts, 
+                             sizing_mode='stretch_both')
+    return rows_CONS_PROD_ts
+    
+# _____________________________________________________________________________
+#
+#               Evolution of PROD, CONS over periods ---> fin
 # _____________________________________________________________________________
 
 # _____________________________________________________________________________
@@ -2085,10 +2195,15 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                             path_2_best_learning_steps)
     print("Utility of RU: TERMINEE")
     
-    rows_CONS_PROD_ts = plot_evolution_over_time_PROD_CONS(
+    rows_pls_CONS_PROD_ts = plot_evolution_players_PROD_CONS_over_time(
                                     df_arr_M_T_Ks, 
                                     path_2_best_learning_steps)
-    print("Evolution of CONS and PROD: TERMINEE")
+    print("Evolution of CONS and PROD by players over time: TERMINEE")
+    
+    rows_CONS_PROD_ts = plot_evolution_PROD_CONS_over_time(
+                            df_arr_M_T_Ks,
+                            df_LRI_12)
+    print("Evolution of CONS and PROD by time: TERMINEE")
     
     rows_PISG_b0c0_ts = plot_evolution_over_time_PISG_b0c0(df_arr_M_T_Ks, 
                                         df_b0_c0_pisg_pi0_T_K,
@@ -2109,6 +2224,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                                                 algos=['LRI1','LRI2'])
     print("affichage S1, S2 p_ijk : TERMINEE")
     
+    
     # col_pxs_in_out = plot_in_out_sg_ksteps_for_scenarios(df_arr_M_T_Ks, t)
     # col_pxs_ben_cst = plot_mean_ben_cst_players_all_states_for_scenarios(
     #                     df_ben_cst_M_T_K, t)
@@ -2119,25 +2235,28 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     tab_dists_ts = Panel(child=rows_dists_ts, title="distribution by state")
     tab_RU_CONS_PROD_ts = Panel(child=rows_RU_CONS_PROD_ts, 
                                 title="utility of players")
+    tab_pls_CONS_PROD_ts = Panel(child=rows_pls_CONS_PROD_ts, 
+                                title="evolution of PROD and CONS by players")
     tab_CONS_PROD_ts = Panel(child=rows_CONS_PROD_ts, 
-                                title="evolution of PROD and CONS")
+                              title="evolution of PROD and CONS over time")
     tab_PISG_b0c0_ts = Panel(child=rows_PISG_b0c0_ts, 
-                             title="evolution of pi_sg,b0,c0")
+                              title="evolution of pi_sg,b0,c0")
     
-    # # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
+    # # # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
     tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
     tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
-    # tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
-    # tab_bencst=Panel(child=col_pxs_ben_cst, title="mean(ben-cst)")
-    # tab_sts=Panel(child=col_px_scen_sts, title="number players")
-    # tab_mode_S1S2_nbplayers=Panel(child=col_px_scen_mode_S1S2_nbplayers, 
-    #                               title="number players by strategies")
-    # tab_playing=Panel(child=col_playing_players, 
-    #              title="number players playing/not_playing")
+    # # tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
+    # # tab_bencst=Panel(child=col_pxs_ben_cst, title="mean(ben-cst)")
+    # # tab_sts=Panel(child=col_px_scen_sts, title="number players")
+    # # tab_mode_S1S2_nbplayers=Panel(child=col_px_scen_mode_S1S2_nbplayers, 
+    # #                               title="number players by strategies")
+    # # tab_playing=Panel(child=col_playing_players, 
+    # #              title="number players playing/not_playing")
     
     tabs = Tabs(tabs= [ 
                         tab_dists_ts,
                         tab_RU_CONS_PROD_ts,
+                        tab_pls_CONS_PROD_ts,
                         tab_CONS_PROD_ts,
                         tab_Pref_algo_t,
                         tab_S1S2,
