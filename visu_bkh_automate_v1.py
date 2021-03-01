@@ -1587,7 +1587,7 @@ def plot_evolution_IN_OUT_SG_over_time(df_arr_M_T_Ks,
 #               Evolution of pi_sg, b0, c0 over periods ---> debut
 # _____________________________________________________________________________
 def plot_price_by_algo(df_ra_pri_al, df_LRI_12, rate, price, algo):
-    cols = df_b0_c0_pisg_pi0_T_K.columns[4:]
+    cols = df_ra_pri_al.columns[4:]
     t_periods = list(df_ra_pri_al.t.unique())
     df_t = pd.DataFrame(index=t_periods, columns=cols)
     for t in t_periods:
@@ -1599,7 +1599,7 @@ def plot_price_by_algo(df_ra_pri_al, df_LRI_12, rate, price, algo):
         index = df_ra_pri_al[(df_ra_pri_al.k == k_max) 
                              & (df_ra_pri_al.t == t)].index[0]
         for col in cols:
-            df_t.loc[t, col] = df_b0_c0_pisg_pi0_T_K.loc[index, col]
+            df_t.loc[t, col] = df_ra_pri_al.loc[index, col]
     df_t = df_t.reset_index()
     df_t.rename(columns={"k":"k_max", 'index':"t"}, inplace=True)
     df_t["t"] = df_t["t"].astype(str)
@@ -2306,8 +2306,8 @@ if __name__ == "__main__":
     name_simu =  "simu_DDMM_HHMM"; k_steps_args = 50#2000#250
     name_simu = "simu_DDMM_HHMM_T2_scenario8_set1_10_repSet1_0.95_set2_6_repSet2_0.95"
     name_simu = "simu_DDMM_HHMM_T30_Scenario3"
-    name_simu = "simu_DDMM_HHMM_T30_Scenario2"
-    name_simu = "simu_DDMM_HHMM_T30_Scenario1"
+    #name_simu = "simu_DDMM_HHMM_T30_Scenario2"
+    #name_simu = "simu_DDMM_HHMM_T30_Scenario1"
     k_steps_args = 250 #350 #2000#250
     
     
@@ -2341,6 +2341,13 @@ if __name__ == "__main__":
         = get_array_turn_df_for_t(tuple_paths, t=None, k_steps_args=k_steps_args, 
                                   algos_4_no_learning=algos_4_no_learning, 
                                   algos_4_learning=algos_4_learning)
+    print("size t={}, df_arr_M_T_Ks={} Mo, df_ben_cst_M_T_K={} Mo, df_b0_c0_pisg_pi0_T_K={} Mo, df_B_C_BB_CC_RU_M={} Mo".format(
+                t, 
+              round(df_arr_M_T_Ks.memory_usage().sum()/(1024*1024), 2),  
+              round(df_ben_cst_M_T_K.memory_usage().sum()/(1024*1024), 2),
+              round(df_b0_c0_pisg_pi0_T_K.memory_usage().sum()/(1024*1024), 2),
+              round(df_B_C_BB_CC_RU_M.memory_usage().sum()/(1024*1024), 4)
+              ))
     print("get_array_turn_df_for_t: TERMINE")
     
     ## -- plot figures
