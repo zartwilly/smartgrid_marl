@@ -990,11 +990,11 @@ def compute_CONS_PROD(df_prod_cons, algo, path_2_best_learning_steps):
     # print("df_tmp: index={}, cols={}".format(df_tmp.index, df_tmp.columns))
     
     list_of_players = df_prod_cons.pl_i.unique().tolist()
-    cols = ['pl_i', 'PROD_i', 'CONS_i']
+    cols = ['pl_i', 'PROD_i', 'CONS_i', 'set']
     df_PROD_CONS = pd.DataFrame(columns=cols, 
                                 index=list_of_players)
     for num_pl_i in list_of_players:
-        sum_prod_pl_i = 0; sum_cons_pl_i = 0
+        sum_prod_pl_i = 0; sum_cons_pl_i = 0; setX = None
         for t in df_prod_cons.t.unique().tolist():
             k_stop = df_tmp.loc["k_stop",str(t)]
             mask_pli_kstop = (df_prod_cons.t == t) \
@@ -1008,11 +1008,13 @@ def compute_CONS_PROD(df_prod_cons, algo, path_2_best_learning_steps):
             # sum_cons_pl_i += df_prod_cons[mask_pli_kstop].loc[num_pl_i,"cons_i"]
             sum_prod_pl_i += df_prod_cons[mask_pli_kstop]["prod_i"].values[0]
             sum_cons_pl_i += df_prod_cons[mask_pli_kstop]["cons_i"].values[0]
+            setX = df_prod_cons[mask_pli_kstop]["set"].values[0]
         # print('pl_{}, sum_prod_pl_i={}, sum_cons_pl_i={}'.format(
         #         num_pl_i, sum_prod_pl_i, sum_cons_pl_i))
         df_PROD_CONS.loc[num_pl_i, "PROD_i"] = sum_prod_pl_i
         df_PROD_CONS.loc[num_pl_i, "CONS_i"] = sum_cons_pl_i
         df_PROD_CONS.loc[num_pl_i, "pl_i"] = num_pl_i
+        df_PROD_CONS.loc[num_pl_i, "set"] = setX
         
     return df_PROD_CONS
 
@@ -1154,7 +1156,8 @@ def plot_utility(df_res, algo, rate, price,
                             ("BB", "@BB"),
                             ("CC", "@CC"),
                             ("CONS_i", "@CONS_i"),
-                            ("PROD_i", "@PROD_i")
+                            ("PROD_i", "@PROD_i"),
+                            ("set", "@set"),
                             ]
                         )
     
@@ -1250,8 +1253,8 @@ def plot_utilities_by_player_4_periods(df_arr_M_T_Ks,
         df_prod_cons = df_arr_M_T_Ks[mask_al_pr_ra_prod_cons].copy()
         df_PROD_CONS = compute_CONS_PROD(df_prod_cons, algo, 
                                          path_2_best_learning_steps)
-        print("{}: df_PROD_CONS={}, df_al_pr_ra={}".format(
-            algo, df_PROD_CONS.shape, df_al_pr_ra.shape))
+        print("{}: df_PROD_CONS={}, df_prod_cons={} ".format(
+            algo, df_PROD_CONS.shape, df_prod_cons.shape))
         # merge on column pl_i
         df_res = pd.merge(df_al_pr_ra, df_PROD_CONS, on="pl_i")
         pxs_al_pr_ra = plot_utility(
@@ -1313,7 +1316,7 @@ def compute_CONS_PROD_NEW(df_prod_cons, algo, path_2_best_learning_steps):
     list_of_players_str = list(map(str,list_of_players))
     t_periods_str = list(map(str, t_periods))
     
-    cols = ['pl_i', 'PROD_i', 'CONS_i']
+    cols = ['pl_i', 'PROD_i', 'CONS_i', 'set']
     df_PROD_CONS = pd.DataFrame(columns=cols, 
                                 index=list_of_players)
     df_PROD = pd.DataFrame(columns=t_periods_str, 
@@ -1322,7 +1325,7 @@ def compute_CONS_PROD_NEW(df_prod_cons, algo, path_2_best_learning_steps):
                            index=list_of_players_str)
     
     for num_pl_i in list_of_players:
-        sum_prod_pl_i = 0; sum_cons_pl_i = 0
+        sum_prod_pl_i = 0; sum_cons_pl_i = 0; set_i = None
         for t in t_periods:
             k_stop = df_tmp.loc["k_stop",str(t)]
             mask_pli_kstop = (df_prod_cons.t == t) \
@@ -1330,6 +1333,7 @@ def compute_CONS_PROD_NEW(df_prod_cons, algo, path_2_best_learning_steps):
                              & (df_prod_cons.pl_i == num_pl_i)
             prod_i = df_prod_cons[mask_pli_kstop]["prod_i"].values[0]
             cons_i = df_prod_cons[mask_pli_kstop]["cons_i"].values[0]
+            set_i = df_prod_cons[mask_pli_kstop]["set"].values[0]
             
             sum_prod_pl_i += prod_i
             sum_cons_pl_i += cons_i
@@ -1340,6 +1344,7 @@ def compute_CONS_PROD_NEW(df_prod_cons, algo, path_2_best_learning_steps):
         df_PROD_CONS.loc[num_pl_i, "PROD_i"] = sum_prod_pl_i
         df_PROD_CONS.loc[num_pl_i, "CONS_i"] = sum_cons_pl_i
         df_PROD_CONS.loc[num_pl_i, "pl_i"] = num_pl_i
+        df_PROD_CONS.loc[num_pl_i, "set"] = set_i
         
     # turn df_PROD to dico with key="player_num_pl_i", value=dico of time
     dico_players_PROD, dico_players_CONS = dict(), dict()
