@@ -2272,10 +2272,13 @@ def turn_dico_stats_res_into_df_LRI(
                 gamma_i = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
+                setX = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["set"]]
                 Vi = ben_csts_MKs_t[num_pl_i, k]
                 
                 dico_pls["player_"+str(num_pl_i)] \
-                    = {"state":state_i, "mode":mode_i, 
+                    = {"set":setX, "state":state_i, "mode":mode_i, 
                        "Vi":round(Vi, fct_aux.N_DECIMALS),
                        "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
                        "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS),
@@ -2358,7 +2361,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08():
     # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     # #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
     
-    t_periods = 30
+    t_periods = 4
     set1_m_players, set2_m_players = 10, 6
     set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #scenario1, name = T2_Scenario1_set1_10_repSet1_0.75_set2_6_repSet2_0.42
     set1_states, set2_states = None, None
