@@ -67,9 +67,9 @@ if __name__ == "__main__":
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.5, 0.42  #scenario6, name = T2_Scenario6_set1_10_repSet1_0.50_set2_6_repSet2_0.42
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.95, 0.75  #scenario7, name = T2_Scenario7_set1_10_repSet1_0.95_set2_6_repSet2_0.75
             #set1_stateId0_m_players, set2_stateId0_m_players = 0.95, 0.95  #scenario8, name = T2_Scenario8_set1_10_repSet1_0.95_set2_6_repSet2_0.95
-            set1_stateId0_m_players, set2_stateId0_m_players = 0.9, 0.0 #scenario1
+            #set1_stateId0_m_players, set2_stateId0_m_players = 0.9, 0.0 #scenario1
             #set1_stateId0_m_players, set2_stateId0_m_players = 1.0, 0.8 #scenario2
-            #set1_stateId0_m_players, set2_stateId0_m_players = 0.5, 0.5 #scenario3
+            set1_stateId0_m_players, set2_stateId0_m_players = 0.5, 0.5 #scenario3
         else:
             # ---- DEBUG A EFFACER apres debug ----
             m_players, t_periods = 3, 2
@@ -111,10 +111,11 @@ if __name__ == "__main__":
                                     path_to_arr_pl_M_T, used_instances)
         algos= None #["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"] 
         if set1_m_players + set2_m_players <= 20:
-            algos = ["LRI1", "LRI2", "DETERMINIST"] \
-                    + fct_aux.ALGO_NAMES_BF 
-                    # \
-                    # + fct_aux.ALGO_NAMES_NASH 
+            algos = ["LRI1", "LRI2", "DETERMINIST"]
+            # algos = ["LRI1", "LRI2", "DETERMINIST"] \
+            #         + fct_aux.ALGO_NAMES_BF 
+            #         # \
+            #         # + fct_aux.ALGO_NAMES_NASH 
         else:
             algos=["LRI1", "LRI2", "DETERMINIST"] 
     else:
@@ -163,14 +164,14 @@ if __name__ == "__main__":
     
     
     if Visualisation: 
-        autoVizGame.MULT_WIDTH = 2.0 #2.25;
-        autoVizGame.MULT_HEIGHT = 0.7 #1.0 #1.1;
+        autoVizGameV1.MULT_WIDTH = 2.0 #2.25;
+        autoVizGameV1.MULT_HEIGHT = 0.7 #1.0 #1.1;
         
         name_simu = "simu_"+date_hhmm; k_steps_args = k_steps
         t = 0 #1
         
-        autoVizGame.NAME_RESULT_SHOW_VARS \
-            = autoVizGame.NAME_RESULT_SHOW_VARS.format(pi_hp_plus[0], 
+        autoVizGameV1.NAME_RESULT_SHOW_VARS \
+            = autoVizGameV1.NAME_RESULT_SHOW_VARS.format(pi_hp_plus[0], 
                                                        pi_hp_minus[0])
             
         ## _________          turn_arr4d_2_df() ---> debut           __________
