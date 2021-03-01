@@ -1470,27 +1470,28 @@ def plot_evolution_players_PROD_CONS_over_time(df_arr_M_T_Ks,
 #
 #               Evolution of PROD, CONS over periods ---> debut
 # _____________________________________________________________________________
-def plot_evolution_PROD_CONS_by_algo(df_PROD_CONS,
+def plot_evolution_IN_OUT_SG_by_algo(df_IN_OUT_SG,
                                      algo, rate, price):
-    df_PROD_CONS["t"] = df_PROD_CONS["t"].astype(str)
-    idx = df_PROD_CONS.t.unique().tolist()
-    cols = ['k', 'PROD', 'CONS']
+    df_IN_OUT_SG["t"] = df_IN_OUT_SG["t"].astype(str)
+    idx = df_IN_OUT_SG.t.unique().tolist()
+    # cols = ['k', 'PROD', 'CONS']
+    cols = ['k', 'IN_sg', 'OUT_sg']
     
     TOOLS[7] = HoverTool(tooltips=[
                             ("t", "@t"),
-                            ("PROD", "@PROD"),
-                            ("CONS", "@CONS")
+                            ("IN_sg", "@IN_sg"),
+                            ("OUT_sg", "@OUT_sg")
                             ]
                         )
     px = figure(x_range=idx, 
-                y_range=(0, df_PROD_CONS[cols[1:]].values.max() + 5), 
+                y_range=(0, df_IN_OUT_SG[cols[1:]].values.max() + 5), 
                 plot_height = int(350), 
                 plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
                 toolbar_location="above")
-    title = "{}: PROD, CONS (rate:{}, price={})".format(algo, rate, price)
+    title = "{}: IN_sg, OUT_sg (rate:{}, price={})".format(algo, rate, price)
     px.title.text = title
            
-    source = ColumnDataSource(data = df_PROD_CONS)
+    source = ColumnDataSource(data = df_IN_OUT_SG)
     
     width= 0.2 #0.5
     px.vbar(x=dodge('t', -0.3, range=px.x_range), top=cols[1], 
@@ -1509,10 +1510,10 @@ def plot_evolution_PROD_CONS_by_algo(df_PROD_CONS,
     
     return px
 
-def compute_CONS_PROD_by_periods(df_prod_cons, algo, df_LRI_12):
-    cols = ['t','k','PROD','CONS']
+def compute_IN_OUT_SG_by_periods(df_prod_cons, algo, df_LRI_12):
+    cols = ['t','k','IN_sg','OUT_sg']
     t_periods = list(df_prod_cons.t.unique())
-    df_PROD_CONS = pd.DataFrame(index=t_periods, columns=cols)
+    df_IN_OUT_SG = pd.DataFrame(index=t_periods, columns=cols)
     for t in t_periods:
         k_max = None
         if algo in ['LRI1', 'LRI2']:
@@ -1521,17 +1522,17 @@ def compute_CONS_PROD_by_periods(df_prod_cons, algo, df_LRI_12):
             k_max = df_prod_cons.k.max()
         mask_t_kmax = (df_prod_cons.k == k_max) & (df_prod_cons.t == t)
         df_t_k = df_prod_cons[mask_t_kmax]
-        prod = df_t_k.prod_i.sum()
-        cons = df_t_k.cons_i.sum()
-        df_PROD_CONS.loc[t, cols[0]] = t
-        df_PROD_CONS.loc[t, cols[1]] = k_max
-        df_PROD_CONS.loc[t, cols[2]] = prod
-        df_PROD_CONS.loc[t, cols[3]] = cons
+        IN_sg = df_t_k.prod_i.sum()
+        OUT_sg = df_t_k.cons_i.sum()
+        df_IN_OUT_SG.loc[t, cols[0]] = t
+        df_IN_OUT_SG.loc[t, cols[1]] = k_max
+        df_IN_OUT_SG.loc[t, cols[2]] = IN_sg
+        df_IN_OUT_SG.loc[t, cols[3]] = OUT_sg
         
-    return df_PROD_CONS
+    return df_IN_OUT_SG
         
     
-def plot_evolution_PROD_CONS_over_time(df_arr_M_T_Ks,
+def plot_evolution_IN_OUT_SG_over_time(df_arr_M_T_Ks,
                                        df_LRI_12):
     """
     show the evolution of PROD, CONS over the time
@@ -1548,28 +1549,28 @@ def plot_evolution_PROD_CONS_over_time(df_arr_M_T_Ks,
                             & (df_arr_M_T_Ks.prices == price) \
                             & (df_arr_M_T_Ks.algo == algo)
         df_prod_cons = df_arr_M_T_Ks[mask_al_pr_ra].copy()
-        df_PROD_CONS = compute_CONS_PROD_by_periods(
-                        df_prod_cons, algo, 
-                        df_LRI_12)
+        df_IN_OUT_SG = compute_IN_OUT_SG_by_periods(
+                            df_prod_cons, algo, 
+                            df_LRI_12)
         
-        pxs_PROD_CONS = plot_evolution_PROD_CONS_by_algo(
-                            df_PROD_CONS,
+        pxs_IN_OUT_SG = plot_evolution_IN_OUT_SG_by_algo(
+                            df_IN_OUT_SG,
                             algo, rate, price)
-        pxs_PROD_CONS.legend.click_policy="hide"
+        pxs_IN_OUT_SG.legend.click_policy="hide"
         
         if (algo, price, rate) not in dico_pxs.keys():
             dico_pxs[(algo, price, rate)] \
-                = [pxs_PROD_CONS]
+                = [pxs_IN_OUT_SG]
         else:
-            dico_pxs[(algo, price, rate)].extend([pxs_PROD_CONS])
+            dico_pxs[(algo, price, rate)].extend([pxs_IN_OUT_SG])
         
-    rows_CONS_PROD_ts = list()
+    rows_IN_OUT_SG_ts = list()
     for key, pxs_CONS_PROD in dico_pxs.items():
         col_px_sts = column(pxs_CONS_PROD)
-        rows_CONS_PROD_ts.append(col_px_sts)
-    rows_CONS_PROD_ts=column(children=rows_CONS_PROD_ts, 
+        rows_IN_OUT_SG_ts.append(col_px_sts)
+    rows_IN_OUT_SG_ts=column(children=rows_IN_OUT_SG_ts, 
                              sizing_mode='stretch_both')
-    return rows_CONS_PROD_ts
+    return rows_IN_OUT_SG_ts
     
 # _____________________________________________________________________________
 #
@@ -2200,10 +2201,10 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                                     path_2_best_learning_steps)
     print("Evolution of CONS and PROD by players over time: TERMINEE")
     
-    rows_CONS_PROD_ts = plot_evolution_PROD_CONS_over_time(
+    rows_OUT_IN_SG_ts = plot_evolution_IN_OUT_SG_over_time(
                             df_arr_M_T_Ks,
                             df_LRI_12)
-    print("Evolution of CONS and PROD by time: TERMINEE")
+    print("Evolution of OUT_sg and IN_sg by time: TERMINEE")
     
     rows_PISG_b0c0_ts = plot_evolution_over_time_PISG_b0c0(df_arr_M_T_Ks, 
                                         df_b0_c0_pisg_pi0_T_K,
@@ -2237,8 +2238,8 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                                 title="utility of players")
     tab_pls_CONS_PROD_ts = Panel(child=rows_pls_CONS_PROD_ts, 
                                 title="evolution of PROD and CONS by players")
-    tab_CONS_PROD_ts = Panel(child=rows_CONS_PROD_ts, 
-                              title="evolution of PROD and CONS over time")
+    tab_OUT_IN_SG_ts = Panel(child=rows_OUT_IN_SG_ts, 
+                              title="evolution of In_sg and OUT_sg over time")
     tab_PISG_b0c0_ts = Panel(child=rows_PISG_b0c0_ts, 
                               title="evolution of pi_sg,b0,c0")
     
@@ -2257,7 +2258,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                         tab_dists_ts,
                         tab_RU_CONS_PROD_ts,
                         tab_pls_CONS_PROD_ts,
-                        tab_CONS_PROD_ts,
+                        tab_OUT_IN_SG_ts,
                         tab_Pref_algo_t,
                         tab_S1S2,
                         tab_PISG_b0c0_ts
@@ -2300,6 +2301,8 @@ if __name__ == "__main__":
     name_simu =  "simu_DDMM_HHMM"; k_steps_args = 50#2000#250
     name_simu = "simu_DDMM_HHMM_T2_scenario8_set1_10_repSet1_0.95_set2_6_repSet2_0.95"
     name_simu = "simu_DDMM_HHMM_T30_Scenario3"
+    name_simu = "simu_DDMM_HHMM_T30_Scenario2"
+    name_simu = "simu_DDMM_HHMM_T30_Scenario1"
     k_steps_args = 250 #350 #2000#250
     
     
