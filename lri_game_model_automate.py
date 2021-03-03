@@ -637,7 +637,7 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         Ci = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
                                    fct_aux.AUTOMATE_INDEX_ATTRS['Ci']]
         Si = arr_pl_M_T_K_vars_modif[num_pl_i, t, k, 
-                                   fct_aux.AUTOMATE_INDEX_ATTRS['Si']] 
+                                   fct_aux.AUTOMATE_INDEX_ATTRS['Si']]
         Si_max = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
         gamma_i = arr_pl_M_T_K_vars_modif[num_pl_i, t, k,
@@ -673,46 +673,6 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         
         # is pl_i balanced?
         boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
-        
-        # compute gamma_i, Si_{plus,minus}
-        # Pi_t_plus_1_k \
-        #     = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
-        #                         fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
-        #         if t+1 < t_periods \
-        #         else 0
-        # Ci_t_plus_1_k \
-        #     = arr_pl_M_T_K_vars_modif[num_pl_i, t+1, k, 
-        #                         fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
-        #         if t+1 < t_periods \
-        #         else 0
-                     
-        # # print("** Ci_t_plus_1_k={}, Pi_t_plus_1_k={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
-        # #         Ci_t_plus_1_k, Pi_t_plus_1_k, pi_0_plus_t, pi_0_minus_t))
-        # pl_i.select_storage_politic(
-        #     Ci_t_plus_1 = Ci_t_plus_1_k, 
-        #     Pi_t_plus_1 = Pi_t_plus_1_k, 
-        #     pi_0_plus = pi_0_plus_t,
-        #     pi_0_minus = pi_0_minus_t,
-        #     pi_hp_plus = pi_hp_plus, 
-        #     pi_hp_minus = pi_hp_minus)
-        
-        # gamma_i = None
-        # if manual_debug:
-        #     gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
-        #     pl_i.set_gamma_i(gamma_i)
-        # else:
-        #     gamma_i = pl_i.get_gamma_i()
-        
-        # dico = dict()
-        # if gamma_i < min(pi_0_plus_t, pi_0_minus_t)-1:
-        #     dico["min_pi_0"] = gamma_i
-        # elif gamma_i > max(pi_hp_minus, pi_hp_plus):
-        #     dico["max_pi_hp"] = gamma_i
-         
-        # mode_i = pl_i.get_mode_i()
-        # dico["state_i"] = state_i; dico["mode_i"] = mode_i
-        # dico["gamma_i"] = gamma_i
-        # dico_gamma_players_t_k["player_"+str(num_pl_i)] = dico
         
         # update variables in arr_pl_M_T_k
         tup_cols_values = [("prod_i", pl_i.get_prod_i()), 
@@ -1407,7 +1367,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                pi_0_plus_t = 2
                pi_0_minus_t = 2
         
-        arr_pl_M_T_K_vars_modif = fct_aux.compute_gamma_4_period_t(
+        arr_pl_M_T_K_vars_modif = fct_aux.compute_gamma_state_4_period_t(
                                 arr_pl_M_T_K_vars=arr_pl_M_T_K_vars_modif.copy(), 
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,

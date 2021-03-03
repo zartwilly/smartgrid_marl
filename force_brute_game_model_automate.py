@@ -559,7 +559,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                pi_0_plus_t = 2
                pi_0_minus_t = 2
                
-        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_4_period_t(
+        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_state_4_period_t(
                                 arr_pl_M_T_K_vars=arr_pl_M_T_vars_modif.copy(), 
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
@@ -647,7 +647,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                             +"_"+str(cpt_xxx)] \
                     = dico_vars
             
-            dico_mode_prof_by_players["Perf_t"] = Perf_t
+            dico_mode_prof_by_players["Perf_t"] = Perf_t                       # utility of the game
             dico_mode_prof_by_players["b0"] = b0_t
             dico_mode_prof_by_players["c0"] = c0_t  
             
@@ -1752,7 +1752,7 @@ def test_brute_force_game_USE_DICT_MODE_PROFIL(criteria):
     debug = False
     criteria_bf = "Perf_t"
     
-    t_periods = 3#35 #2 #53 #3
+    t_periods = 30 #3#35 #2 #53 #3
     set1_m_players, set2_m_players = 20, 12
     set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
     #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42

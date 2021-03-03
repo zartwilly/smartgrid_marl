@@ -30,35 +30,6 @@ RACINE_PLAYER = "player"
 #                       definition of functions
 #
 #------------------------------------------------------------------------------
-# def find_out_opposite_mode(state_i, mode_i):
-#     """
-#     look for the opposite mode of the player.
-#     for example, 
-#     if state_i = state1, the possible modes are CONS+ and CONS-
-#     the opposite mode of CONS+ is CONS- and this of CONS- is CONS+
-#     """
-#     mode_i_bar = None
-#     if state_i == fct_aux.STATES[0] \
-#         and mode_i == fct_aux.STATE1_STRATS[0]:                         # state1, CONS+
-#         mode_i_bar = fct_aux.STATE1_STRATS[1]                           # CONS-
-#     elif state_i == fct_aux.STATES[0] \
-#         and mode_i == fct_aux.STATE1_STRATS[1]:                         # state1, CONS-
-#         mode_i_bar = fct_aux.STATE1_STRATS[0]                           # CONS+
-#     elif state_i == fct_aux.STATES[1] \
-#         and mode_i == fct_aux.STATE2_STRATS[0]:                         # state2, DIS
-#         mode_i_bar = fct_aux.STATE2_STRATS[1]                           # CONS-
-#     elif state_i == fct_aux.STATES[1] \
-#         and mode_i == fct_aux.STATE2_STRATS[1]:                         # state2, CONS-
-#         mode_i_bar = fct_aux.STATE2_STRATS[0]                           # DIS
-#     elif state_i == fct_aux.STATES[2] \
-#         and mode_i == fct_aux.STATE3_STRATS[0]:                         # state3, DIS
-#         mode_i_bar = fct_aux.STATE3_STRATS[1]                           # PROD
-#     elif state_i == fct_aux.STATES[2] \
-#         and mode_i == fct_aux.STATE3_STRATS[1]:                         # state3, PROD
-#         mode_i_bar = fct_aux.STATE3_STRATS[0]                           # DIS
-
-#     return mode_i_bar
-
 def detect_nash_balancing_profil(dico_profs_Vis_Perf_t, 
                                  arr_pl_M_T_vars_modif, t):
     """
@@ -1115,7 +1086,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                pi_0_plus_t = 2
                pi_0_minus_t = 2
                
-        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_4_period_t(
+        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_state_4_period_t(
                                 arr_pl_M_T_K_vars=arr_pl_M_T_vars_modif.copy(), 
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
