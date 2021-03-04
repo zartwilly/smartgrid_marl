@@ -38,14 +38,17 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
         gamma_i = arr_pl_M_T_vars_modif[num_pl_i, t,
                                  fct_aux.AUTOMATE_INDEX_ATTRS['gamma_i']]
-        prod_i, cons_i, r_i = 0, 0, 0
-        state_i = arr_pl_M_T_vars_modif[num_pl_i, t,
-                                 fct_aux.AUTOMATE_INDEX_ATTRS['state_i']]
+        prod_i, cons_i, r_i, state_i = 0, 0, 0, ""
+        # state_i = arr_pl_M_T_vars_modif[num_pl_i, t,
+        #                          fct_aux.AUTOMATE_INDEX_ATTRS['state_i']]
         
         pl_i = None
         pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
                               prod_i, cons_i, r_i, state_i)
         pl_i.set_R_i_old(Si_max-Si)                                             # update R_i_old
+        
+        # state
+        state_i = pl_i.find_out_state_i()
         
         # get mode_i
         mode_i = None
@@ -166,7 +169,8 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
         tup_cols_values = [("prod_i", pl_i.get_prod_i()), 
                 ("cons_i", pl_i.get_cons_i()), ("r_i", pl_i.get_r_i()),
                 ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
-                ("Si_old", pl_i.get_Si_old()), ("mode_i", pl_i.get_mode_i()), 
+                ("Si_old", pl_i.get_Si_old()), 
+                ("mode_i", pl_i.get_mode_i()), ("state_i", pl_i.get_state_i()), 
                 ("balanced_pl_i", boolean), ("formule", formule)]
         for col, val in tup_cols_values:
             arr_pl_M_T_vars_modif[num_pl_i, t, 
@@ -310,12 +314,12 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                pi_0_plus_t = 2
                pi_0_minus_t = 2
             
-        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_4_period_t(
+        arr_pl_M_T_vars_modif = fct_aux.compute_gamma_state_4_period_t(
                                 arr_pl_M_T_K_vars=arr_pl_M_T_vars_modif.copy(), 
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
-                                dbg=dbg)    
+                                dbg=dbg)
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
@@ -417,7 +421,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
     
     #__________      save computed variables locally      _____________________ 
     algo_name = "RD-DETERMINIST" if random_determinist else "DETERMINIST"
-    if arr_pl_M_T_vars_modif.shape[0]<11:
+    if arr_pl_M_T_vars_modif.shape[0]<22:
         fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif, 
                        b0_ts_T, c0_ts_T, B_is_M, C_is_M, 
                        BENs_M_T, CSTs_M_T, 
@@ -494,10 +498,52 @@ def test_DETERMINIST_balanced_player_game():
         
     return arr_pl_M_T_vars
 
+def test_DETERMINIST_balanced_player_game_NEW_AUTOMATE():
+    
+    pi_hp_plus = 10 #0.2*pow(10,-3)
+    pi_hp_minus = 20 #0.33
+    random_determinist = False #True #False
+    used_storage = False #True #False
+    
+    manual_debug=True
+    
+    prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
+    prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
+    prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7;
+    scenario1 = [(prob_A_A, prob_A_B, prob_A_C), 
+                 (prob_B_A, prob_B_B, prob_B_C),
+                 (prob_C_A, prob_C_B, prob_C_C)]
+    
+    t_periods = 4
+    setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False #True
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE(
+                            setA_m_players, setB_m_players, setC_m_players, 
+                            t_periods, 
+                            scenario1,
+                            path_to_arr_pl_M_T, used_instances)
+    
+    arr_pl_M_T_vars = \
+        determinist_balanced_player_game(
+                                 arr_pl_M_T_vars_init.copy(),
+                                 pi_hp_plus=pi_hp_plus, 
+                                 pi_hp_minus=pi_hp_minus,
+                                 random_determinist=random_determinist,
+                                 used_storage=used_storage,
+                                 path_to_save="tests", 
+                                 manual_debug=manual_debug, dbg=False)
+        
+    return arr_pl_M_T_vars
+
+
+
 #------------------------------------------------------------------------------
 #                       execution
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
     ti = time.time()
-    arr_M_T_vars = test_DETERMINIST_balanced_player_game()
+    #arr_M_T_vars = test_DETERMINIST_balanced_player_game()
+    arr_M_T_vars = test_DETERMINIST_balanced_player_game_NEW_AUTOMATE()
     print("runtime = {}".format(time.time() - ti))
