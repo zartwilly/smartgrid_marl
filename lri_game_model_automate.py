@@ -1451,7 +1451,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 if nb_repeat_k == fct_aux.NB_REPEAT_K_MAX-1:
-                    print("arr_bg_i_nb_repeat_k={}".format(arr_bg_i_nb_repeat_k))
+                    print("k={}, arr_bg_i_nb_repeat_k={}".format(k, arr_bg_i_nb_repeat_k))
                     
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
                 for S1or2 in ["S1","S2"]:
@@ -2351,6 +2351,55 @@ def test_lri_balanced_player_game_all_pijk_upper_08():
                                  dbg=False)
     return arr_pl_M_T_K_vars_modif    
 
+def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
+    # steps of learning
+    k_steps = 250 # 5,250
+    p_i_j_ks = [0.5, 0.5, 0.5]
+    
+    pi_hp_plus = 10 #0.2*pow(10,-3)
+    pi_hp_minus = 20 # 0.33
+    learning_rate = 0.1
+    utility_function_version=1
+    
+    manual_debug= False #True
+    
+    prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
+    prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
+    prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7;
+    scenario1 = [(prob_A_A, prob_A_B, prob_A_C), 
+                 (prob_B_A, prob_B_B, prob_B_C),
+                 (prob_C_A, prob_C_B, prob_C_C)]
+    # t_periods = 2
+    # set1_m_players, set2_m_players = 20, 12
+    # set1_stateId0_m_players, set2_stateId0_m_players = 15, 5
+    # #set1_stateId0_m_players, set2_stateId0_m_players = 0.75, 0.42 #0.42
+    
+    t_periods = 4
+    setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False #True
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE(
+                            setA_m_players, setB_m_players, setC_m_players, 
+                            t_periods, 
+                            scenario1,
+                            path_to_arr_pl_M_T, used_instances)
+    # return arr_pl_M_T_vars_init
+    
+    arr_pl_M_T_K_vars_modif = lri_balanced_player_game_all_pijk_upper_08(
+                                arr_pl_M_T_vars_init,
+                                pi_hp_plus=pi_hp_plus, 
+                                 pi_hp_minus=pi_hp_minus,
+                                 k_steps=k_steps, 
+                                 learning_rate=learning_rate,
+                                 p_i_j_ks=p_i_j_ks,
+                                 utility_function_version=utility_function_version,
+                                 path_to_save="tests", 
+                                 manual_debug=manual_debug, 
+                                 dbg=False)
+    return arr_pl_M_T_K_vars_modif    
+
+
 def test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_step():
     # steps of learning
     k_steps = 250 # 5,250
@@ -2402,7 +2451,8 @@ if __name__ == "__main__":
     ti = time.time()
     
     # arr_pl_M_T_K_vars = test_lri_balanced_player_game()
-    arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08()
+    # arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08()
+    arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE()
     # arr_pl_M_T_K_vars = test_lri_balanced_player_game_all_pijk_upper_08_select_best_profil_4_all_step()
     
     print("runtime = {}".format(time.time() - ti))
