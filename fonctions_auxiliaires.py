@@ -508,7 +508,7 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
             arr_pl_vars[num_pl_i, t, :, 
                         AUTOMATE_INDEX_ATTRS["state_i"]] = state_i
             arr_pl_vars[num_pl_i, t, :, 
-                        AUTOMATE_INDEX_ATTRS["S_i"]] = Si
+                        AUTOMATE_INDEX_ATTRS["Si"]] = Si
             arr_pl_vars[num_pl_i, t, :, 
                         AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_i
             arr_pl_vars[num_pl_i, t, :, 
@@ -1841,51 +1841,54 @@ def generate_Pi_Ci_by_automate(setA_m_players,
             Pi_t, Ci_t, Si_t = None, None, None
             setX = arr_pl_M_T_vars[num_pl_i, t, 
                                   AUTOMATE_INDEX_ATTRS["set"]]
+            set_i_t_plus_1 = None
             if setX == SET_ABC[0]:                                             # setA
                 Si_t = 3
                 Ci_t = 10
                 x = np.random.randint(low=2, high=8, size=1)[0]
                 Pi_t = x
+                # player' set at t+1 prob_A_A = 0.7; prob_A_B = 0.3; prob_A_C = 0.0 
+                set_i_t_plus_1 = np.random.choice(SET_ABC, p=[prob_A_A, 
+                                                              prob_A_B, 
+                                                              prob_A_C])
             elif setX == SET_ABC[1]:                                           # setB
                 Si_t = 4
                 Ci_t = 20
                 x = np.random.randint(low=12, high=20, size=1)[0]
                 Pi_t = x
-            elif setX == SET_ABC[2]:                                           # setB
+                # player' set at t+1 prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3 
+                set_i_t_plus_1 = np.random.choice(SET_ABC, p=[prob_B_A, 
+                                                              prob_B_B, 
+                                                              prob_B_C])
+            elif setX == SET_ABC[2]:                                           # setC
                 Si_t = 10
                 Ci_t = 30
                 x = np.random.randint(low=26, high=35, size=1)[0]
                 Pi_t = x
-                
-            # determine state of player for t+1
-            set_i_t_plus_1 = None
-            if setX == SET_ABC[0]:                                         # setA
-                # prob_A_A = 0.7; prob_A_B = 0.3; prob_A_C = 0.0 
-                set_i_t_plus_1 = np.random.choice(SET_ABC, p=[prob_A_A, 
-                                                              prob_A_B, 
-                                                              prob_A_C])
-            elif setX == SET_ABC[1]:                                       # setB
-                # prob_A_B = 0.3; prob_A_A = 0.4; prob_A_C = 0.3 
-                set_i_t_plus_1 = np.random.choice(SET_ABC, p=[prob_B_A, 
-                                                              prob_B_B, 
-                                                              prob_B_C])
-            elif setX == SET_ABC[2]:                                       # setC
-                # prob_A_C = 0.1; prob_A_B = 0.2; prob_A_A = 0.7; 
+                # player' set at t+1 prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7; 
                 set_i_t_plus_1 = np.random.choice(SET_ABC, p=[prob_C_A, 
                                                               prob_C_B, 
                                                               prob_C_C])
                 
             # update arrays cells with variables
-            cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si", Si_t), ("Si_max",Si_t_max), 
-                    ("mode_i",""), ("state_i",""), ("set", set_i_t_plus_1)]
+            cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si",Si_t), ("Si_max",Si_t_max), 
+                    ("mode_i",""), ("state_i",""), ("set",set_i_t_plus_1)]
             for col, val in cols:
-                if t < t_periods-1:
-                    arr_pl_M_T_vars[
-                        num_pl_i, t+1, 
-                        AUTOMATE_INDEX_ATTRS["set"]] = set_i_t_plus_1
-                else:
+                if col != "set":
                     arr_pl_M_T_vars[num_pl_i, t, 
                                     AUTOMATE_INDEX_ATTRS[col]] = val
+                else:
+                    if t < t_periods-1:
+                        arr_pl_M_T_vars[
+                            num_pl_i, t+1, 
+                            AUTOMATE_INDEX_ATTRS["set"]] = set_i_t_plus_1
+                
+            # print("t={}, pl_i={}, Pi,Ci,Si={}".format(t, num_pl_i, 
+            #         arr_pl_M_T_vars[num_pl_i, t,[AUTOMATE_INDEX_ATTRS["Pi"], 
+            #                                      AUTOMATE_INDEX_ATTRS["Ci"],
+            #                                      AUTOMATE_INDEX_ATTRS["Si"], 
+            #                                      AUTOMATE_INDEX_ATTRS["set"]]]
+            #                                           ))
     
     # ____ attribution of players' states in arr_pl_M_T_vars : fin   _________
     
@@ -2611,7 +2614,7 @@ def test_get_or_create_instance_Pi_Ci_etat_AUTOMATE():
     setA_m_players = 10; setB_m_players = 6; setC_m_players = 5 
     t_periods = 20 
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
-    used_instances = True
+    used_instances = True #False#True
     prob_A_A = 0.7; prob_A_B = 0.3; prob_A_C = 0.0;
     prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
     prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7;
@@ -2623,6 +2626,52 @@ def test_get_or_create_instance_Pi_Ci_etat_AUTOMATE():
                         t_periods, 
                         scenario,
                         path_to_arr_pl_M_T, used_instances)
+    m_players = arr_pl_M_T_vars.shape[0]
+    t_periods = arr_pl_M_T_vars.shape[1]
+    for t in range(0, t_periods):
+        cpt_t_Pi_nok, cpt_t_Pi_ok = 0, 0
+        cpt_t_Ci_ok, cpt_t_Ci_nok = 0, 0
+        cpt_t_Si_ok, cpt_t_Si_nok = 0, 0
+        nb_setA_t, nb_setB_t, nb_setC_t = 0, 0, 0
+        for num_pl_i in range(0, m_players):
+            setX = arr_pl_M_T_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["set"]]
+            Pi = arr_pl_M_T_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Pi"]]
+            Ci = arr_pl_M_T_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Ci"]]
+            Si = arr_pl_M_T_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]]
+            
+            if setX == SET_ABC[0]:                                              # setA
+                Pis = [2,8]; Cis = [10]; Sis = [3]
+                nb_setA_t += 1
+                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
+                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+            elif setX == SET_ABC[1]:                                            # setB
+                Pis = [12,20]; Cis = [20]; Sis = [4]
+                nb_setB_t += 1
+                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
+                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+            elif setX == SET_ABC[2]:                                            # setC
+                Pis = [26,35]; Cis = [30]; Sis = [10]
+                nb_setC_t += 1
+                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
+                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+                
+        # print("t={}, setA={}, setB={}, setC={}, Pi_OK={}, Pi_NOK={}, Ci_OK={}, Ci_NOK={}, Si_NOK={}, Pi={}, Ci={}, Si={}".format(
+        #         t, nb_setA_t, nb_setB_t, nb_setC_t, cpt_t_Pi_ok, cpt_t_Pi_nok,
+        #         cpt_t_Ci_ok, cpt_t_Ci_nok, cpt_t_Si_nok, Pi, Ci, Si))
+        print("t={}, setA={}, setB={}, setC={}, Pi_OK={}, Ci_OK={}, Si_OK={}".format(
+                t, nb_setA_t, nb_setB_t, nb_setC_t, 
+                round(cpt_t_Pi_ok/m_players,2), round(cpt_t_Ci_ok/m_players,2), 
+                1-round(cpt_t_Si_nok/m_players,2) ))
+            
                 
     print("arr_pl_M_T_vars={}".format(arr_pl_M_T_vars.shape))
 
