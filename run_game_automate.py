@@ -33,7 +33,7 @@ if __name__ == "__main__":
     if debug:
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm="DDMM_HHMM"
-        t_periods = 30 #35 #55 #117 #15 #3
+        t_periods = 3#30 #35 #55 #117 #15 #3
         k_steps = 250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
