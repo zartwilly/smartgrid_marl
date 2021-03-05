@@ -1852,7 +1852,7 @@ def generate_Pi_Ci_by_automate(setA_m_players,
                                                               prob_A_B, 
                                                               prob_A_C])
             elif setX == SET_ABC[1]:                                           # setB
-                Si_t = 4
+                Si_t = 7
                 Ci_t = 20
                 x = np.random.randint(low=12, high=20, size=1)[0]
                 Pi_t = x
