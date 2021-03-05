@@ -813,7 +813,6 @@ def balanced_player_game_t_4_mode_profil_prices_SG(
                         t, k, 
                         pi_hp_plus, pi_hp_minus, 
                         pi_0_plus_t, pi_0_minus_t,
-                        m_players, t_periods, 
                         random_mode,
                         manual_debug, dbg=False):
     """
@@ -925,7 +924,7 @@ def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
                             fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] )
     for num_pl_i in range(0, m_players):
         state_i = arr_pl_M_T_K_vars_modif[
-                        num_pl_i, t, k_stop_learning(), 
+                        num_pl_i, t, k_stop_learning, 
                         fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] 
         mode_i = modes_profil[num_pl_i]
         mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
@@ -934,7 +933,7 @@ def checkout_nash_4_profils_by_periods(arr_pl_M_T_K_vars_modif,
         opposite_modes_profil[num_pl_i] = mode_i_bar
         opposite_modes_profil = tuple(opposite_modes_profil)
         
-        df_nash_t.loc[num_pl_i, "players"] = "player_"+str(num_pl_i)
+        df_nash_t.loc[num_pl_i, "players"] = fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)
         df_nash_t.loc[num_pl_i, "nash_modes_t{}".format(t)] = mode_i
         df_nash_t.loc[num_pl_i, "states_t{}".format(t)] = state_i
         
@@ -1012,6 +1011,9 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 mode_i = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
+                Si = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
                 S1_p_i_j_k = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
@@ -1026,8 +1028,9 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                                 fct_aux.AUTOMATE_INDEX_ATTRS["set"]]
                 Vi = ben_csts_MKs_t[num_pl_i, k]
                 
-                dico_pls["player_"+str(num_pl_i)] \
+                dico_pls[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
                     = {"set":setX, "state":state_i, "mode":mode_i, 
+                       "Si": round(Si, fct_aux.N_DECIMALS),
                        "Vi":round(Vi, fct_aux.N_DECIMALS),
                        "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
                        "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS),
@@ -1118,7 +1121,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
     # ____          run balanced sg for all t_periods : debut         ________
     arr_pl_M_T_K_vars_modif = arr_pl_M_T_K_vars.copy()
     
-    dico_id_players = {"players":["PLAYER_"+str(num_pl_i) 
+    dico_id_players = {"players":[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i) 
                                   for num_pl_i in range(0, m_players)]}
     df_nash = pd.DataFrame.from_dict(dico_id_players)
     
@@ -1501,9 +1504,10 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
     pi_hp_plus = 10 #0.2*pow(10,-3)
     pi_hp_minus = 20 # 0.33
     learning_rate = 0.1
-    utility_function_version=1
+    utility_function_version= 2#1
     
     manual_debug= False #True
+    fct_aux.N_DECIMALS = 2
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
     prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
