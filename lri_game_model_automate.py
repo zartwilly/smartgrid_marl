@@ -718,6 +718,9 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_K_vars_modif,
         pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
                               prod_i, cons_i, r_i, state_i)
         pl_i.set_R_i_old(Si_max-Si)                                              # update R_i_old
+        # state_i_cpte = pl_i.find_out_state_i()
+        # if state_i != state_i_cpte:
+        #     print("t={}, k={}, state_i={}, state_i_cpte={}".format(t,k,state_i,state_i_cpte))
         
         mode_i = mode_profile[num_pl_i]
         
@@ -1350,6 +1353,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
     for t in range(0, t_periods):
         print("******* t = {} BEGIN *******".format(t))
         
+        nb_max_reached_repeat_k_per_t = 0
         if manual_debug:
             pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
             pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
@@ -1389,7 +1393,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         bool_stop_learning = False
         k_stop_learning = 0
         nb_repeat_k = 0
-        k = 0
+        k = 0; 
         while k<k_steps and not bool_stop_learning:
             # print("------- pi_sg_plus_t_k={}, pi_sg_minus_t_k={} -------".format(
             #         pi_sg_plus_t_k, pi_sg_minus_t_k)) \
@@ -1451,7 +1455,8 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 if nb_repeat_k == fct_aux.NB_REPEAT_K_MAX-1:
-                    print("k={}, arr_bg_i_nb_repeat_k={}".format(k, arr_bg_i_nb_repeat_k))
+                    #print("k={}, arr_bg_i_nb_repeat_k={}".format(k, arr_bg_i_nb_repeat_k))
+                    nb_max_reached_repeat_k_per_t += 1
                     
             elif bool_bg_i_min_eq_max and nb_repeat_k == fct_aux.NB_REPEAT_K_MAX:
                 for S1or2 in ["S1","S2"]:
@@ -1561,7 +1566,8 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         pi_sg_plus_T[t] = pi_sg_plus_t
         pi_sg_minus_T[t] = pi_sg_minus_t
         
-        print("******* t = {} END: k_step = {} *******".format(t, k_stop_learning))
+        print("******* t = {} END: k_step = {}, nb_repeat_k={} *******".format(
+            t, k_stop_learning, nb_max_reached_repeat_k_per_t))
         
     # __________        compute prices variables         ______________________
     ## B_is, C_is of shape (M_PLAYERS, )
@@ -2096,9 +2102,9 @@ def checkout_nash_4_profils_by_periods_NEW(arr_pl_M_T_K_vars_modif,
     m_players = arr_pl_M_T_K_vars_modif.shape[0]
     
     # create a result dataframe of checking players' stability and nash equilibrium
-    cols = [["players", "states", "nash_modes"]]\
-            +[['Vis_t{}'.format(str(t)), 'Vis_bar_t{}'.format(str(t)), 
-               'res_t{}'.format(str(t))] 
+    cols = [["players", "nash_modes"]]\
+            +[['states_t{}'.format(t), 'Vis_t{}'.format(str(t)), 
+               'Vis_bar_t{}'.format(str(t)), 'res_t{}'.format(str(t))] 
               for t in range(0, t_periods)]
     cols = [col for subcol in cols for col in subcol]
     
@@ -2131,7 +2137,7 @@ def checkout_nash_4_profils_by_periods_NEW(arr_pl_M_T_K_vars_modif,
             
             df_res.loc[num_pl_i, "players"] = "player_"+str(num_pl_i)
             df_res.loc[num_pl_i, "nash_modes"] = mode_i
-            df_res.loc[num_pl_i, "states"] = state_i
+            df_res.loc[num_pl_i, "states_t{}".format(t)] = state_i
             
             
             random_mode = False
@@ -2152,11 +2158,11 @@ def checkout_nash_4_profils_by_periods_NEW(arr_pl_M_T_K_vars_modif,
                                       
             bens_csts_t_k = bens_t_k - csts_t_k
             Perf_t = np.sum(bens_csts_t_k, axis=0)
-            Vi = Perf_t
+            Vi = bens_csts_t_k[num_pl_i] #Perf_t
             
             bens_csts_t_k_bar = bens_t_k_bar - csts_t_k_bar
             Perf_t_bar = np.sum(bens_csts_t_k_bar, axis=0)
-            Vi_bar = Perf_t_bar
+            Vi_bar = bens_csts_t_k_bar[num_pl_i] #Perf_t_bar
             
             df_res.loc[num_pl_i, 'Vis_t{}'.format(t)] = Vi
             df_res.loc[num_pl_i, 'Vis_bar_t{}'.format(t)] = Vi_bar
