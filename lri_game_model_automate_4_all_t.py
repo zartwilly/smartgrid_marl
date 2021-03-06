@@ -1000,7 +1000,7 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
         ben_csts_MKs_t = BENs_M_T_K[:,t,:] - CSTs_M_T_K[:,t,:]
         perf_t_K_t = np.sum(ben_csts_MKs_t, axis=0)
         k_stop = dico_k_stop_learnings[t]["k_stop"]
-        for k in range(0, k_stop):
+        for k in range(0, k_stop+1):
             dico_pls = dict()
             b0_s_t_k = b0_s_T_K[t,k]
             c0_s_t_k = c0_s_T_K[t,k]
@@ -1014,6 +1014,9 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 Si = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+                Si_old = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["Si_old"]]
                 S1_p_i_j_k = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
@@ -1030,6 +1033,7 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 
                 dico_pls[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
                     = {"set":setX, "state":state_i, "mode":mode_i, 
+                       "Si_old": round(Si_old, fct_aux.N_DECIMALS),
                        "Si": round(Si, fct_aux.N_DECIMALS),
                        "Vi":round(Vi, fct_aux.N_DECIMALS),
                        "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
@@ -1046,7 +1050,11 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
         
         
     df = pd.DataFrame.from_dict(dico_players, orient="columns")
-    df.to_csv(os.path.join( *[path_to_save, algo_name+"_"+"dico.csv"]))
+    #df.to_csv(os.path.join( *[path_to_save, algo_name+"_"+"dico.csv"]))
+    df.to_excel(os.path.join(
+                *[path_to_save,
+                  "{}_dico.xlsx".format(algo_name)]), 
+                index=True )
 # ______________   turn dico stats into df  -->  fin    ______________________
 
 
@@ -1222,6 +1230,23 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                     learning_rate, 
                     utility_function_version)
             
+            # cancel_update_cols = [fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"],
+            #                       fct_aux.]
+            # cols_2_update = [fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"],
+            #                  fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"],
+            #                  fct_aux.AUTOMATE_INDEX_ATTRS["bg_i"],
+            #                  fct_aux.AUTOMATE_INDEX_ATTRS["u_i"],
+            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
+            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
+            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
+            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
+            #    "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
+            #    "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
+            #    "balanced_pl_i": 14, "formule":15, "Si_minus":16,
+            #    "Si_plus":17, "u_i": 18, "bg_i": 19,
+            #    "S1_p_i_j_k": 20, "S2_p_i_j_k": 21, 
+            #    "non_playing_players":22
+            #                  ]
             if bool_bg_i_min_eq_max and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
                 k = k
                 arr_bg_i_nb_repeat_k[:,nb_repeat_k] \
@@ -1230,8 +1255,8 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                         t, k,
                         fct_aux.AUTOMATE_INDEX_ATTRS["bg_i"]]
                 nb_repeat_k += 1
-                arr_pl_M_T_K_vars_modif[:,t,k,:] \
-                    = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
+                # arr_pl_M_T_K_vars_modif[:,t,k,:] \
+                #     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 if nb_repeat_k == fct_aux.NB_REPEAT_K_MAX-1:
                     #print("k={}, arr_bg_i_nb_repeat_k={}".format(k, arr_bg_i_nb_repeat_k))
                     nb_max_reached_repeat_k_per_t += 1
@@ -1297,7 +1322,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                 arr_bg_i_nb_repeat_k.fill(np.nan)
         
         ## select modes and compute ben,cst at k_stop_learning
-        k_stop_learning = k-1
+        k_stop_learning = k-1 #if k < k_steps else k_steps-1
         dico_k_stop_learnings[t] = {"k_stop":k_stop_learning}
         arr_pl_M_T_K_vars_modif \
             = update_profile_players_by_select_mode_from_S1orS2_p_i_j_k(
