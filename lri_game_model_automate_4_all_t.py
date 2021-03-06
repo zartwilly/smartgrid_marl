@@ -1464,63 +1464,6 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
 #                   definition  des unittests
 #
 ###############################################################################
-def checkout_values_Pi_Ci_arr_pl(arr_pl_M_T_vars_init):
-    m_players = arr_pl_M_T_vars_init.shape[0]
-    t_periods = arr_pl_M_T_vars_init.shape[1]
-    for t in range(0, t_periods):
-        cpt_t_Pi_nok, cpt_t_Pi_ok = 0, 0
-        cpt_t_Ci_ok, cpt_t_Ci_nok = 0, 0
-        cpt_t_Si_ok, cpt_t_Si_nok = 0, 0
-        nb_setA_t, nb_setB_t, nb_setC_t = 0, 0, 0
-        for num_pl_i in range(0, m_players):
-            setX = arr_pl_M_T_vars_init[num_pl_i, t, 
-                                        fct_aux.AUTOMATE_INDEX_ATTRS["set"]]
-            Pi = arr_pl_M_T_vars_init[num_pl_i, t, 
-                                      fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]]
-            Ci = arr_pl_M_T_vars_init[num_pl_i, t, 
-                                      fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]]
-            Si = arr_pl_M_T_vars_init[num_pl_i, t, 
-                                      fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
-            
-            if setX == fct_aux.SET_ABC[0]:                                     # setA
-                Pis = [2,8]; Cis = [10]; Sis = [3]
-                nb_setA_t += 1
-                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
-                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
-                cpt_t_Ci_ok += 1 if Ci in Cis else 0
-                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
-                cpt_t_Si_ok += 1 if Si in Sis else 0
-                cpt_t_Si_nok += 1 if Si not in Sis else 0
-            elif setX == fct_aux.SET_ABC[1]:                                   # setB
-                Pis = [12,20]; Cis = [20]; Sis = [4]
-                nb_setB_t += 1
-                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
-                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
-                cpt_t_Ci_ok += 1 if Ci in Cis else 0
-                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
-                cpt_t_Si_ok += 1 if Si in Sis else 0
-                cpt_t_Si_nok += 1 if Si not in Sis else 0
-            elif setX == fct_aux.SET_ABC[2]:                                   # setC
-                Pis = [26,35]; Cis = [30]; Sis = [10]
-                nb_setC_t += 1
-                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
-                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
-                cpt_t_Ci_ok += 1 if Ci in Cis else 0
-                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
-                cpt_t_Si_ok += 1 if Si in Sis else 0
-                cpt_t_Si_nok += 1 if Si not in Sis else 0
-                
-        # print("t={}, setA={}, setB={}, setC={}, Pi_OK={}, Pi_NOK={}, Ci_OK={}, Ci_NOK={}, Si_NOK={}, Pi={}, Ci={}, Si={}".format(
-        #         t, nb_setA_t, nb_setB_t, nb_setC_t, cpt_t_Pi_ok, cpt_t_Pi_nok,
-        #         cpt_t_Ci_ok, cpt_t_Ci_nok, cpt_t_Si_nok, Pi, Ci, Si))
-        print("t={}, setA={}, setB={}, setC={}, Pi_OK={}, Ci_OK={}, Si_OK={}".format(
-                t, nb_setA_t, nb_setB_t, nb_setC_t, 
-                round(cpt_t_Pi_ok/m_players,2), round(cpt_t_Ci_ok/m_players,2), 
-                1-round(cpt_t_Si_nok/m_players,2) ))
-            
-    print("arr_pl_M_T_vars_init={}".format(arr_pl_M_T_vars_init.shape))
-    
-    
 def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
     # steps of learning
     k_steps = 250 # 5,250
@@ -1551,7 +1494,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
                             t_periods, 
                             scenario1,
                             path_to_arr_pl_M_T, used_instances)
-    checkout_values_Pi_Ci_arr_pl(arr_pl_M_T_vars_init)
+    fct_aux.checkout_values_Pi_Ci_arr_pl(arr_pl_M_T_vars_init)
     # return arr_pl_M_T_vars_init
     
     arr_pl_M_T_K_vars_modif = lri_balanced_player_game_all_pijk_upper_08(
