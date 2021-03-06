@@ -2051,6 +2051,100 @@ def checkout_values_Pi_Ci_arr_pl(arr_pl_M_T_vars_init):
 #            generate Pi, Ci, Si by automate --> fin
 ###############################################################################
 
+###############################################################################
+#           balanced players 4 mode profile at t and k --> debut   
+###############################################################################
+def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif, 
+                                        mode_profile,
+                                        t,
+                                        pi_0_plus_t, pi_0_minus_t, 
+                                        pi_hp_plus, pi_hp_minus,
+                                        manual_debug, dbg):
+    
+    dico_gamma_players_t = dict()
+    
+    m_players = arr_pl_M_T_vars_modif.shape[0]
+    for num_pl_i in range(0, m_players):
+        Pi = arr_pl_M_T_vars_modif[num_pl_i, t,
+                                   AUTOMATE_INDEX_ATTRS['Pi']]
+        Ci = arr_pl_M_T_vars_modif[num_pl_i, t,
+                                   AUTOMATE_INDEX_ATTRS['Ci']]
+        Si = arr_pl_M_T_vars_modif[num_pl_i, t, 
+                                   AUTOMATE_INDEX_ATTRS['Si']] 
+        Si_max = arr_pl_M_T_vars_modif[num_pl_i, t,
+                                       AUTOMATE_INDEX_ATTRS['Si_max']]
+        gamma_i = arr_pl_M_T_vars_modif[num_pl_i, t,
+                                        AUTOMATE_INDEX_ATTRS['gamma_i']]
+        prod_i, cons_i, r_i = 0, 0, 0
+        state_i = arr_pl_M_T_vars_modif[num_pl_i, t,
+                                        AUTOMATE_INDEX_ATTRS['state_i']]
+        
+        pl_i = None
+        pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                              prod_i, cons_i, r_i, state_i)
+        pl_i.set_R_i_old(Si_max-Si)                                            # update R_i_old
+                
+        # select mode for player num_pl_i
+        mode_i = mode_profile[num_pl_i]
+        pl_i.set_mode_i(mode_i)
+        
+        # compute cons, prod, r_i
+        pl_i.update_prod_cons_r_i()
+        
+        # is pl_i balanced?
+        boolean, formule = balanced_player(pl_i, thres=0.1)
+        
+        # update variables in arr_pl_M_T_k
+        tup_cols_values = [("prod_i", pl_i.get_prod_i()), 
+                ("cons_i", pl_i.get_cons_i()), ("r_i", pl_i.get_r_i()),
+                ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
+                ("Si_old", pl_i.get_Si_old()), ("mode_i", pl_i.get_mode_i()), 
+                ("balanced_pl_i", boolean), ("formule", formule)]
+        for col, val in tup_cols_values:
+            arr_pl_M_T_vars_modif[num_pl_i, t,
+                                    AUTOMATE_INDEX_ATTRS[col]] = val
+            
+    return arr_pl_M_T_vars_modif, dico_gamma_players_t
+
+def balanced_player_game_t_4_mode_profil_prices_SG(
+                        arr_pl_M_T_vars_modif, 
+                        mode_profile,
+                        t,
+                        pi_hp_plus, pi_hp_minus, 
+                        pi_0_plus_t, pi_0_minus_t,
+                        random_mode,
+                        manual_debug, dbg=False):
+    """
+    """
+    # find mode, prod, cons, r_i
+    arr_pl_M_T_vars_modif, dico_gamma_players_t \
+        = balanced_player_game_4_mode_profil(
+            arr_pl_M_T_vars_modif.copy(), 
+            mode_profile,
+            t,
+            pi_0_plus_t, pi_0_minus_t, 
+            pi_hp_plus, pi_hp_minus,
+            manual_debug, dbg)
+    
+    # compute pi_sg_{plus,minus}_t_k, pi_0_{plus,minus}_t_k
+    b0_t, c0_t, \
+    bens_t, csts_t, \
+    pi_sg_plus_t, pi_sg_minus_t, \
+        = compute_prices_inside_SG(arr_pl_M_T_vars_modif, t,
+                                           pi_hp_plus, pi_hp_minus,
+                                           pi_0_plus_t, pi_0_minus_t,
+                                           manual_debug, dbg)
+        
+    return arr_pl_M_T_vars_modif, \
+            b0_t, c0_t, \
+            bens_t, csts_t, \
+            dico_gamma_players_t
+
+###############################################################################
+#           balanced players 4 mode profile at t and k --> fin   
+###############################################################################
+
+
 # __________    look for whether pli is balanced or not --> debut  ____________
 
 def balanced_player(pl_i, thres=0.1, dbg=False):
