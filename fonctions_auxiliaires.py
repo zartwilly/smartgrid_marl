@@ -776,6 +776,10 @@ def save_variables(path_to_save, arr_pl_M_T_K_vars,
     np.save(os.path.join(path_to_save, "pi_hp_minus_s.npy"), pi_hp_minus_s)
     pd.DataFrame.from_dict(dico_stats_res)\
         .to_csv(os.path.join(path_to_save, "stats_res.csv"))
+    pd.DataFrame.from_dict(dico_best_steps)\
+        .to_csv(os.path.join(path_to_save,
+                              "best_learning_steps.csv"), 
+                  index=True)
     pd.DataFrame.from_dict(dico_best_steps, orient="columns")\
         .to_excel(os.path.join(path_to_save,
                                "best_learning_steps.xlsx"), 
