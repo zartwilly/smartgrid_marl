@@ -58,10 +58,10 @@ ALGO_NAMES_BF = ["BEST-BRUTE-FORCE", "BAD-BRUTE-FORCE", "MIDDLE-BRUTE-FORCE"]
 ALGO_NAMES_NASH = ["BEST-NASH", "BAD-NASH", "MIDDLE-NASH"]
 
 # manual debug constants
-MANUEL_DBG_GAMMA_I = 5
+MANUEL_DBG_GAMMA_I = np.random.randint(low=2, high=21, size=1)[0]              #5
 MANUEL_DBG_PI_SG_PLUS_T_K = 8
 MANUEL_DBG_PI_SG_MINUS_T_K = 10
-MANUEL_DBG_PI_0_PLUS_T_K = 2 
+MANUEL_DBG_PI_0_PLUS_T_K = 4#2 
 MANUEL_DBG_PI_0_MINUS_T_K = 3
 
 RACINE_PLAYER = "player"
@@ -361,7 +361,8 @@ def compute_gamma_4_period_t(arr_pl_M_T_K_vars, t,
   
 def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t, 
                                    pi_0_plus, pi_0_minus,
-                                   pi_hp_plus, pi_hp_minus, dbg=False):
+                                   pi_hp_plus, pi_hp_minus, 
+                                   manual_debug=False, dbg=False):
     """
     # TODO: ajouter manual_debug parmi les parametres de la fonction puis 
         faire un if manual_dbg : gamma = np.random.randint(low=2, high=21, size=1)[0]
@@ -420,15 +421,18 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
                 Y = pi_hp_plus
                 
             gamma_i = None
-            Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
-            if Si_t_plus_1 < Si_t_minus:
-                gamma_i = X - 1
-            elif Si_t_plus_1 >= Si_t_plus:
-                gamma_i = Y + 1
-            elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
-                res = ( Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus)
-                Z = X + (Y-X)*res
-                gamma_i = math.floor(Z)
+            if manual_debug:
+                gamma_i = MANUEL_DBG_GAMMA_I
+            else:
+                Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
+                if Si_t_plus_1 < Si_t_minus:
+                    gamma_i = X - 1
+                elif Si_t_plus_1 >= Si_t_plus:
+                    gamma_i = Y + 1
+                elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
+                    res = ( Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus)
+                    Z = X + (Y-X)*res
+                    gamma_i = math.floor(Z)
                                 
             arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]] = Si
             arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["state_i"]] = state_i            
@@ -498,15 +502,18 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
                 Y = pi_hp_plus
                 
             gamma_i = None
-            Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
-            if Si_t_plus_1 < Si_t_minus:
-                gamma_i = X-1
-            elif Si_t_plus_1 >= Si_t_plus:
-                gamma_i = Y+1
-            elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
-                res = ( Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus)
-                Z = X + (Y-X)*res
-                gamma_i = math.floor(Z)  
+            if manual_debug:
+                gamma_i = MANUEL_DBG_GAMMA_I
+            else:
+                Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
+                if Si_t_plus_1 < Si_t_minus:
+                    gamma_i = X-1
+                elif Si_t_plus_1 >= Si_t_plus:
+                    gamma_i = Y+1
+                elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
+                    res = ( Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus)
+                    Z = X + (Y-X)*res
+                    gamma_i = math.floor(Z)  
                 
             arr_pl_vars[num_pl_i, t, :, 
                         AUTOMATE_INDEX_ATTRS["state_i"]] = state_i
@@ -2271,7 +2278,6 @@ def checkout_values_Pi_Ci_arr_pl(arr_pl_M_T_vars_init):
             
     print("arr_pl_M_T_vars_init={}".format(arr_pl_M_T_vars_init.shape))
     
-# TODO : checkout values on Pi, Ci for one period t=0
 def checkout_values_Pi_Ci_arr_pl_one_period(arr_pl_M_T_vars_init):
     m_players = arr_pl_M_T_vars_init.shape[0]
     t_periods = arr_pl_M_T_vars_init.shape[1]

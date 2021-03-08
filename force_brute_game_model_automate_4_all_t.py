@@ -170,11 +170,7 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif,
                                        fct_aux.AUTOMATE_INDEX_ATTRS['Si']]
         Si_max = arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
                                         fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
-        gamma_i = None
-        if manual_debug:
-            gamma_i = fct_aux.MANUEL_DBG_GAMMA_I # 5
-        else:
-            gamma_i = arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
+        gamma_i = arr_pl_M_T_vars_mode_prof[num_pl_i, t, 
                                        fct_aux.AUTOMATE_INDEX_ATTRS['gamma_i']]
         prod_i, cons_i, r_i = 0, 0, 0
         mode_i = mode_profile[num_pl_i]
@@ -405,6 +401,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                manual_debug=manual_debug,
                                 dbg=dbg)
         
         possibles_modes = fct_aux.possibles_modes_players_automate(

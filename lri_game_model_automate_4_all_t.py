@@ -1166,8 +1166,8 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                manual_debug=manual_debug,
                                 dbg=dbg)
-                
         print("t={}, pi_sg_plus_t={}, pi_sg_minus_t={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
              t, pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t))
         
@@ -1474,7 +1474,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
     learning_rate = 0.1
     utility_function_version= 2#1
     
-    manual_debug= False #True
+    manual_debug= True #False #True
     fct_aux.N_DECIMALS = 2
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
@@ -1484,7 +1484,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
                  (prob_B_A, prob_B_B, prob_B_C),
                  (prob_C_A, prob_C_B, prob_C_C)]
     
-    t_periods = 4
+    t_periods = 2#4
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True

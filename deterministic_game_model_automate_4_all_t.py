@@ -344,6 +344,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                manual_debug=manual_debug,
                                 dbg=dbg)
             
         pi_0_plus_T[t] = pi_0_plus_t
