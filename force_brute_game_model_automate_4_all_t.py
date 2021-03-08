@@ -54,7 +54,7 @@ def turn_dico_stats_res_into_df_BF(dico_stats_res_algo, path_to_save,
     # save df to xlsx
     df.to_excel(os.path.join(*[path_to_save,
                                "{}_dico_BF.xlsx".format(algo_name)]), 
-                index=False)
+                index=True)
 # ____________          turn dico in2 df  --> debut             ______________
 
 # ____________        checkout NASH equilibrium --> debut        ______________
@@ -181,7 +181,7 @@ def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif,
         
         pl_i.set_R_i_old(Si_max-Si)
         pl_i.set_mode_i(mode_i)
-        pl_i.set_state_i(state_i)
+        #pl_i.set_state_i(state_i)
         
         # update prod, cons and r_i
         pl_i.update_prod_cons_r_i()
@@ -653,7 +653,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
             bens_csts_M_t = bens_t - csts_t
             df_nash_t = None
             df_nash_t = checkout_nash_4_profils_by_periods(
-                            arr_pl_M_T_vars_modif,
+                            arr_pl_M_T_vars_mode_prof_best_algo,
                             arr_pl_M_T_vars_init,
                             pi_hp_plus, pi_hp_minus, 
                             pi_0_minus_t, pi_0_plus_t, 
@@ -789,7 +789,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                    pi_0_minus_T_BESTBF, pi_0_plus_T_BESTBF,
                    pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BESTBF, 
                    algo=algo_name,
-                   dico_best_steps=dico_mode_prof_by_players_T)
+                   dico_best_steps=dict())
     else:
         fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BESTBF, 
                    b0_ts_T_BESTBF, c0_ts_T_BESTBF, B_is_M_BESTBF, C_is_M_BESTBF, 
@@ -826,7 +826,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                        pi_0_minus_T_BADBF, pi_0_plus_T_BADBF,
                        pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_BADBF, 
                        algo=algo_name,
-                       dico_best_steps=dico_mode_prof_by_players_T)
+                       dico_best_steps=dict())
     else:
         fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BADBF, 
                        b0_ts_T_BADBF, c0_ts_T_BADBF, B_is_M_BADBF, C_is_M_BADBF, 
@@ -863,7 +863,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                        pi_0_minus_T_MIDBF, pi_0_plus_T_MIDBF,
                        pi_hp_plus_s, pi_hp_minus_s, dico_stats_res_MIDBF, 
                        algo=algo_name,
-                       dico_best_steps=dico_mode_prof_by_players_T)
+                       dico_best_steps=dict())
     else:
         fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_MIDBF, 
                        b0_ts_T_MIDBF, c0_ts_T_MIDBF, B_is_M_MIDBF, C_is_M_MIDBF, 
@@ -933,6 +933,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     
     t_periods = 2
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
+    setA_m_players, setB_m_players, setC_m_players = 8, 3, 3
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
@@ -953,6 +954,48 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     
     return arr_pl_M_T_vars
     
+def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period():
+    
+    fct_aux.N_DECIMALS = 8
+    
+    pi_hp_plus = 10 #0.2*pow(10,-3) #[5, 15]
+    pi_hp_minus = 20 #0.33 #[15, 5]
+    
+    manual_debug=True
+    debug = False
+    criteria_bf = "Perf_t"
+    
+    setA_m_players = 15; setB_m_players = 10; setC_m_players = 10
+    setA_m_players, setB_m_players, setC_m_players = 8, 3, 3
+    setA_m_players, setB_m_players, setC_m_players = 6, 2, 2
+    t_periods = 1 
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False#True
+    
+    prob_A_A = 0.7; prob_A_B = 0.3; prob_A_C = 0.0;
+    prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
+    prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7;
+    scenario = [(prob_A_A, prob_A_B, prob_A_C), (prob_B_A, prob_B_B, prob_B_C),
+                (prob_C_A, prob_C_B, prob_C_C)]
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_Pi_Ci_one_period(
+                        setA_m_players, setB_m_players, setC_m_players, 
+                        t_periods, 
+                        scenario,
+                        path_to_arr_pl_M_T, used_instances)
+    fct_aux.checkout_values_Pi_Ci_arr_pl_one_period(arr_pl_M_T_vars_init)
+    
+    arr_pl_M_T_vars = bf_balanced_player_game_USE_DICT_MODE_PROFIL(
+                                arr_pl_M_T_vars_init.copy(),
+                                pi_hp_plus=pi_hp_plus, 
+                                pi_hp_minus=pi_hp_minus,
+                                path_to_save="tests", 
+                                manual_debug=manual_debug, 
+                                criteria_bf=criteria_bf, dbg=debug)
+    
+    return arr_pl_M_T_vars
+    
+    
 ###############################################################################
 #                   Execution
 #
@@ -962,5 +1005,8 @@ if __name__ == "__main__":
     
     arr_pl_M_T_vars_modif \
         = test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE()
+        
+    # arr_pl_M_T_vars_modif \
+    #     = test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period()
     
     print("runtime = {}".format(time.time() - ti))
