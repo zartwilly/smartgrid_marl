@@ -2303,9 +2303,8 @@ if __name__ == "__main__":
     t = 1
     
     name_simu =  "simu_2701_1259"; k_steps_args = 250
-    name_simu =  "simu_DDMM_HHMM"; k_steps_args = 50#2000#250
-    name_simu = "simu_DDMM_HHMM_T2_scenario8_set1_10_repSet1_0.95_set2_6_repSet2_0.95"
-    name_simu = "simu_DDMM_HHMM_T30_Scenario3"
+    name_simu =  "simu_DDMM_HHMM_scenario1_T50"; k_steps_args = 50#2000#250
+    #name_simu = "simu_DDMM_HHMM_T30_Scenario3"
     #name_simu = "simu_DDMM_HHMM_T30_Scenario2"
     #name_simu = "simu_DDMM_HHMM_T30_Scenario1"
     k_steps_args = 250 #350 #2000#250
@@ -2315,8 +2314,9 @@ if __name__ == "__main__":
                             + fct_aux.ALGO_NAMES_BF \
                             + fct_aux.ALGO_NAMES_NASH
     algos_4_learning = ["LRI1", "LRI2"]
-    algos_4_showing = ["DETERMINIST", "LRI1", "LRI2"] \
-                        + [fct_aux.ALGO_NAMES_BF[0], fct_aux.ALGO_NAMES_BF[1]]
+    # algos_4_showing = ["DETERMINIST", "LRI1", "LRI2"] \
+    #                     + [fct_aux.ALGO_NAMES_BF[0], fct_aux.ALGO_NAMES_BF[1]]
+    algos_4_showing = ["DETERMINIST", "LRI1", "LRI2"] 
                         
     tuple_paths, prices, algos, learning_rates, path_2_best_learning_steps \
         = get_tuple_paths_of_arrays(
