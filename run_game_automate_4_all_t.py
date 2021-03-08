@@ -10,7 +10,6 @@ import os
 import time
 import execution_game_automate_4_all_t as autoExeGame4T
 import fonctions_auxiliaires as fct_aux
-import visu_bkh_automate as autoVizGame
 import visu_bkh_automate_v1 as autoVizGameV1
 
 
@@ -41,7 +40,7 @@ if __name__ == "__main__":
     # _____                     scenarios --> fin                   __________
     
     
-    debug_all_periods = False #True #False #False #True
+    debug_all_periods = True #False #True #False #False #True
     debug_one_period = not debug_all_periods
     
     name_dir="tests"
@@ -61,7 +60,7 @@ if __name__ == "__main__":
         nb_periods = None
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm="DDMM_HHMM"
-        t_periods = 3 #50 #30 #35 #55 #117 #15 #3
+        t_periods = 50 #30 #35 #55 #117 #15 #3
         k_steps = 250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
@@ -71,8 +70,8 @@ if __name__ == "__main__":
         pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
         
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
-                + fct_aux.ALGO_NAMES_NASH \
                 + fct_aux.ALGO_NAMES_BF
+        algos = ["LRI1", "LRI2", "DETERMINIST"]
         
         dbg_234_players = False #True #False
         used_storage_det= True #False #True
@@ -83,6 +82,7 @@ if __name__ == "__main__":
         
         # ---- initialization of variables for generating instances ----
         setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
+        setA_m_players, setB_m_players, setC_m_players = 15, 10, 10
         if dbg_234_players:
             t_periods = 2
             setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
