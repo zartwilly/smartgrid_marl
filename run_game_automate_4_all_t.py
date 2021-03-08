@@ -41,7 +41,8 @@ if __name__ == "__main__":
     # _____                     scenarios --> fin                   __________
     
     
-    debug = True #False #False #True
+    debug_all_periods = False #True #False #False #True
+    debug_one_period = not debug_all_periods
     
     name_dir="tests"
     
@@ -53,11 +54,14 @@ if __name__ == "__main__":
     used_storage_det=True
     criteria_bf="Perf_t" # "In_sg_Out_sg"
     dbg_234_players = None
+    arr_pl_M_T_vars_init = None
+    path_to_arr_pl_M_T = os.path.join(*[name_dir, "AUTOMATE_INSTANCES_GAMES"])
     
-    if debug:
+    if debug_all_periods:
+        nb_periods = None
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm="DDMM_HHMM"
-        t_periods = 50 #30 #35 #55 #117 #15 #3
+        t_periods = 3 #50 #30 #35 #55 #117 #15 #3
         k_steps = 250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
@@ -71,7 +75,7 @@ if __name__ == "__main__":
                 + fct_aux.ALGO_NAMES_BF
         
         dbg_234_players = False #True #False
-        used_storage_det= False #True
+        used_storage_det= True #False #True
         manual_debug = False #True #False #True
         Visualisation = True #False, True
         
@@ -82,59 +86,73 @@ if __name__ == "__main__":
         if dbg_234_players:
             t_periods = 2
             setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
-    else:
-       # ---- new constances simu_2306_2206 --- **** debug ***** 
-       date_hhmm="2306_2206"
-       t_periods = 110
-       k_steps = 1000
-       NB_REPEAT_K_MAX = 15 #30
-       learning_rates = [0.1] #[0.01] #[0.0001]
-       
-       pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
-       pi_hp_minus = [0.33] #[15, 5]
-       
-       dbg_234_players = False
-       used_storage_det= True #False #True
-       manual_debug = False #True
-       Visualisation = True #False, True
-       
-       # ---- initialization of variables for generating instances ----
-       setA_m_players, setB_m_players, setC_m_players = 20, 12, 6
-       
-       
-    set1_states, set2_states = None, None
-    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
-    used_instances = True #False #True
-    algos= None
-    arr_pl_M_T_vars_init = None 
-    if not dbg_234_players:
+         
+        used_instances = True
         arr_pl_M_T_vars_init \
             = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE(
                 setA_m_players, setB_m_players, setC_m_players, 
                 t_periods, 
                 scenario,
                 path_to_arr_pl_M_T, used_instances)
-        algos= None #["LRI1", "LRI2", "DETERMINIST", "RD-DETERMINIST", "BRUTE-FORCE"] 
-        if setA_m_players + setB_m_players + setC_m_players <= 20:
-            algos = ["LRI1", "LRI2", "DETERMINIST"] \
-                    + fct_aux.ALGO_NAMES_BF
-                    # + fct_aux.ALGO_NAMES_NASH 
-        else:
-            algos= ["LRI1", "LRI2", "DETERMINIST"]  #["LRI1", "LRI2", "DETERMINIST"] 
-            algos= ["LRI1", "LRI2", "DETERMINIST"] \
-                    + fct_aux.ALGO_NAMES_BF
-    else:
-        # ---- DEBUG A EFFACER apres debug ----
-        arr_pl_M_T_vars_init \
-            = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE(
-                setA_m_players, setB_m_players, setC_m_players, 
-                t_periods, 
-                scenario,
-                path_to_arr_pl_M_T, used_instances)
-        algos = ["LRI1", "LRI2", "DETERMINIST"] \
-                    + fct_aux.ALGO_NAMES_BF \
-                    + fct_aux.ALGO_NAMES_NASH 
         
+    elif debug_one_period:
+        nb_periods = 0
+        # ---- new constances simu_DDMM_HHMM  ONE PERIOD t = 0 --- **** debug *****
+        date_hhmm="DDMM_HHMM"
+        t_periods = 1 #50 #30 #35 #55 #117 #15 #3
+        k_steps = 250 #5000 #2000 #50 #250
+        NB_REPEAT_K_MAX= 10 #3 #15 #30
+        learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
+        fct_aux.N_DECIMALS = 8
+        
+        pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
+        pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
+        
+        algos = ["LRI1", "LRI2", "DETERMINIST"] \
+                + fct_aux.ALGO_NAMES_NASH \
+                + fct_aux.ALGO_NAMES_BF
+        algos = ["LRI1", "LRI2", "DETERMINIST"] 
+        
+        dbg_234_players = False #True #False
+        used_storage_det= True #False #True
+        manual_debug = True#False #True #False #True
+        Visualisation = True #False, True
+        
+        scenario = scenario1
+        
+        # ---- initialization of variables for generating instances ----
+        setA_m_players, setB_m_players, setC_m_players = 15, 10, 10
+        setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
+        
+        # ---- generation of data into array ----
+        used_instances = True
+        arr_pl_M_T_vars_init \
+            = fct_aux.get_or_create_instance_Pi_Ci_one_period(
+                setA_m_players, setB_m_players, setC_m_players, 
+                t_periods, 
+                scenario,
+                path_to_arr_pl_M_T, used_instances)
+        
+    else:
+        nb_periods = None
+        # ---- new constances simu_2306_2206 --- **** debug ***** 
+        date_hhmm="2306_2206"
+        t_periods = 110
+        k_steps = 1000
+        NB_REPEAT_K_MAX = 15 #30
+        learning_rates = [0.1] #[0.01] #[0.0001]
+       
+        pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
+        pi_hp_minus = [0.33] #[15, 5]
+       
+        dbg_234_players = False
+        used_storage_det= True #False #True
+        manual_debug = False #True
+        Visualisation = True #False, True
+       
+        # ---- initialization of variables for generating instances ----
+        setA_m_players, setB_m_players, setC_m_players = 20, 12, 6
+       
     
     # autoExeGame.execute_algos_used_Generated_instances(
     #             arr_pl_M_T_vars_init, 
@@ -204,14 +222,13 @@ if __name__ == "__main__":
         df_LRI_12, df_k_stop = autoVizGameV1.get_k_stop_4_periods(
                                                 path_2_best_learning_steps)
         print("get_k_stop_4_periods: TERMINE") 
-    
         
         df_arr_M_T_Ks, \
         df_ben_cst_M_T_K, \
         df_b0_c0_pisg_pi0_T_K, \
         df_B_C_BB_CC_RU_M \
             = autoVizGameV1.get_array_turn_df_for_t(
-                tuple_paths, t=None, k_steps_args=k_steps_args, 
+                tuple_paths, t=nb_periods, k_steps_args=k_steps_args, 
                 algos_4_no_learning=algos_4_no_learning, 
                 algos_4_learning=algos_4_learning)
         print("df_arr_M_T_Ks: {}, df_ben_cst_M_T_K={}, df_b0_c0_pisg_pi0_T_K={}, df_B_C_BB_CC_RU_M={}".format( 
