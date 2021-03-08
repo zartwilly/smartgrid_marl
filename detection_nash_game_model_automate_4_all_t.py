@@ -920,6 +920,7 @@ def test_NASH_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL():
     t_periods = 2
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
     setA_m_players, setB_m_players, setC_m_players = 8, 3, 3
+    setA_m_players, setB_m_players, setC_m_players = 6, 2, 2
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
@@ -936,7 +937,7 @@ def test_NASH_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL():
                                 pi_hp_minus=pi_hp_minus,
                                 path_to_save="tests", 
                                 manual_debug=manual_debug, 
-                                criteria_bf=criteria_bf, dbg=debug)
+                                dbg=debug)
     
     return arr_pl_M_T_vars
 
@@ -977,7 +978,7 @@ def test_NASH_balanced_player_game_Pi_Ci_one_period():
                                 pi_hp_minus=pi_hp_minus,
                                 path_to_save="tests", 
                                 manual_debug=manual_debug, 
-                                criteria_bf=criteria_bf, dbg=debug)
+                                dbg=debug)
     
     return arr_pl_M_T_vars
     
@@ -988,6 +989,7 @@ def test_NASH_balanced_player_game_Pi_Ci_one_period():
 if __name__ == "__main__":
     ti = time.time()
     
-   
+    arr_pl_M_T_vars = test_NASH_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL()
+    # arr_pl_M_T_vars = test_NASH_balanced_player_game_Pi_Ci_one_period()
     
     print("runtime = {}".format(time.time() - ti))
