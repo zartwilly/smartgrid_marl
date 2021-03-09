@@ -201,6 +201,8 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                                 pi_hp_plus=0.2, 
                                 pi_hp_minus=0.33,
                                 path_to_save="tests", 
+                                name_dir="tests", 
+                                date_hhmm="DDMM_HHMM",
                                 manual_debug=False, 
                                 dbg=False):
     
@@ -777,7 +779,6 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
     
     #_______      save computed variables locally from algo_name     __________
     msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
-    name_dir = "tests"; date_hhmm = "DDMM_HHMM"
     
     print("path_to_save={}".format(path_to_save))
     algo_name = fct_aux.ALGO_NAMES_NASH[0]
@@ -823,6 +824,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
                                     msg, algo_name
                                     )
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
     df_nash_BADN.to_excel(os.path.join(
                 *[path_to_save,
                   "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
@@ -860,6 +862,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
         path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
                                     msg, algo_name
                                     )
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
     df_nash_MIDN.to_excel(os.path.join(
                 *[path_to_save,
                   "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
@@ -936,6 +939,8 @@ def test_NASH_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL():
                                 pi_hp_plus=pi_hp_plus, 
                                 pi_hp_minus=pi_hp_minus,
                                 path_to_save="tests", 
+                                name_dir="tests", 
+                                date_hhmm="DDMM_HHMM",
                                 manual_debug=manual_debug, 
                                 dbg=debug)
     
@@ -977,6 +982,8 @@ def test_NASH_balanced_player_game_Pi_Ci_one_period():
                                 pi_hp_plus=pi_hp_plus, 
                                 pi_hp_minus=pi_hp_minus,
                                 path_to_save="tests", 
+                                name_dir="tests", 
+                                date_hhmm="DDMM_HHMM",
                                 manual_debug=manual_debug, 
                                 dbg=debug)
     

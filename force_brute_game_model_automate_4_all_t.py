@@ -238,6 +238,8 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                         pi_hp_plus=0.02, 
                                         pi_hp_minus=0.33,
                                         path_to_save="tests", 
+                                        name_dir="tests", 
+                                        date_hhmm="DDMM_HHMM",
                                         manual_debug=False, 
                                         criteria_bf="Perf_t", dbg=False):
     
@@ -626,10 +628,12 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
             diff = np.abs(best_key_Perf_t-( np.sum(bens_t-csts_t) ))
             print("best_key==bens_t-csts_t --> OK (diff={}) ".format(diff)) \
                 if diff < 0.1 \
-                else print("best_key==bens_t-csts_t --> NOK (diff={}) \n".format(diff))
+                else print("best_key==bens_t-csts_t --> NOK (diff={}) \n"\
+                           .format(diff))
             In_sg, Out_sg = fct_aux.compute_prod_cons_SG(
                                 arr_pl_M_T_vars_mode_prof_best_algo, t)
-            print("b0_t={}, c0_t={}, Out_sg={},In_sg={} \n".format(b0_t, c0_t, Out_sg, In_sg))
+            print("b0_t={}, c0_t={}, Out_sg={},In_sg={} \n".format(
+                b0_t, c0_t, Out_sg, In_sg))
             
             # pi_sg_{plus,minus} of shape (T_PERIODS,)
             if np.isnan(pi_sg_plus_t):
@@ -660,7 +664,8 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                             bens_csts_M_t,
                             t,
                             manual_debug)
-            df_nash_algo = pd.merge(df_nash_algo, df_nash_t, on='players', how='outer')
+            df_nash_algo = pd.merge(df_nash_algo, df_nash_t, on='players', 
+                                    how='outer')
             
             # __________        compute prices variables         ____________________
             # B_is, C_is of shape (M_PLAYERS, )
@@ -767,7 +772,6 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
         
     #_______      save computed variables locally from algo_name     __________
     msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
-    name_dir = "tests"; date_hhmm = "DDMM_HHMM"
     
     print("path_to_save={}".format(path_to_save))
     algo_name = fct_aux.ALGO_NAMES_BF[0]
@@ -949,6 +953,8 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
                                 pi_hp_plus=pi_hp_plus, 
                                 pi_hp_minus=pi_hp_minus,
                                 path_to_save="tests", 
+                                name_dir="tests", 
+                                date_hhmm="DDMM_HHMM",
                                 manual_debug=manual_debug, 
                                 criteria_bf=criteria_bf, dbg=debug)
     
@@ -990,6 +996,8 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period():
                                 pi_hp_plus=pi_hp_plus, 
                                 pi_hp_minus=pi_hp_minus,
                                 path_to_save="tests", 
+                                name_dir="tests", 
+                                date_hhmm="DDMM_HHMM",
                                 manual_debug=manual_debug, 
                                 criteria_bf=criteria_bf, dbg=debug)
     
