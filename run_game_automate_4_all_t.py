@@ -37,6 +37,9 @@ if __name__ == "__main__":
     scenario3 = [(prob_A_A, prob_A_B, prob_A_C), 
                  (prob_B_A, prob_B_B, prob_B_C),
                  (prob_C_A, prob_C_B, prob_C_C)]
+    dico_scenario = {"scenario1": scenario1, 
+                     "scenario2": scenario2, 
+                     "scenario3": scenario3}
     # _____                     scenarios --> fin                   __________
     
     
@@ -59,8 +62,8 @@ if __name__ == "__main__":
     if debug_all_periods:
         nb_periods = None
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
-        date_hhmm="DDMM_HHMM"
-        t_periods = 50 #30 #35 #55 #117 #15 #3
+        date_hhmm = "DDMM_HHMM"
+        t_periods = 20 #50 #30 #35 #55 #117 #15 #3
         k_steps = 250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
@@ -78,7 +81,9 @@ if __name__ == "__main__":
         manual_debug = False #True #False #True
         Visualisation = True #False, True
         
-        scenario = scenario1
+        scenario = "scenario1"
+        date_hhmm = "_".join([date_hhmm, scenario, 
+                              "".join(["T", str(t_periods)])])
         
         # ---- initialization of variables for generating instances ----
         setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
@@ -92,7 +97,7 @@ if __name__ == "__main__":
             = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE(
                 setA_m_players, setB_m_players, setC_m_players, 
                 t_periods, 
-                scenario,
+                dico_scenario[scenario],
                 path_to_arr_pl_M_T, used_instances)
         
     elif debug_one_period:
