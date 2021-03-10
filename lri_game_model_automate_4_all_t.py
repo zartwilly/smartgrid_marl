@@ -1357,26 +1357,27 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         Sis = arr_pl_M_T_K_vars[
                         :, t, k_stop_learning, 
                         fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+        dico_gamma_players_t[t] = dico_gamma_players_t_k
         # arr_pl_M_T_K_vars_modif[
         #                 :, t, k_stop_learning, 
         #                 fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = Sis
-        random_mode = False
-        arr_pl_M_T_K_vars_modif, \
-        b0_t_k, c0_t_k, \
-        bens_t_k, csts_t_k, \
-        dico_gamma_players_t_k \
-            = balanced_player_game_t(arr_pl_M_T_K_vars_modif.copy(), 
-                        t, k_stop_learning, 
-                        pi_hp_plus, pi_hp_minus, 
-                        pi_0_plus_t, pi_0_minus_t,
-                        m_players, t_periods, random_mode,
-                        manual_debug, dbg=False)
-        dico_gamma_players_t[t] = dico_gamma_players_t_k
-        dico_stats_res[t] = dico_gamma_players_t
-        b0_s_T_K[t,k_stop_learning] = b0_t_k
-        c0_s_T_K[t,k_stop_learning] = c0_t_k
-        BENs_M_T_K[:,t,k_stop_learning] = bens_t_k
-        CSTs_M_T_K[:,t,k_stop_learning] = csts_t_k
+        # random_mode = False
+        # arr_pl_M_T_K_vars_modif, \
+        # b0_t_k, c0_t_k, \
+        # bens_t_k, csts_t_k, \
+        # dico_gamma_players_t_k \
+        #     = balanced_player_game_t(arr_pl_M_T_K_vars_modif.copy(), 
+        #                 t, k_stop_learning, 
+        #                 pi_hp_plus, pi_hp_minus, 
+        #                 pi_0_plus_t, pi_0_minus_t,
+        #                 m_players, t_periods, random_mode,
+        #                 manual_debug, dbg=False)
+        # dico_gamma_players_t[t] = dico_gamma_players_t_k
+        # dico_stats_res[t] = dico_gamma_players_t
+        # b0_s_T_K[t,k_stop_learning] = b0_t_k
+        # c0_s_T_K[t,k_stop_learning] = c0_t_k
+        # BENs_M_T_K[:,t,k_stop_learning] = bens_t_k
+        # CSTs_M_T_K[:,t,k_stop_learning] = csts_t_k
         
         Sis = arr_pl_M_T_K_vars_modif[
                         :, t, k_stop_learning, 
