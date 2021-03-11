@@ -584,7 +584,7 @@ def get_array_turn_df_for_t(tuple_paths, t=1, k_steps_args=250,
         #for t in range(0, t_periods):                                     
         t_periods = None; tu_mtk = None; tu_tk = None; tu_m = None
         if t is None:
-            t_periods = arr_pl_M_T_K_vars.shape[1] - 1
+            t_periods = arr_pl_M_T_K_vars.shape[1]
             tu_mtk = list(it.product([algo], [rate], [price],
                                      range(0, m_players), 
                                      range(0, t_periods), 
@@ -2178,6 +2178,223 @@ def plot_max_proba_mode(df_arr_M_T_Ks, t, path_2_best_learning_steps,
 #        moyenne de la grande proba dune mode pour chaque state  ---> fin
 # _____________________________________________________________________________
 
+
+# _____________________________________________________________________________
+#
+#        representation de moyenne de Vi a chaque periode  ---> debut
+# _____________________________________________________________________________
+def create_dataframe_mean_Vi_for(df_ben_cst_M_T_K, df_LRI_12, k_steps_args, 
+                                 algos_4_learning):
+    """
+    create a dataframe containing the mean of Vi by for loop
+    for each algo at each period
+    
+    """
+    df_ben_cst_M_T_K["Vi"] = df_ben_cst_M_T_K["ben"] - df_ben_cst_M_T_K["cst"]
+    
+    algos = df_ben_cst_M_T_K.algo.unique().tolist()
+    t_periods = df_ben_cst_M_T_K.t.unique().tolist()
+    rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
+    prices = df_ben_cst_M_T_K["prices"].unique()
+    
+    dico_algo_t_periods = dict()
+    dico_algo_t_periods["algo"] = []
+    dico_algo_t_periods["t"] = []
+    dico_algo_t_periods["rate"] = []
+    dico_algo_t_periods["price"] = []
+    dico_algo_t_periods["moy_Vi"] = []
+    
+    # TODO : l es valeurs de determinist sont tous a NAN
+    for (rate,price,algo) in it.product(rates,prices,algos):
+        for t in t_periods:
+            kmax = df_LRI_12.loc[algo+"_k_stop", str(t)] \
+                        if algo in algos_4_learning \
+                        else k_steps_args-1
+            mask_algo_kmax = (df_ben_cst_M_T_K.algo == algo) \
+                                & (df_ben_cst_M_T_K.rate == rate) \
+                                & (df_ben_cst_M_T_K.prices == price) \
+                                & (df_ben_cst_M_T_K.k == kmax)
+            df_pl_is = df_ben_cst_M_T_K[mask_algo_kmax]
+            mean_Vi = df_pl_is['Vi'].mean()
+            dico_algo_t_periods["algo"].append(algo)
+            dico_algo_t_periods["t"].append(str(t))
+            dico_algo_t_periods["moy_Vi"].append(mean_Vi)
+            dico_algo_t_periods["rate"].append(rate)
+            dico_algo_t_periods["price"].append(price)
+            
+        print("mean_Vi_for: {}, price={},rate={} TERMINE".format(algo,price,rate))
+        
+    df_algo_t_periods_moyVi = pd.DataFrame.from_dict(dico_algo_t_periods)
+    
+    return df_algo_t_periods_moyVi
+
+def plot_bar_meanVi_over_time_one_algo(df_ra_pr, price, rate):
+    """
+    draw a bar plot of Vi mean.
+    the bar plot has period t and algo on x-axis ie key = (t, algo)
+        and moyVi on y-axis
+
+    """
+    
+    cols = ["t", "algo"]
+    x = list(map(tuple,list(df_ra_pr[cols].values)))
+    moy_Vi = list(df_ra_pr["moy_Vi"])
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("algo", "@algo"),
+                            ("t", "@t"),
+                            ("moy_Vi", "@moy_Vi")
+                            ]
+                        )
+    
+    px= figure(x_range=FactorRange(*x), 
+                plot_height=int(HEIGHT*MULT_HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH),
+                title="mean of Vi over time (price={},rate={}".format(price,rate),
+                toolbar_location="above", tools=TOOLS)
+
+    data = dict(x=x, moy_Vi=moy_Vi, 
+                t=df_ra_pr.t.tolist(),
+                algo=df_ra_pr.algo.tolist())
+    source = ColumnDataSource(data=data)
+    px.vbar(x='x', top='moy_Vi', width=0.9, source=source, 
+            fill_color=factor_cmap('x', 
+                                    palette=Category20[20], 
+                                    factors=list(df_ra_pr.algo.unique()), 
+                                    start=1, end=2))
+    print("moy_Vi={}".format( df_ra_pr.moy_Vi ))
+    print("min(moy_Vi)={}".format( df_ra_pr.moy_Vi.min() ))
+    px.y_range.start = df_ra_pr.moy_Vi.min() - 1
+    #px.y_range.end = df_ra_pr.moy_Vi.max()
+    px.x_range.range_padding = 0.1
+    px.xaxis.major_label_orientation = 1
+    px.xgrid.grid_line_color = None
+    px.xaxis.axis_label = 't_periods'
+    px.yaxis.axis_label = 'moy_Vi'
+    
+    return px
+    
+
+def plot_bar_meanVi_over_time(df_algo_t_periods_moyVi):
+    
+    algos = df_algo_t_periods_moyVi.algo.unique().tolist()
+    rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
+    prices = df_ben_cst_M_T_K["prices"].unique()
+    
+    dico_pxs = dict()
+    for (rate, price) in it.product(rates, prices):
+        mask_ra_pr = (df_algo_t_periods_moyVi.rate == rate) \
+                            & (df_algo_t_periods_moyVi.price == price)
+        df_ra_pr = df_algo_t_periods_moyVi[mask_ra_pr]
+        
+        px = plot_bar_meanVi_over_time_one_algo(df_ra_pr, price, rate)
+        if (price, rate) not in dico_pxs:
+            dico_pxs[(price, rate)] = [px]
+        else:
+            dico_pxs[(price, rate)].append(px)
+            
+    col_pxs = []
+    for key, pxs in dico_pxs.items():
+        row_px_sts = row(pxs)
+        col_pxs.append(row_px_sts)
+    col_pxs=column(children=col_pxs, 
+                   sizing_mode='stretch_both')
+    return col_pxs   
+# _____________________________________________________________________________
+#
+#        representation de moyenne de Vi a chaque periode  ---> fin
+# _____________________________________________________________________________
+
+# _____________________________________________________________________________
+#
+#           representation de moyenne de Vi par algo  ---> debut
+# _____________________________________________________________________________
+def plot_bar_meanVi_all_algos(df_ra_pr, price, rate):
+    """
+    draw a bar plot of Vi mean for all algo.
+    the bar plot has algo on x-axis ie key = (algo)
+        and moyVi on y-axis
+
+    """
+    cols = ["algo"]
+    df_groupby_algo = df_ra_pr.groupby(cols)["moy_Vi"]\
+                                .aggregate([np.sum, np.mean, np.std])\
+                                .reset_index()
+    df_groupby_algo.rename(columns={"mean":"moy_Vi", 
+                                    "sum":"sum_Vi", 
+                                    "std":"std_Vi"}, 
+                                   inplace=True)
+    algos = df_groupby_algo[cols].values.tolist() 
+    algos = df_groupby_algo['algo'].values.tolist()
+    moy_Vi = list(df_groupby_algo["moy_Vi"])
+    
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("moy_Vi", "@moy_Vi"),
+                            ("sum_Vi", "@sum_Vi"),
+                            ("std_Vi", "@std_Vi"),
+                            ("algo", "@algo"),
+                            ]
+                        )
+    px= figure(x_range=algos, 
+               plot_height=int(HEIGHT*MULT_HEIGHT), 
+               plot_width = int(WIDTH*MULT_WIDTH),
+               title="mean of Vi by algorithm",
+                toolbar_location="above", tools=TOOLS)
+
+    data = dict(x=algos, moy_Vi=moy_Vi,
+                sum_Vi=df_groupby_algo.sum_Vi.tolist(),
+                std_Vi=df_groupby_algo.std_Vi.tolist(),
+                algo=df_groupby_algo.algo.tolist())
+    
+    source = ColumnDataSource(data=data)
+    px.vbar(x='x', top='moy_Vi', width=0.9, source=source, 
+            fill_color=factor_cmap('x', 
+                                    palette=Category20[20], 
+                                    factors=list(df_groupby_algo\
+                                                 .algo.unique()), 
+                                    start=0, end=1))
+    
+    px.y_range.start = df_groupby_algo.moy_Vi.min() # 0
+    px.x_range.range_padding = 0.1
+    px.xaxis.major_label_orientation = 1
+    px.xgrid.grid_line_color = None
+    px.xaxis.axis_label = 'algorithms'
+    px.yaxis.axis_label = 'moy_Vi'
+    
+    col_px = column(px)
+    col_px = column(children=[col_px], 
+                    sizing_mode='stretch_both')
+    return col_px
+
+def plot_bar_meanVi_by_algo(df_algo_t_periods_moyVi):
+    algos = df_algo_t_periods_moyVi.algo.unique().tolist()
+    rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
+    prices = df_ben_cst_M_T_K["prices"].unique()
+    
+    dico_pxs = dict()
+    for (rate, price) in it.product(rates, prices):
+        mask_ra_pr = (df_algo_t_periods_moyVi.rate == rate) \
+                            & (df_algo_t_periods_moyVi.price == price)
+        df_ra_pr = df_algo_t_periods_moyVi[mask_ra_pr]
+        
+        px = plot_bar_meanVi_all_algos(df_ra_pr, price, rate)
+        if (price, rate) not in dico_pxs:
+            dico_pxs[(price, rate)] = [px]
+        else:
+            dico_pxs[(price, rate)].append(px)
+            
+    col_pxs = []
+    for key, pxs in dico_pxs.items():
+        row_px_sts = row(pxs)
+        col_pxs.append(row_px_sts)
+    col_pxs=column(children=col_pxs, 
+                   sizing_mode='stretch_both')
+    return col_pxs   
+# _____________________________________________________________________________
+#
+#           representation de moyenne de Vi par algo  ---> fin
+# _____________________________________________________________________________
+
+
 # _____________________________________________________________________________
 #
 #                   affichage  dans tab  ---> debut
@@ -2193,27 +2410,57 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     rows_dists_ts = plot_distribution_by_states_4_periods(
                         df_arr_M_T_Ks, k_steps_args,
                         path_2_best_learning_steps)
+    tab_dists_ts = Panel(child=rows_dists_ts, title="distribution by state")
     print("Distribution of players: TERMINEE")
     
     rows_RU_CONS_PROD_ts = plot_utilities_by_player_4_periods(
                             df_arr_M_T_Ks,
                             df_B_C_BB_CC_RU_M, 
                             path_2_best_learning_steps)
+    tab_RU_CONS_PROD_ts = Panel(child=rows_RU_CONS_PROD_ts, 
+                                title="utility of players")
     print("Utility of RU: TERMINEE")
+    
+    ##### to add to group_plot_on_panel with plot_bar_meanVi_over_time() #####
+    df_algo_t_periods_moyVi = create_dataframe_mean_Vi_for(
+                                        df_ben_cst_M_T_K, 
+                                        df_LRI_12, 
+                                        k_steps_args, 
+                                        algos_4_learning)
+
+    cols_meanVi_over_time = plot_bar_meanVi_over_time(df_algo_t_periods_moyVi)
+    tab_meanVi_over_time = Panel(child=cols_meanVi_over_time, 
+                                  title="mean of Vi over time")
+    print("mean of Vi over time moy_Vi: TERMINEE")
+    
+    
+    cols_meanVi_by_algo = plot_bar_meanVi_by_algo(df_algo_t_periods_moyVi)
+    tab_meanVi_by_algo = Panel(child=cols_meanVi_by_algo, 
+                                  title="mean of Vi by algo")
+    print("mean of Vi over ALGO moy_Vi: TERMINEE")
+    
     
     rows_pls_CONS_PROD_ts = plot_evolution_players_PROD_CONS_over_time(
                                     df_arr_M_T_Ks, 
                                     path_2_best_learning_steps)
+    tab_pls_CONS_PROD_ts = Panel(child=rows_pls_CONS_PROD_ts, 
+                                title="evolution of PROD and CONS by players")
     print("Evolution of CONS and PROD by players over time: TERMINEE")
+    
     
     rows_OUT_IN_SG_ts = plot_evolution_IN_OUT_SG_over_time(
                             df_arr_M_T_Ks,
                             df_LRI_12)
+    tab_OUT_IN_SG_ts = Panel(child=rows_OUT_IN_SG_ts, 
+                              title="evolution of In_sg and OUT_sg over time")
     print("Evolution of OUT_sg and IN_sg by time: TERMINEE")
+    
     
     rows_PISG_b0c0_ts = plot_evolution_over_time_PISG_b0c0(df_arr_M_T_Ks, 
                                         df_b0_c0_pisg_pi0_T_K,
                                         df_LRI_12)
+    tab_PISG_b0c0_ts = Panel(child=rows_PISG_b0c0_ts, 
+                              title="evolution of pi_sg,b0,c0")
     print("Evolution of PI_SG, b0, c0: TERMINEE")
     
     
@@ -2223,11 +2470,14 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     col_pxs_Pref_algo_t = plot_Perf_t_players_all_algos(
                             df_ben_cst_M_T_K, t, 
                             df_LRI_12, df_k_stop)
+    tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
     print("Performance Perf_t all algos: TERMINEE")
+    
     
     col_px_scen_st_S1S2s = plot_max_proba_mode(df_arr_M_T_Ks, t, 
                                                 path_2_best_learning_steps, 
                                                 algos=['LRI1','LRI2'])
+    tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
     print("affichage S1, S2 p_ijk : TERMINEE")
     
     
@@ -2238,19 +2488,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     # col_px_scen_mode_S1S2_nbplayers = plot_histo_strategies(df_arr_M_T_Ks, t)
     # col_playing_players = plot_histo_playing(df_arr_M_T_Ks, t)
     
-    tab_dists_ts = Panel(child=rows_dists_ts, title="distribution by state")
-    tab_RU_CONS_PROD_ts = Panel(child=rows_RU_CONS_PROD_ts, 
-                                title="utility of players")
-    tab_pls_CONS_PROD_ts = Panel(child=rows_pls_CONS_PROD_ts, 
-                                title="evolution of PROD and CONS by players")
-    tab_OUT_IN_SG_ts = Panel(child=rows_OUT_IN_SG_ts, 
-                              title="evolution of In_sg and OUT_sg over time")
-    tab_PISG_b0c0_ts = Panel(child=rows_PISG_b0c0_ts, 
-                              title="evolution of pi_sg,b0,c0")
-    
     # # # tab_Pref_t=Panel(child=col_pxs_Pref_t, title="Pref_t by state")
-    tab_Pref_algo_t=Panel(child=col_pxs_Pref_algo_t, title="Pref_t")
-    tab_S1S2=Panel(child=col_px_scen_st_S1S2s, title="mean_S1_S2")
     # # tab_inout=Panel(child=col_pxs_in_out, title="In_sg-Out_sg")
     # # tab_bencst=Panel(child=col_pxs_ben_cst, title="mean(ben-cst)")
     # # tab_sts=Panel(child=col_px_scen_sts, title="number players")
@@ -2262,11 +2500,13 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     tabs = Tabs(tabs= [ 
                         tab_dists_ts,
                         tab_RU_CONS_PROD_ts,
+                        tab_meanVi_over_time,
+                        tab_meanVi_by_algo,
                         tab_pls_CONS_PROD_ts,
                         tab_OUT_IN_SG_ts,
                         tab_Pref_algo_t,
                         tab_S1S2,
-                        tab_PISG_b0c0_ts
+                        tab_PISG_b0c0_ts, 
                         #tab_Pref_t, 
                         #tab_Pref_algo_t,
                         #tab_S1S2,
@@ -2307,6 +2547,7 @@ if __name__ == "__main__":
     #name_simu = "simu_DDMM_HHMM_T30_Scenario3"
     #name_simu = "simu_DDMM_HHMM_T30_Scenario2"
     #name_simu = "simu_DDMM_HHMM_T30_Scenario1"
+    name_simu = "simu_DDMM_HHMM_scenario1_T20"
     k_steps_args = 250 #350 #2000#250
     
     
@@ -2361,6 +2602,28 @@ if __name__ == "__main__":
                         NAME_RESULT_SHOW_VARS)
     
     
+    # ##### to add to group_plot_on_panel with plot_bar_meanVi_over_time() #####
+    # df_algo_t_periods_moyVi = create_dataframe_mean_Vi_for(
+    #                                     df_ben_cst_M_T_K, 
+    #                                     df_LRI_12, 
+    #                                     k_steps_args, 
+    #                                     algos_4_learning)
+    
+    # cols_meanVi_over_time = plot_bar_meanVi_over_time(df_algo_t_periods_moyVi)
+    # tab_meanVi_over_time = Panel(child=cols_meanVi_over_time, 
+    #                               title="mean of Vi over time")
+    
+    # cols_meanVi_by_algo = plot_bar_meanVi_by_algo(df_algo_t_periods_moyVi)
+    # tab_meanVi_by_algo = Panel(child=cols_meanVi_by_algo, 
+    #                               title="mean of Vi by algo")
+       
+    # tabs = Tabs(tabs= [ 
+    #                         # tab_meanVi_over_time,
+    #                         tab_meanVi_by_algo
+    #                         ])
+        
+    # show(tabs)
+   
     
 
 
