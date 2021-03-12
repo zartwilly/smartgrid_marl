@@ -1188,9 +1188,10 @@ def plot_utility(df_res, algo, rate, price,
                    width=width, source=source,
                    color="#FFD700", legend_label=cols[5])
     
+    px.y_range.start = df_res.RU.min() - 1
     px.x_range.range_padding = width
     px.xgrid.grid_line_color = None
-    px.legend.location = "top_left"
+    px.legend.location = "top_right" #"top_left"
     px.legend.orientation = "horizontal"
     px.xaxis.axis_label = "players"
     px.yaxis.axis_label = "values"
@@ -2183,6 +2184,50 @@ def plot_max_proba_mode(df_arr_M_T_Ks, t, path_2_best_learning_steps,
 #
 #        representation de moyenne de Vi a chaque periode  ---> debut
 # _____________________________________________________________________________
+# def create_dataframe_mean_Vi_for(df_ben_cst_M_T_K, df_LRI_12, k_steps_args, 
+#                                  algos_4_learning):
+#     """
+#     create a dataframe containing the mean of Vi by for loop
+#     for each algo at each period
+    
+#     """
+#     df_ben_cst_M_T_K["Vi"] = df_ben_cst_M_T_K["ben"] - df_ben_cst_M_T_K["cst"]
+    
+#     algos = df_ben_cst_M_T_K.algo.unique().tolist()
+#     t_periods = df_ben_cst_M_T_K.t.unique().tolist()
+#     rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
+#     prices = df_ben_cst_M_T_K["prices"].unique()
+    
+#     dico_algo_t_periods = dict()
+#     dico_algo_t_periods["algo"] = []
+#     dico_algo_t_periods["t"] = []
+#     dico_algo_t_periods["rate"] = []
+#     dico_algo_t_periods["price"] = []
+#     dico_algo_t_periods["moy_Vi"] = []
+    
+#     # TODO : l es valeurs de determinist sont tous a NAN
+#     for (rate,price,algo) in it.product(rates,prices,algos):
+#         for t in t_periods:
+#             kmax = df_LRI_12.loc[algo+"_k_stop", str(t)] \
+#                         if algo in algos_4_learning \
+#                         else k_steps_args-1
+#             mask_algo_kmax = (df_ben_cst_M_T_K.algo == algo) \
+#                                 & (df_ben_cst_M_T_K.rate == rate) \
+#                                 & (df_ben_cst_M_T_K.prices == price) \
+#                                 & (df_ben_cst_M_T_K.k == kmax)
+#             df_pl_is = df_ben_cst_M_T_K[mask_algo_kmax]
+#             mean_Vi = df_pl_is['Vi'].mean()
+#             dico_algo_t_periods["algo"].append(algo)
+#             dico_algo_t_periods["t"].append(str(t))
+#             dico_algo_t_periods["moy_Vi"].append(mean_Vi)
+#             dico_algo_t_periods["rate"].append(rate)
+#             dico_algo_t_periods["price"].append(price)
+            
+#         print("mean_Vi_for: {}, price={},rate={} TERMINE".format(algo,price,rate))
+        
+#     df_algo_t_periods_moyVi = pd.DataFrame.from_dict(dico_algo_t_periods)
+    
+#     return df_algo_t_periods_moyVi
 def create_dataframe_mean_Vi_for(df_ben_cst_M_T_K, df_LRI_12, k_steps_args, 
                                  algos_4_learning):
     """
@@ -2203,24 +2248,28 @@ def create_dataframe_mean_Vi_for(df_ben_cst_M_T_K, df_LRI_12, k_steps_args,
     dico_algo_t_periods["rate"] = []
     dico_algo_t_periods["price"] = []
     dico_algo_t_periods["moy_Vi"] = []
+    dico_algo_t_periods["std_Vi"] = []
     
-    # TODO : l es valeurs de determinist sont tous a NAN
     for (rate,price,algo) in it.product(rates,prices,algos):
         for t in t_periods:
             kmax = df_LRI_12.loc[algo+"_k_stop", str(t)] \
                         if algo in algos_4_learning \
                         else k_steps_args-1
             mask_algo_kmax = (df_ben_cst_M_T_K.algo == algo) \
-                                & (df_ben_cst_M_T_K.rate == rate) \
+                                & ((df_ben_cst_M_T_K.rate == rate)| 
+                                   (df_ben_cst_M_T_K.rate == 0))\
                                 & (df_ben_cst_M_T_K.prices == price) \
-                                & (df_ben_cst_M_T_K.k == kmax)
+                                & (df_ben_cst_M_T_K.k == kmax) \
+                                & (df_ben_cst_M_T_K.t == t)
             df_pl_is = df_ben_cst_M_T_K[mask_algo_kmax]
-            mean_Vi = df_pl_is['Vi'].mean()
+            mean_Vi = df_pl_is.Vi.mean()
+            std_Vi = df_pl_is.Vi.std()
             dico_algo_t_periods["algo"].append(algo)
             dico_algo_t_periods["t"].append(str(t))
             dico_algo_t_periods["moy_Vi"].append(mean_Vi)
             dico_algo_t_periods["rate"].append(rate)
             dico_algo_t_periods["price"].append(price)
+            dico_algo_t_periods["std_Vi"].append(std_Vi)
             
         print("mean_Vi_for: {}, price={},rate={} TERMINE".format(algo,price,rate))
         
@@ -2242,7 +2291,8 @@ def plot_bar_meanVi_over_time_one_algo(df_ra_pr, price, rate):
     TOOLS[7] = HoverTool(tooltips=[
                             ("algo", "@algo"),
                             ("t", "@t"),
-                            ("moy_Vi", "@moy_Vi")
+                            ("moy_Vi", "@moy_Vi"),
+                            ("std_Vi", "@std_Vi")
                             ]
                         )
     
@@ -2252,7 +2302,7 @@ def plot_bar_meanVi_over_time_one_algo(df_ra_pr, price, rate):
                 title="mean of Vi over time (price={},rate={}".format(price,rate),
                 toolbar_location="above", tools=TOOLS)
 
-    data = dict(x=x, moy_Vi=moy_Vi, 
+    data = dict(x=x, moy_Vi=moy_Vi, std_Vi=df_ra_pr.std_Vi.tolist(),
                 t=df_ra_pr.t.tolist(),
                 algo=df_ra_pr.algo.tolist())
     source = ColumnDataSource(data=data)
@@ -2261,7 +2311,7 @@ def plot_bar_meanVi_over_time_one_algo(df_ra_pr, price, rate):
                                     palette=Category20[20], 
                                     factors=list(df_ra_pr.algo.unique()), 
                                     start=1, end=2))
-    print("moy_Vi={}".format( df_ra_pr.moy_Vi ))
+    
     print("min(moy_Vi)={}".format( df_ra_pr.moy_Vi.min() ))
     px.y_range.start = df_ra_pr.moy_Vi.min() - 1
     #px.y_range.end = df_ra_pr.moy_Vi.max()
@@ -2545,10 +2595,9 @@ if __name__ == "__main__":
     
     name_simu =  "simu_2701_1259"; k_steps_args = 250
     name_simu =  "simu_DDMM_HHMM_scenario1_T50"; k_steps_args = 50#2000#250
-    #name_simu = "simu_DDMM_HHMM_T30_Scenario3"
-    #name_simu = "simu_DDMM_HHMM_T30_Scenario2"
-    #name_simu = "simu_DDMM_HHMM_T30_Scenario1"
-    name_simu = "simu_DDMM_HHMM_scenario1_T20"
+    
+    #name_simu = "simu_DDMM_HHMM_scenario1_T20"
+    #name_simu = "simu_DDMM_HHMM_scenario2_T20"
     name_simu = "simu_DDMM_HHMM_scenario3_T20"
     k_steps_args = 250 #350 #2000#250
     
