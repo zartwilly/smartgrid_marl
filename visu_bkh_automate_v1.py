@@ -2404,6 +2404,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                         df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir,
                         df_LRI_12, df_k_stop,
+                        algos_4_learning,
                         path_2_best_learning_steps, 
                         NAME_RESULT_SHOW_VARS):
     
@@ -2548,6 +2549,7 @@ if __name__ == "__main__":
     #name_simu = "simu_DDMM_HHMM_T30_Scenario2"
     #name_simu = "simu_DDMM_HHMM_T30_Scenario1"
     name_simu = "simu_DDMM_HHMM_scenario1_T20"
+    name_simu = "simu_DDMM_HHMM_scenario3_T20"
     k_steps_args = 250 #350 #2000#250
     
     
@@ -2598,6 +2600,7 @@ if __name__ == "__main__":
                         df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir, 
                         df_LRI_12, df_k_stop,
+                        algos_4_learning,
                         path_2_best_learning_steps, 
                         NAME_RESULT_SHOW_VARS)
     
