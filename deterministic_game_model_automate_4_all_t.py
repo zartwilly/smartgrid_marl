@@ -483,7 +483,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                     pi_0_minus_T, pi_0_plus_T,
                     pi_hp_plus_s, pi_hp_minus_s, dico_stats_res, 
                     algo=algo_name, 
-                    dico_best_steps=dict())
+                    dico_best_steps=dico_mode_prof_by_players_T)
         
     print("DETERMINIST GAME: pi_hp_plus={}, pi_hp_minus ={} ---> FIN \n"\
           .format( pi_hp_plus, pi_hp_minus))
