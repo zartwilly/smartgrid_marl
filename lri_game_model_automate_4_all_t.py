@@ -1014,6 +1014,9 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 Si = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+                ri = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
                 Si_old = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["Si_old"]]
@@ -1029,6 +1032,8 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 setX = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["set"]]
+                ben_i = BENs_M_T_K[num_pl_i, t, k]
+                cst_i = CSTs_M_T_K[num_pl_i, t, k]
                 Vi = ben_csts_MKs_t[num_pl_i, k]
                 
                 dico_pls[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
@@ -1052,14 +1057,18 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 cons_i = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+                
                 dico_pls[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
                     = {"set":setX, "state":state_i, "mode":mode_i, 
                        "Si_old": round(Si_old, fct_aux.N_DECIMALS),
                        "Si": round(Si, fct_aux.N_DECIMALS),
                        "Pi": round(Pi, fct_aux.N_DECIMALS),
                        "Ci": round(Ci, fct_aux.N_DECIMALS),
+                       "ri": round(ri, fct_aux.N_DECIMALS),
                        "prod_i": round(prod_i, fct_aux.N_DECIMALS),
                        "cons_i": round(cons_i, fct_aux.N_DECIMALS),
+                       "ben_i": round(ben_i, fct_aux.N_DECIMALS),
+                       "cst_i": round(cst_i, fct_aux.N_DECIMALS),
                        "Vi":round(Vi, fct_aux.N_DECIMALS),
                        "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
                        "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS),
