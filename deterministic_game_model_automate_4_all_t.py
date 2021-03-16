@@ -554,7 +554,7 @@ def test_DETERMINIST_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     used_storage = True #False
     
     manual_debug = False
-    gamma_version = 2 #1
+    gamma_version = 1 #2 #1
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
     prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
