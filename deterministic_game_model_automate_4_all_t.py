@@ -150,6 +150,9 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                                     fct_aux.AUTOMATE_INDEX_ATTRS["Si_minus"]] \
                                 if t-1 > 0 \
                                 else 0
+            Si_t_minus = arr_pl_M_T_vars_modif[num_pl_i, 
+                                    t, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["Si_minus"]]
             Si_t_minus_1_plus = arr_pl_M_T_vars_modif[num_pl_i, 
                                      t-1, 
                                      fct_aux.AUTOMATE_INDEX_ATTRS["Si_plus"]] \
@@ -157,17 +160,23 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
                                 else 0
             
             if used_storage:
-                if state_i == fct_aux.STATES[0] and gamma_i < Si_t_minus_1_minus:
+                if state_i == fct_aux.STATES[0] and \
+                    fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_t_minus:
                     mode_i = fct_aux.STATE1_STRATS[0]                          # CONS+, state1
-                elif state_i == fct_aux.STATES[0] and gamma_i >= Si_t_minus_1_minus:
+                elif state_i == fct_aux.STATES[0] and \
+                    fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_t_minus:
                     mode_i = fct_aux.STATE1_STRATS[1]                          # CONS-, state1
-                elif state_i == fct_aux.STATES[1] and gamma_i < Si_t_minus_1_minus:
+                elif state_i == fct_aux.STATES[1] and \
+                    fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_t_minus:
                     mode_i = fct_aux.STATE2_STRATS[1]                          # CONS-, state2
-                elif state_i == fct_aux.STATES[1] and gamma_i >= Si_t_minus_1_minus:
+                elif state_i == fct_aux.STATES[1] and \
+                    fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_t_minus:
                     mode_i = fct_aux.STATE2_STRATS[0]                          # DIS, state2
-                elif state_i == fct_aux.STATES[2] and gamma_i < Si_t_minus_1_minus:
+                elif state_i == fct_aux.STATES[2] and \
+                    fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) >= Si_t_minus:
                     mode_i = fct_aux.STATE3_STRATS[0]                          # DIS, state3
-                elif state_i == fct_aux.STATES[2] and gamma_i >= Si_t_minus_1_minus:
+                elif state_i == fct_aux.STATES[2] and \
+                    fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1) < Si_t_minus:
                     mode_i = fct_aux.STATE3_STRATS[1]                          # PROD, state3
             else:
                 if state_i == fct_aux.STATES[0]:
@@ -332,13 +341,36 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                                                          else pi_sg_plus_t
             pi_sg_minus_t_minus_1 = pi_sg_minus_t0_minus_1 if t == 0 \
                                                             else pi_sg_minus_t
-            pi_0_plus_t = round(pi_sg_plus_t_minus_1*pi_hp_plus/pi_hp_minus, 
+            pi_0_plus_t = round(pi_sg_minus_t_minus_1*pi_hp_plus/pi_hp_minus, 
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
             if t == 0:
                pi_0_plus_t = 4
                pi_0_minus_t = 3
                
+        if t == 0:
+            print("before compute gamma state 4 t={}, modes={}, Sis={},  Si_old={}, ris={}".format(
+            t,
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]],
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]],
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si_old"]],
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
+            )) if dbg else None
+        else:
+            print("before compute gamma state 4 t={}, modes={}, Sis={},  Si_old={}, ris={}".format(
+                t-1,
+                arr_pl_M_T_vars_modif[:,t-1, fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]],
+                arr_pl_M_T_vars_modif[:,t-1, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]],
+                arr_pl_M_T_vars_modif[:,t-1, fct_aux.AUTOMATE_INDEX_ATTRS["Si_old"]],
+                arr_pl_M_T_vars_modif[:,t-1, fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
+                )) if dbg else None
+            print("before compute gamma state 4 t={}, modes={}, Sis={},  Si_old={}, ris={}".format(
+                t,
+                arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]],
+                arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]],
+                arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si_old"]],
+                arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
+                )) if dbg else None
         arr_pl_M_T_vars_modif = fct_aux.compute_gamma_state_4_period_t(
                                 arr_pl_M_T_K_vars=arr_pl_M_T_vars_modif.copy(), 
                                 t=t, 
@@ -346,6 +378,13 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
                                 manual_debug=manual_debug,
                                 dbg=dbg)
+        print("after compute gamma state 4 t={}, modes={}, Sis={},  Si_old={}, ris={}".format(
+            t,
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]],
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]],
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si_old"]],
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
+            )) if dbg else None
             
         pi_0_plus_T[t] = pi_0_plus_t
         pi_0_minus_T[t] = pi_0_minus_t
@@ -363,6 +402,13 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                 pi_0_plus_t, pi_0_minus_t,
                 random_determinist, used_storage,
                 manual_debug, dbg)
+        Sis = arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]].copy()
+        arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = Sis
+        print("after Sis update 4 t={}, Sis={}, modes={}".format(
+            t,
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]],
+            arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]
+            )) if dbg else None
         dico_stats_res[t] = dico_gamme_t
         
         # pi_sg_{plus,minus} of shape (T_PERIODS,)
@@ -397,8 +443,8 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
             dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
             dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
             variables = ["state_i", "mode_i", "prod_i", "cons_i", "r_i", 
-                         "gamma_i", "Pi", "Ci", "Si", "Si_old", 
-                         "Si_minus", "Si_plus"]
+                         "gamma_i", "Pi", "Ci", "Si", "Si_old", "Si_max",
+                         "Si_minus", "Si_plus","set"]
             for variable in variables:
                 dico_vars[variable] = arr_pl_M_T_vars_modif[
                                         num_pl_i, t, 
@@ -421,7 +467,7 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
         ## checkout NASH equilibrium
         df_nash_t = None
         df_nash_t = checkout_nash_4_profils_by_periods(
-                        arr_pl_M_T_vars_modif,
+                        arr_pl_M_T_vars_modif.copy(),
                         arr_pl_M_T_vars_init,
                         pi_hp_plus, pi_hp_minus, 
                         pi_0_minus_t, pi_0_plus_t, 

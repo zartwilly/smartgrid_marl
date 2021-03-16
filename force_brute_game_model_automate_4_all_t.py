@@ -390,7 +390,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                                          else pi_sg_plus_t
             pi_sg_minus_t_minus_1 = pi_sg_minus_t0_minus_1 if t == 0 \
                                                             else pi_sg_minus_t
-            pi_0_plus_t = round(pi_sg_plus_t_minus_1*pi_hp_plus/pi_hp_minus, 
+            pi_0_plus_t = round(pi_sg_minus_t_minus_1*pi_hp_plus/pi_hp_minus, 
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
             if t == 0:
@@ -657,7 +657,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
             bens_csts_M_t = bens_t - csts_t
             df_nash_t = None
             df_nash_t = checkout_nash_4_profils_by_periods(
-                            arr_pl_M_T_vars_mode_prof_best_algo,
+                            arr_pl_M_T_vars_mode_prof_best_algo.copy(),
                             arr_pl_M_T_vars_init,
                             pi_hp_plus, pi_hp_minus, 
                             pi_0_minus_t, pi_0_plus_t, 
