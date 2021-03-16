@@ -2246,7 +2246,7 @@ def create_dataframe_mean_Vi_for(df_ben_cst_M_T_K, df_LRI_12, k_steps_args,
     dico_algo_t_periods["algo"] = []
     dico_algo_t_periods["t"] = []
     dico_algo_t_periods["rate"] = []
-    dico_algo_t_periods["price"] = []
+    dico_algo_t_periods["prices"] = []
     dico_algo_t_periods["moy_Vi"] = []
     dico_algo_t_periods["std_Vi"] = []
     
@@ -2268,10 +2268,10 @@ def create_dataframe_mean_Vi_for(df_ben_cst_M_T_K, df_LRI_12, k_steps_args,
             dico_algo_t_periods["t"].append(str(t))
             dico_algo_t_periods["moy_Vi"].append(mean_Vi)
             dico_algo_t_periods["rate"].append(rate)
-            dico_algo_t_periods["price"].append(price)
+            dico_algo_t_periods["prices"].append(price)
             dico_algo_t_periods["std_Vi"].append(std_Vi)
             
-        print("mean_Vi_for: {}, price={},rate={} TERMINE".format(algo,price,rate))
+        print("mean_Vi_for: {}, prices={},rate={} TERMINE".format(algo,price,rate))
         
     df_algo_t_periods_moyVi = pd.DataFrame.from_dict(dico_algo_t_periods)
     
@@ -2327,13 +2327,13 @@ def plot_bar_meanVi_over_time_one_algo(df_ra_pr, price, rate):
 def plot_bar_meanVi_over_time(df_algo_t_periods_moyVi):
     
     algos = df_algo_t_periods_moyVi.algo.unique().tolist()
-    rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
-    prices = df_ben_cst_M_T_K["prices"].unique()
+    rates = df_algo_t_periods_moyVi["rate"].unique(); rates = rates[rates!=0]
+    prices = df_algo_t_periods_moyVi["prices"].unique()
     
     dico_pxs = dict()
     for (rate, price) in it.product(rates, prices):
         mask_ra_pr = (df_algo_t_periods_moyVi.rate == rate) \
-                            & (df_algo_t_periods_moyVi.price == price)
+                            & (df_algo_t_periods_moyVi.prices == price)
         df_ra_pr = df_algo_t_periods_moyVi[mask_ra_pr]
         
         px = plot_bar_meanVi_over_time_one_algo(df_ra_pr, price, rate)
@@ -2417,13 +2417,13 @@ def plot_bar_meanVi_all_algos(df_ra_pr, price, rate):
 
 def plot_bar_meanVi_by_algo(df_algo_t_periods_moyVi):
     algos = df_algo_t_periods_moyVi.algo.unique().tolist()
-    rates = df_ben_cst_M_T_K["rate"].unique(); rates = rates[rates!=0]
-    prices = df_ben_cst_M_T_K["prices"].unique()
+    rates = df_algo_t_periods_moyVi["rate"].unique(); rates = rates[rates!=0]
+    prices = df_algo_t_periods_moyVi["prices"].unique()
     
     dico_pxs = dict()
     for (rate, price) in it.product(rates, prices):
         mask_ra_pr = (df_algo_t_periods_moyVi.rate == rate) \
-                            & (df_algo_t_periods_moyVi.price == price)
+                            & (df_algo_t_periods_moyVi.prices == price)
         df_ra_pr = df_algo_t_periods_moyVi[mask_ra_pr]
         
         px = plot_bar_meanVi_all_algos(df_ra_pr, price, rate)
@@ -2598,7 +2598,7 @@ if __name__ == "__main__":
     
     #name_simu = "simu_DDMM_HHMM_scenario1_T20"
     #name_simu = "simu_DDMM_HHMM_scenario2_T20"
-    name_simu = "simu_DDMM_HHMM_scenario3_T20"
+    name_simu = "simu_DDMM_HHMM_scenario2_T20"
     k_steps_args = 250 #350 #2000#250
     
     
