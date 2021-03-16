@@ -257,7 +257,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
 
     """
     
-    print("\n \n game: {}, pi_hp_minus ={} ---> debut \n"\
+    print("\n \n game: pi_hp_plus={}, pi_hp_minus={} ---> debut \n"\
           .format(pi_hp_plus, pi_hp_minus))
         
     m_players = arr_pl_M_T_vars_init.shape[0]
@@ -927,7 +927,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     pi_hp_minus = 20 #0.33 #[15, 5]
     
     manual_debug=True
-    gamma_version = 2 #1
+    gamma_version = 2 #1,2
     debug = False
     criteria_bf = "Perf_t"
     
@@ -972,7 +972,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period():
     pi_hp_minus = 20 #0.33 #[15, 5]
     
     manual_debug=True
-    gamma_version = 2 #1
+    gamma_version = 2 #1,2
     debug = False
     criteria_bf = "Perf_t"
     
