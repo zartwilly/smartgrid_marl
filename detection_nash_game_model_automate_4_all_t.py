@@ -600,7 +600,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                 bens_csts_M_t = bens_t - csts_t
                 df_nash_t = None
                 df_nash_t = autoBfGameModel4T.checkout_nash_4_profils_by_periods(
-                                arr_pl_M_T_vars_nash_mode_prof_algo,
+                                arr_pl_M_T_vars_nash_mode_prof_algo.copy(),
                                 arr_pl_M_T_vars_init,
                                 pi_hp_plus, pi_hp_minus, 
                                 pi_0_minus_t, pi_0_plus_t, 
@@ -911,8 +911,8 @@ def test_NASH_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL():
     pi_hp_plus = 10 #0.2*pow(10,-3) #[5, 15]
     pi_hp_minus = 20 #0.33 #[15, 5]
     
-    manual_debug = True
-    gamma_version = 2 #1
+    manual_debug = False #True
+    gamma_version = 2 #1,2
     debug = False
     criteria_bf = "Perf_t"
     
@@ -957,8 +957,8 @@ def test_NASH_balanced_player_game_Pi_Ci_one_period():
     pi_hp_plus = 10 #0.2*pow(10,-3) #[5, 15]
     pi_hp_minus = 20 #0.33 #[15, 5]
     
-    manual_debug = True
-    gamma_version = 2 #1
+    manual_debug = False #True
+    gamma_version = 2 #1,2
     debug = False
     criteria_bf = "Perf_t"
     
