@@ -1014,6 +1014,9 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 Si = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+                Si_max = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]]
                 ri = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
@@ -1040,6 +1043,7 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                     = {"set":setX, "state":state_i, "mode":mode_i, 
                        "Si_old": round(Si_old, fct_aux.N_DECIMALS),
                        "Si": round(Si, fct_aux.N_DECIMALS),
+                       "Si_max": round(Si_max, fct_aux.N_DECIMALS),
                        "Vi":round(Vi, fct_aux.N_DECIMALS),
                        "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
                        "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS),
@@ -1189,7 +1193,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                                                          else pi_sg_plus_t
             pi_sg_minus_t_minus_1 = pi_sg_minus_t0_minus_1 if t == 0 \
                                                             else pi_sg_minus_t
-            pi_0_plus_t = round(pi_sg_plus_t_minus_1*pi_hp_plus/pi_hp_minus, 
+            pi_0_plus_t = round(pi_sg_minus_t_minus_1*pi_hp_plus/pi_hp_minus, 
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
             if t == 0:
