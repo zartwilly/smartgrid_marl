@@ -470,7 +470,7 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
             Ci_Pis_t_plus_1[Ci_Pis_t_plus_1 < 0] = 0
             GC_t = np.sum(Ci_Pis_t_plus_1)
             
-            state_is = np.empty(shape=(m_players,), dtype=str)
+            state_is = np.empty(shape=(m_players,), dtype=object)
             Sis = np.zeros(shape=(m_players,))
             GSis_t_minus = np.zeros(shape=(m_players,)) 
             GSis_t_plus = np.zeros(shape=(m_players,))
@@ -514,6 +514,7 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
             
             GS_t_minus = np.sum(GSis_t_minus)
             GS_t_plus = np.sum(GSis_t_plus)
+            gamma_is = None
             if GC_t <= GS_t_minus:
                 gamma_is = Xis - 1
             elif GC_t > GS_t_plus:
@@ -523,33 +524,33 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
                 res_is = Xis + (Yis-Xis)*frac
                 gamma_is = np.floor(res_is)
                 
-        arr_pl_vars[:, t, AUTOMATE_INDEX_ATTRS["Si"]] = Sis
-        arr_pl_vars[:, t, 
-                    AUTOMATE_INDEX_ATTRS["state_i"]] = state_is            
-        arr_pl_vars[:, t, 
-                    AUTOMATE_INDEX_ATTRS["Si_minus"]] = GSis_t_minus
-        arr_pl_vars[:, t, 
-                    AUTOMATE_INDEX_ATTRS["Si_plus"]] = GSis_t_plus
-        if manual_debug:
+            arr_pl_vars[:, t, AUTOMATE_INDEX_ATTRS["Si"]] = Sis
             arr_pl_vars[:, t, 
-                        AUTOMATE_INDEX_ATTRS["gamma_i"]] = MANUEL_DBG_GAMMA_I
-        else:
+                        AUTOMATE_INDEX_ATTRS["state_i"]] = state_is            
             arr_pl_vars[:, t, 
-                    AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is
-        
-        bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
-                        & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
-        print("GAMMA : t={}, val={}, bool_gamma_is={}"\
-              .format(t, gamma_is, bool_gamma_is)) if dbg else None
-        GSis_t_minus_1 = arr_pl_vars[:, t, AUTOMATE_INDEX_ATTRS["Si"]] \
-                        if t == 0 \
-                        else arr_pl_vars[:, t-1, AUTOMATE_INDEX_ATTRS["Si"]]
-        print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
-            if dbg else None
+                        AUTOMATE_INDEX_ATTRS["Si_minus"]] = GSis_t_minus
+            arr_pl_vars[:, t, 
+                        AUTOMATE_INDEX_ATTRS["Si_plus"]] = GSis_t_plus
+            if manual_debug:
+                arr_pl_vars[:, t, 
+                            AUTOMATE_INDEX_ATTRS["gamma_i"]] = MANUEL_DBG_GAMMA_I
+            else:
+                arr_pl_vars[:, t, 
+                        AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is
+            
+            bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
+                            & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
+            print("GAMMA : t={}, val={}, bool_gamma_is={}"\
+                  .format(t, gamma_is, bool_gamma_is)) if dbg else None
+            GSis_t_minus_1 = arr_pl_vars[:, t, AUTOMATE_INDEX_ATTRS["Si"]] \
+                            if t == 0 \
+                            else arr_pl_vars[:, t-1, AUTOMATE_INDEX_ATTRS["Si"]]
+            print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
+                if dbg else None
                 
     elif len(arr_pl_M_T_K_vars.shape) == 4:
         arr_pl_vars = arr_pl_M_T_K_vars.copy()
-        k = 0
+        k = 0; k_steps = arr_pl_M_T_K_vars.shape[2]
         if gamma_version == 1: 
             for num_pl_i in range(0, m_players):
                 Pi = arr_pl_vars[num_pl_i, t, k,
@@ -648,7 +649,7 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
             Ci_Pis_t_plus_1[Ci_Pis_t_plus_1 < 0] = 0
             GC_t = np.sum(Ci_Pis_t_plus_1)
             
-            state_is = np.empty(shape=(m_players,), dtype=str)
+            state_is = np.empty(shape=(m_players,), dtype=object)
             Sis = np.zeros(shape=(m_players,))
             GSis_t_minus = np.zeros(shape=(m_players,)) 
             GSis_t_plus = np.zeros(shape=(m_players,))
@@ -703,30 +704,50 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
                 res_is = Xis + (Yis-Xis)*frac
                 gamma_is = np.floor(res_is)
                 
-        arr_pl_vars[:, t, k, AUTOMATE_INDEX_ATTRS["Si"]] = Sis
-        arr_pl_vars[:, t, k,
-                    AUTOMATE_INDEX_ATTRS["state_i"]] = state_is            
-        arr_pl_vars[:, t, k,
-                    AUTOMATE_INDEX_ATTRS["Si_minus"]] = GSis_t_minus
-        arr_pl_vars[:, t, k,
-                    AUTOMATE_INDEX_ATTRS["Si_plus"]] = GSis_t_plus
-        if manual_debug:
-            arr_pl_vars[:, t, k,
-                        AUTOMATE_INDEX_ATTRS["gamma_i"]] = MANUEL_DBG_GAMMA_I
-        else:
-            arr_pl_vars[:, t, k,
-                    AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is
+            #TODO turn Sis 1D to 2D
+            arrs_Sis_2D = []; arrs_state_is_2D = []; arrs_GSis_t_minus_2D = []
+            arrs_GSis_t_plus_2D = []; arrs_gamma_is_2D = []; 
+            arrs_manuel_dbg_gamma_i_2D = []; 
+            manuel_dbg_gamma_is = [MANUEL_DBG_GAMMA_I for _ in range(0, m_players)]
+            for k in range(0, k_steps):
+                arrs_Sis_2D.append(list(Sis))
+                arrs_state_is_2D.append(list(state_is))
+                arrs_GSis_t_minus_2D.append(list(GSis_t_minus))
+                arrs_GSis_t_plus_2D.append(list(GSis_t_plus))
+                arrs_gamma_is_2D.append(list(gamma_is))
+                arrs_manuel_dbg_gamma_i_2D.append(manuel_dbg_gamma_is)
+            Sis_2D = np.array(arrs_Sis_2D, dtype=object).T
+            state_is_2D = np.array(arrs_state_is_2D, dtype=object).T
+            GSis_t_minus_2D = np.array(arrs_GSis_t_minus_2D, dtype=object).T
+            GSis_t_plus_2D = np.array(arrs_GSis_t_plus_2D, dtype=object).T
+            gamma_is_2D = np.array(arrs_gamma_is_2D, dtype=object).T
+            manuel_dbg_gamma_i_2D = np.array(arrs_manuel_dbg_gamma_i_2D, 
+                                             dtype=object).T
+            
+            arr_pl_vars[:, t, :, AUTOMATE_INDEX_ATTRS["Si"]] = Sis_2D
+            arr_pl_vars[:, t, :,
+                        AUTOMATE_INDEX_ATTRS["state_i"]] = state_is_2D          
+            arr_pl_vars[:, t, :,
+                        AUTOMATE_INDEX_ATTRS["Si_minus"]] = GSis_t_minus_2D
+            arr_pl_vars[:, t, :,
+                        AUTOMATE_INDEX_ATTRS["Si_plus"]] = GSis_t_plus_2D 
+            if manual_debug:
+                arr_pl_vars[:, t, :,
+                            AUTOMATE_INDEX_ATTRS["gamma_i"]] = manuel_dbg_gamma_i_2D
+            else:
+                arr_pl_vars[:, t, :,
+                        AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is_2D
         
-        bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
-                        & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
-        print("GAMMA : t={}, val={}, bool_gamma_is={}"\
-              .format(t, gamma_is, bool_gamma_is)) if dbg else None
-        GSis_t_minus_1 = arr_pl_vars[:, t, k, AUTOMATE_INDEX_ATTRS["Si"]] \
-                        if t == 0 \
-                        else arr_pl_vars[:, t-1, k, 
-                                         AUTOMATE_INDEX_ATTRS["Si"]]
-        print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
-            if dbg else None
+            bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
+                            & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
+            print("GAMMA : t={}, val={}, bool_gamma_is={}"\
+                  .format(t, gamma_is, bool_gamma_is)) if dbg else None
+            GSis_t_minus_1 = arr_pl_vars[:, t, k, AUTOMATE_INDEX_ATTRS["Si"]] \
+                            if t == 0 \
+                            else arr_pl_vars[:, t-1, k, 
+                                             AUTOMATE_INDEX_ATTRS["Si"]]
+            print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
+                if dbg else None
 
     return arr_pl_vars
       
