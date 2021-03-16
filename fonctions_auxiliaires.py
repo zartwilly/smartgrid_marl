@@ -362,6 +362,7 @@ def compute_gamma_4_period_t(arr_pl_M_T_K_vars, t,
 def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t, 
                                    pi_0_plus, pi_0_minus,
                                    pi_hp_plus, pi_hp_minus, 
+                                   gamma_version=1,
                                    manual_debug=False, dbg=False):
     """
     # TODO: ajouter manual_debug parmi les parametres de la fonction puis 
@@ -379,165 +380,353 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
     arr_pl_vars = arr_pl_M_T_K_vars.copy()
     
     if len(arr_pl_M_T_K_vars.shape) == 3:
-        for num_pl_i in range(0, m_players):
-            Pi = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Pi"]]
-            Ci = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Ci"]]
-            Si = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]] \
-                    if t == 0 \
-                    else arr_pl_vars[num_pl_i, t-1, AUTOMATE_INDEX_ATTRS["Si"]]
-            Si_max = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si_max"]]
-            Ci_t_plus_1 = arr_pl_vars[num_pl_i, 
-                                       t+1, 
-                                       AUTOMATE_INDEX_ATTRS["Ci"]] \
-                            if t+1<t_periods \
-                            else 0
-            Pi_t_plus_1 = arr_pl_vars[num_pl_i, 
-                                      t+1, 
-                                      AUTOMATE_INDEX_ATTRS["Pi"]] \
-                            if t+1 < t_periods \
-                            else 0
-            prod_i, cons_i, r_i, gamma_i, state_i = 0, 0, 0, 0, ""
-            pl_i = None
-            pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
-                                  prod_i, cons_i, r_i, state_i)
-            state_i = pl_i.find_out_state_i()
-            
-            Si_t_minus, Si_t_plus = None, None
-            X, Y = None, None
-            if state_i == STATES[0]:                                            # state1 or Deficit
-                Si_t_minus = 0
-                Si_t_plus = Si
-                X = pi_0_minus
-                Y = pi_hp_minus
-            elif state_i == STATES[1]:                                          # state2 or Self
-                Si_t_minus = Si - (Ci - Pi)
-                Si_t_plus = Si
-                X = pi_0_minus
-                Y = pi_hp_minus
-            elif state_i == STATES[2]:                                          # state3 or Surplus
-                Si_t_minus = Si
-                Si_t_plus = max(Si_max, Si+(Pi-Ci))
-                X = pi_0_plus
-                Y = pi_hp_plus
+        if gamma_version == 1:
+            for num_pl_i in range(0, m_players):
+                Pi = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Pi"]]
+                Ci = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Ci"]]
+                Si = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]] \
+                        if t == 0 \
+                        else arr_pl_vars[num_pl_i, t-1, AUTOMATE_INDEX_ATTRS["Si"]]
+                Si_max = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si_max"]]
+                Ci_t_plus_1 = arr_pl_vars[num_pl_i, 
+                                           t+1, 
+                                           AUTOMATE_INDEX_ATTRS["Ci"]] \
+                                if t+1<t_periods \
+                                else 0
+                Pi_t_plus_1 = arr_pl_vars[num_pl_i, 
+                                          t+1, 
+                                          AUTOMATE_INDEX_ATTRS["Pi"]] \
+                                if t+1 < t_periods \
+                                else 0
+                prod_i, cons_i, r_i, gamma_i, state_i = 0, 0, 0, 0, ""
+                pl_i = None
+                pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                                      prod_i, cons_i, r_i, state_i)
+                state_i = pl_i.find_out_state_i()
                 
-            gamma_i = None
-            if manual_debug:
-                gamma_i = MANUEL_DBG_GAMMA_I
-            else:
-                Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
-                if Si_t_plus_1 < Si_t_minus:
-                    gamma_i = X - 1
-                elif Si_t_plus_1 >= Si_t_plus:
-                    gamma_i = Y + 1
-                elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
-                    res = ( Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus)
-                    Z = X + (Y-X)*res
-                    gamma_i = math.floor(Z)
-                                
-            arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]] = Si
-            arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["state_i"]] = state_i            
-            arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_i
-            arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si_minus"]] = Si_t_minus
-            arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si_plus"]] = Si_t_plus
+                Si_t_minus, Si_t_plus = None, None
+                X, Y = None, None
+                if state_i == STATES[0]:                                            # state1 or Deficit
+                        Si_t_minus = 0
+                        Si_t_plus = Si
+                        X = pi_0_minus
+                        Y = pi_hp_minus
+                elif state_i == STATES[1]:                                          # state2 or Self
+                    Si_t_minus = Si - (Ci - Pi)
+                    Si_t_plus = Si
+                    X = pi_0_minus
+                    Y = pi_hp_minus
+                elif state_i == STATES[2]:                                          # state3 or Surplus
+                    Si_t_minus = Si
+                    Si_t_plus = max(Si_max, Si+(Pi-Ci))
+                    X = pi_0_plus
+                    Y = pi_hp_plus
+                    
+                gamma_i = None
+                if manual_debug:
+                    gamma_i = MANUEL_DBG_GAMMA_I
+                else:
+                    Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
+                    if Si_t_plus_1 < Si_t_minus:
+                        gamma_i = X - 1
+                    elif Si_t_plus_1 >= Si_t_plus:
+                        gamma_i = Y + 1
+                    elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
+                        res = ( Si_t_plus_1 - Si_t_minus) / \
+                                (Si_t_plus - Si_t_minus)
+                        Z = X + (Y-X)*res
+                        gamma_i = math.floor(Z)
+                                    
+                arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]] = Si
+                arr_pl_vars[num_pl_i, t, 
+                            AUTOMATE_INDEX_ATTRS["state_i"]] = state_i            
+                arr_pl_vars[num_pl_i, t, 
+                            AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_i
+                arr_pl_vars[num_pl_i, t, 
+                            AUTOMATE_INDEX_ATTRS["Si_minus"]] = Si_t_minus
+                arr_pl_vars[num_pl_i, t, 
+                            AUTOMATE_INDEX_ATTRS["Si_plus"]] = Si_t_plus
+                
+                bool_gamma_i = (gamma_i >= min(pi_0_minus, pi_0_plus)-1) \
+                                & (gamma_i <= max(pi_hp_minus, pi_hp_plus)+1)
+                print("GAMMA : t={}, player={}, val={}, bool_gamma_i={}"\
+                      .format(t, num_pl_i, gamma_i, bool_gamma_i)) if dbg else None
+                Si_t_minus_1 = arr_pl_vars[num_pl_i, t, 
+                                           AUTOMATE_INDEX_ATTRS["Si"]] \
+                                if t == 0 \
+                                else arr_pl_vars[num_pl_i, t-1, 
+                                                 AUTOMATE_INDEX_ATTRS["Si"]]
+                print("Si_t_minus_1={}, Si={}".format(Si_t_minus_1, Si)) \
+                    if dbg else None
+                            
+        elif gamma_version==2:
+            Cis_t_plus_1 = arr_pl_vars[:,t+1, AUTOMATE_INDEX_ATTRS["Ci"]] \
+                            if t+1 < t_periods \
+                            else np.zeros(shape=(m_players,))
+            Pis_t_plus_1 = arr_pl_vars[:,t+1, AUTOMATE_INDEX_ATTRS["Pi"]] \
+                            if t+1 < t_periods \
+                            else np.zeros(shape=(m_players,))
+            Ci_Pis_t_plus_1 = Cis_t_plus_1 - Pis_t_plus_1
+            Ci_Pis_t_plus_1[Ci_Pis_t_plus_1 < 0] = 0
+            GC_t = np.sum(Ci_Pis_t_plus_1)
             
-            bool_gamma_i = (gamma_i >= min(pi_0_minus, pi_0_plus)-1) \
-                            & (gamma_i <= max(pi_hp_minus, pi_hp_plus)+1)
-            print("GAMMA : t={}, player={}, val={}, bool_gamma_i={}"\
-                  .format(t, num_pl_i, gamma_i, bool_gamma_i)) if dbg else None
-            Si_t_minus_1 = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]] \
-                            if t == 0 \
-                            else arr_pl_vars[num_pl_i, t-1, 
-                                             AUTOMATE_INDEX_ATTRS["Si"]]
-            print("Si_t_minus_1={}, Si={}".format(Si_t_minus_1, Si)) \
-                if dbg else None
+            state_is = np.empty(shape=(m_players,), dtype=str)
+            Sis = np.zeros(shape=(m_players,))
+            GSis_t_minus = np.zeros(shape=(m_players,)) 
+            GSis_t_plus = np.zeros(shape=(m_players,))
+            Xis = np.zeros(shape=(m_players,)) 
+            Yis = np.zeros(shape=(m_players,))
+            for num_pl_i in range(0, m_players):
+                Pi = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Pi"]]
+                Ci = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Ci"]]
+                Si = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si"]] \
+                        if t == 0 \
+                        else arr_pl_vars[num_pl_i, t-1, AUTOMATE_INDEX_ATTRS["Si"]]
+                Si_max = arr_pl_vars[num_pl_i, t, AUTOMATE_INDEX_ATTRS["Si_max"]]
+                Sis[num_pl_i] = Si
+                prod_i, cons_i, r_i, gamma_i, state_i = 0, 0, 0, 0, ""
+                pl_i = None
+                pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                                      prod_i, cons_i, r_i, state_i)
+                state_i = pl_i.find_out_state_i()
+                state_is[num_pl_i] = state_i
+                
+                Si_t_minus, Si_t_plus = None, None
+                Xi, Yi = None, None
+                if state_i == STATES[0]:                                            # state1 or Deficit
+                    Si_t_minus = 0
+                    Si_t_plus = Si
+                    Xi = pi_0_minus
+                    Yi = pi_hp_minus
+                elif state_i == STATES[1]:                                          # state2 or Self
+                    Si_t_minus = Si - (Ci - Pi)
+                    Si_t_plus = Si
+                    Xi = pi_0_minus
+                    Yi = pi_hp_minus
+                elif state_i == STATES[2]:                                          # state3 or Surplus
+                    Si_t_minus = Si
+                    Si_t_plus = max(Si_max, Si+(Pi-Ci))
+                    Xi = pi_0_plus
+                    Yi = pi_hp_plus
+                GSis_t_minus[num_pl_i] = Si_t_minus
+                GSis_t_plus[num_pl_i] = Si_t_plus
+                Xis[num_pl_i] = Xi; Yis[num_pl_i] = Yi
+            
+            GS_t_minus = np.sum(GSis_t_minus)
+            GS_t_plus = np.sum(GSis_t_plus)
+            if GC_t <= GS_t_minus:
+                gamma_is = Xis - 1
+            elif GC_t > GS_t_plus:
+                gamma_is = Yis + 1
+            else:
+                frac = (GC_t - GS_t_minus) / (GS_t_plus - GS_t_minus)
+                res_is = Xis + (Yis-Xis)*frac
+                gamma_is = np.floor(res_is)
+                
+        arr_pl_vars[:, t, AUTOMATE_INDEX_ATTRS["Si"]] = Sis
+        arr_pl_vars[:, t, 
+                    AUTOMATE_INDEX_ATTRS["state_i"]] = state_is            
+        arr_pl_vars[:, t, 
+                    AUTOMATE_INDEX_ATTRS["Si_minus"]] = GSis_t_minus
+        arr_pl_vars[:, t, 
+                    AUTOMATE_INDEX_ATTRS["Si_plus"]] = GSis_t_plus
+        if manual_debug:
+            arr_pl_vars[:, t, 
+                        AUTOMATE_INDEX_ATTRS["gamma_i"]] = MANUEL_DBG_GAMMA_I
+        else:
+            arr_pl_vars[:, t, 
+                    AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is
+        
+        bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
+                        & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
+        print("GAMMA : t={}, val={}, bool_gamma_is={}"\
+              .format(t, gamma_is, bool_gamma_is)) if dbg else None
+        GSis_t_minus_1 = arr_pl_vars[:, t, AUTOMATE_INDEX_ATTRS["Si"]] \
+                        if t == 0 \
+                        else arr_pl_vars[:, t-1, AUTOMATE_INDEX_ATTRS["Si"]]
+        print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
+            if dbg else None
                 
     elif len(arr_pl_M_T_K_vars.shape) == 4:
         arr_pl_vars = arr_pl_M_T_K_vars.copy()
         k = 0
-        for num_pl_i in range(0, m_players):
-            Pi = arr_pl_vars[num_pl_i, t, k,
-                                  AUTOMATE_INDEX_ATTRS["Pi"]]
-            Ci = arr_pl_vars[num_pl_i, t, k,
-                                  AUTOMATE_INDEX_ATTRS["Ci"]]
-            Si = arr_pl_vars[num_pl_i, t, k,
-                                  AUTOMATE_INDEX_ATTRS["Si"]] \
-                    if t == 0 \
-                    else arr_pl_vars[num_pl_i, t-1, k,
-                                  AUTOMATE_INDEX_ATTRS["Si"]]
-            Si_max = arr_pl_vars[num_pl_i, t, k,
-                                  AUTOMATE_INDEX_ATTRS["Si_max"]]
-            Ci_t_plus_1 = arr_pl_vars[num_pl_i, 
-                                       t+1, k,
-                                       AUTOMATE_INDEX_ATTRS["Ci"]] \
-                            if t+1<t_periods \
-                            else 0
-            Pi_t_plus_1 = arr_pl_vars[num_pl_i, 
-                                      t+1, k,
-                                      AUTOMATE_INDEX_ATTRS["Pi"]] \
-                            if t+1 < t_periods \
-                            else 0
+        if gamma_version == 1: 
+            for num_pl_i in range(0, m_players):
+                Pi = arr_pl_vars[num_pl_i, t, k,
+                                      AUTOMATE_INDEX_ATTRS["Pi"]]
+                Ci = arr_pl_vars[num_pl_i, t, k,
+                                      AUTOMATE_INDEX_ATTRS["Ci"]]
+                Si = arr_pl_vars[num_pl_i, t, k,
+                                      AUTOMATE_INDEX_ATTRS["Si"]] \
+                        if t == 0 \
+                        else arr_pl_vars[num_pl_i, t-1, k,
+                                      AUTOMATE_INDEX_ATTRS["Si"]]
+                Si_max = arr_pl_vars[num_pl_i, t, k,
+                                      AUTOMATE_INDEX_ATTRS["Si_max"]]
+                Ci_t_plus_1 = arr_pl_vars[num_pl_i, 
+                                           t+1, k,
+                                           AUTOMATE_INDEX_ATTRS["Ci"]] \
+                                if t+1<t_periods \
+                                else 0
+                Pi_t_plus_1 = arr_pl_vars[num_pl_i, 
+                                          t+1, k,
+                                          AUTOMATE_INDEX_ATTRS["Pi"]] \
+                                if t+1 < t_periods \
+                                else 0
+                                
+                prod_i, cons_i, r_i, gamma_i, state_i = 0, 0, 0, 0, ""
+                pl_i = None
+                pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                                      prod_i, cons_i, r_i, state_i)
+                state_i = pl_i.find_out_state_i()
+                
+                Si_t_minus, Si_t_plus = None, None
+                X, Y = None, None
+                if gamma_version == 1:
+                    if state_i == STATES[0]:                                           # state1 or Deficit
+                        Si_t_minus = 0
+                        Si_t_plus = Si
+                        X = pi_0_minus
+                        Y = pi_hp_minus
+                    elif state_i == STATES[1]:                                         # state2 or Self
+                        Si_t_minus = Si - (Ci - Pi)
+                        Si_t_plus = Si
+                        X = pi_0_minus
+                        Y = pi_hp_minus
+                    elif state_i == STATES[2]:                                         # state3 or Surplus
+                        Si_t_minus = Si
+                        Si_t_plus = max(Si_max, Si+(Pi-Ci))
+                        X = pi_0_plus
+                        Y = pi_hp_plus
+                        
+                    gamma_i = None
+                    if manual_debug:
+                        gamma_i = MANUEL_DBG_GAMMA_I
+                    else:
+                        Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
+                        if Si_t_plus_1 < Si_t_minus:
+                            gamma_i = X-1
+                        elif Si_t_plus_1 >= Si_t_plus:
+                            gamma_i = Y+1
+                        elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
+                            res = ( Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus)
+                            Z = X + (Y-X)*res
+                            gamma_i = math.floor(Z)  
+                        
+                    arr_pl_vars[num_pl_i, t, :, 
+                                AUTOMATE_INDEX_ATTRS["state_i"]] = state_i
+                    arr_pl_vars[num_pl_i, t, :, 
+                                AUTOMATE_INDEX_ATTRS["Si"]] = Si
+                    arr_pl_vars[num_pl_i, t, :, 
+                                AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_i
+                    arr_pl_vars[num_pl_i, t, :, 
+                                AUTOMATE_INDEX_ATTRS["Si_minus"]] = Si_t_minus
+                    arr_pl_vars[num_pl_i, t, :, 
+                                AUTOMATE_INDEX_ATTRS["Si_plus"]] = Si_t_plus
+                    
+                    bool_gamma_i = (gamma_i >= min(pi_0_minus, pi_0_plus)-1) \
+                                    & (gamma_i <= max(pi_hp_minus, pi_hp_plus)+1)
+                    print("GAMMA : t={}, player={}, val={}, bool_gamma_i={}, {}"\
+                          .format(t, num_pl_i, gamma_i, bool_gamma_i, state_i)) \
+                        if dbg else None
+                    Si_t_minus_1 = arr_pl_vars[num_pl_i, t, k, 
+                                               AUTOMATE_INDEX_ATTRS["Si"]] \
+                                    if t == 0 \
+                                    else arr_pl_vars[num_pl_i, t-1, k,
+                                                     AUTOMATE_INDEX_ATTRS["Si"]]
+                    print("Si_t_minus_1={}, Si={}".format(Si_t_minus_1, Si)) \
+                        if dbg else None
                             
-            prod_i, cons_i, r_i, gamma_i, state_i = 0, 0, 0, 0, ""
-            pl_i = None
-            pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
-                                  prod_i, cons_i, r_i, state_i)
-            state_i = pl_i.find_out_state_i()
+        elif gamma_version == 2:
+            Cis_t_plus_1 = arr_pl_vars[:,t+1, k, AUTOMATE_INDEX_ATTRS["Ci"]] \
+                            if t+1 < t_periods \
+                            else np.zeros(shape=(m_players,))
+            Pis_t_plus_1 = arr_pl_vars[:,t+1, k, AUTOMATE_INDEX_ATTRS["Pi"]] \
+                            if t+1 < t_periods \
+                            else np.zeros(shape=(m_players,))
+            Ci_Pis_t_plus_1 = Cis_t_plus_1 - Pis_t_plus_1
+            Ci_Pis_t_plus_1[Ci_Pis_t_plus_1 < 0] = 0
+            GC_t = np.sum(Ci_Pis_t_plus_1)
             
-            Si_t_minus, Si_t_plus = None, None
-            X, Y = None, None
-            if state_i == STATES[0]:                                           # state1 or Deficit
-                Si_t_minus = 0
-                Si_t_plus = Si
-                X = pi_0_minus
-                Y = pi_hp_minus
-            elif state_i == STATES[1]:                                         # state2 or Self
-                Si_t_minus = Si - (Ci - Pi)
-                Si_t_plus = Si
-                X = pi_0_minus
-                Y = pi_hp_minus
-            elif state_i == STATES[2]:                                         # state3 or Surplus
-                Si_t_minus = Si
-                Si_t_plus = max(Si_max, Si+(Pi-Ci))
-                X = pi_0_plus
-                Y = pi_hp_plus
+            state_is = np.empty(shape=(m_players,), dtype=str)
+            Sis = np.zeros(shape=(m_players,))
+            GSis_t_minus = np.zeros(shape=(m_players,)) 
+            GSis_t_plus = np.zeros(shape=(m_players,))
+            Xis = np.zeros(shape=(m_players,))
+            Yis = np.zeros(shape=(m_players,))
+            for num_pl_i in range(0, m_players):
+                Pi = arr_pl_vars[num_pl_i, t, k, AUTOMATE_INDEX_ATTRS["Pi"]]
+                Ci = arr_pl_vars[num_pl_i, t, k, AUTOMATE_INDEX_ATTRS["Ci"]]
+                Si = arr_pl_vars[num_pl_i, t, k, AUTOMATE_INDEX_ATTRS["Si"]] \
+                        if t == 0 \
+                        else arr_pl_vars[num_pl_i, t-1, k, 
+                                         AUTOMATE_INDEX_ATTRS["Si"]]
+                Si_max = arr_pl_vars[num_pl_i, t, k, 
+                                     AUTOMATE_INDEX_ATTRS["Si_max"]]
+                Sis[num_pl_i] = Si
+                prod_i, cons_i, r_i, gamma_i, state_i = 0, 0, 0, 0, ""
+                pl_i = None
+                pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                                      prod_i, cons_i, r_i, state_i)
+                state_i = pl_i.find_out_state_i()
+                state_is[num_pl_i] = state_i
                 
-            gamma_i = None
-            if manual_debug:
-                gamma_i = MANUEL_DBG_GAMMA_I
+                Si_t_minus, Si_t_plus = None, None
+                Xi, Yi = None, None
+                if state_i == STATES[0]:                                            # state1 or Deficit
+                    Si_t_minus = 0
+                    Si_t_plus = Si
+                    Xi = pi_0_minus
+                    Yi = pi_hp_minus
+                elif state_i == STATES[1]:                                          # state2 or Self
+                    Si_t_minus = Si - (Ci - Pi)
+                    Si_t_plus = Si
+                    Xi = pi_0_minus
+                    Yi = pi_hp_minus
+                elif state_i == STATES[2]:                                          # state3 or Surplus
+                    Si_t_minus = Si
+                    Si_t_plus = max(Si_max, Si+(Pi-Ci))
+                    Xi = pi_0_plus
+                    Yi = pi_hp_plus
+                GSis_t_minus[num_pl_i] = Si_t_minus
+                GSis_t_plus[num_pl_i] = Si_t_plus
+                Xis[num_pl_i] = Xi; Yis[num_pl_i] = Yi
+            
+            GS_t_minus = np.sum(GSis_t_minus)
+            GS_t_plus = np.sum(GSis_t_plus)
+            if GC_t <= GS_t_minus:
+                gamma_is = Xis - 1
+            elif GC_t > GS_t_plus:
+                gamma_is = Yis + 1
             else:
-                Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
-                if Si_t_plus_1 < Si_t_minus:
-                    gamma_i = X-1
-                elif Si_t_plus_1 >= Si_t_plus:
-                    gamma_i = Y+1
-                elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
-                    res = ( Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus)
-                    Z = X + (Y-X)*res
-                    gamma_i = math.floor(Z)  
+                frac = (GC_t - GS_t_minus) / (GS_t_plus - GS_t_minus)
+                res_is = Xis + (Yis-Xis)*frac
+                gamma_is = np.floor(res_is)
                 
-            arr_pl_vars[num_pl_i, t, :, 
-                        AUTOMATE_INDEX_ATTRS["state_i"]] = state_i
-            arr_pl_vars[num_pl_i, t, :, 
-                        AUTOMATE_INDEX_ATTRS["Si"]] = Si
-            arr_pl_vars[num_pl_i, t, :, 
-                        AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_i
-            arr_pl_vars[num_pl_i, t, :, 
-                        AUTOMATE_INDEX_ATTRS["Si_minus"]] = Si_t_minus
-            arr_pl_vars[num_pl_i, t, :, 
-                        AUTOMATE_INDEX_ATTRS["Si_plus"]] = Si_t_plus
-            
-            bool_gamma_i = (gamma_i >= min(pi_0_minus, pi_0_plus)-1) \
-                            & (gamma_i <= max(pi_hp_minus, pi_hp_plus)+1)
-            print("GAMMA : t={}, player={}, val={}, bool_gamma_i={}, {}"\
-                  .format(t, num_pl_i, gamma_i, bool_gamma_i, state_i)) \
-                if dbg else None
-            Si_t_minus_1 = arr_pl_vars[num_pl_i, t, k, 
-                                       AUTOMATE_INDEX_ATTRS["Si"]] \
-                            if t == 0 \
-                            else arr_pl_vars[num_pl_i, t-1, k,
-                                             AUTOMATE_INDEX_ATTRS["Si"]]
-            print("Si_t_minus_1={}, Si={}".format(Si_t_minus_1, Si)) \
-                if dbg else None
+        arr_pl_vars[:, t, k, AUTOMATE_INDEX_ATTRS["Si"]] = Sis
+        arr_pl_vars[:, t, k,
+                    AUTOMATE_INDEX_ATTRS["state_i"]] = state_is            
+        arr_pl_vars[:, t, k,
+                    AUTOMATE_INDEX_ATTRS["Si_minus"]] = GSis_t_minus
+        arr_pl_vars[:, t, k,
+                    AUTOMATE_INDEX_ATTRS["Si_plus"]] = GSis_t_plus
+        if manual_debug:
+            arr_pl_vars[:, t, k,
+                        AUTOMATE_INDEX_ATTRS["gamma_i"]] = MANUEL_DBG_GAMMA_I
+        else:
+            arr_pl_vars[:, t, k,
+                    AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is
+        
+        bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
+                        & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
+        print("GAMMA : t={}, val={}, bool_gamma_is={}"\
+              .format(t, gamma_is, bool_gamma_is)) if dbg else None
+        GSis_t_minus_1 = arr_pl_vars[:, t, k, AUTOMATE_INDEX_ATTRS["Si"]] \
+                        if t == 0 \
+                        else arr_pl_vars[:, t-1, k, 
+                                         AUTOMATE_INDEX_ATTRS["Si"]]
+        print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
+            if dbg else None
 
     return arr_pl_vars
       

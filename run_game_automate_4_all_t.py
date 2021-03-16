@@ -54,6 +54,7 @@ if __name__ == "__main__":
     learning_rates = None, None, None
     date_hhmm, Visualisation = None, None
     used_storage_det=True
+    gamma_version = 1 # 2
     criteria_bf="Perf_t" # "In_sg_Out_sg"
     dbg_234_players = None
     arr_pl_M_T_vars_init = None
@@ -63,8 +64,8 @@ if __name__ == "__main__":
         nb_periods = None
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm = "DDMM_HHMM"
-        t_periods = 20 #50 #30 #35 #55 #117 #15 #3
-        k_steps = 250 #5000 #2000 #50 #250
+        t_periods = 10 #30 #50 #30 #35 #55 #117 #15 #3
+        k_steps = 100#250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
         fct_aux.N_DECIMALS = 8
@@ -79,15 +80,18 @@ if __name__ == "__main__":
         dbg_234_players = False #True #False
         used_storage_det= True #False #True
         manual_debug = False #True #False #True
+        gamma_version = 1 # 2
         Visualisation = True #False, True
         
-        scenario = "scenario1"
+        scenario = "scenario3"
         date_hhmm = "_".join([date_hhmm, scenario, 
                               "".join(["T", str(t_periods)])])
         
         # ---- initialization of variables for generating instances ----
         setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
         setA_m_players, setB_m_players, setC_m_players = 15, 10, 10
+        setA_m_players, setB_m_players, setC_m_players = 6, 3, 3               # 12 players
+        setA_m_players, setB_m_players, setC_m_players = 2, 1, 1
         if dbg_234_players:
             t_periods = 2
             setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
@@ -121,6 +125,7 @@ if __name__ == "__main__":
         dbg_234_players = False #True #False
         used_storage_det= True #False #True
         manual_debug = True#False #True #False #True
+        gamma_version = 1 # 2
         Visualisation = True #False, True
         
         scenario = scenario1
@@ -153,6 +158,7 @@ if __name__ == "__main__":
         dbg_234_players = False
         used_storage_det= True #False #True
         manual_debug = False #True
+        gamma_version = 1 # 2
         Visualisation = True #False, True
        
         # ---- initialization of variables for generating instances ----
@@ -185,6 +191,7 @@ if __name__ == "__main__":
                 learning_rates = learning_rates,
                 pi_hp_plus = pi_hp_plus,
                 pi_hp_minus = pi_hp_minus,
+                gamma_version = gamma_version,
                 used_instances = used_instances,
                 used_storage_det = used_storage_det,
                 manual_debug = manual_debug, 
@@ -257,6 +264,7 @@ if __name__ == "__main__":
                         df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir, 
                         df_LRI_12, df_k_stop,
+                        algos_4_learning,
                         path_2_best_learning_steps, 
                         autoVizGameV1.NAME_RESULT_SHOW_VARS)
         ## ____________          plot figures ---> fin            ____________

@@ -246,6 +246,7 @@ def balanced_player_game_t(arr_pl_M_T_vars_modif, t,
 def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                                      pi_hp_plus=0.2, 
                                      pi_hp_minus=0.33,
+                                     gamma_version=1,
                                      random_determinist=False,
                                      used_storage=False,
                                      path_to_save="tests", 
@@ -371,13 +372,16 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                 arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["Si_old"]],
                 arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
                 )) if dbg else None
+            
         arr_pl_M_T_vars_modif = fct_aux.compute_gamma_state_4_period_t(
                                 arr_pl_M_T_K_vars=arr_pl_M_T_vars_modif.copy(), 
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                gamma_version=gamma_version,
                                 manual_debug=manual_debug,
                                 dbg=dbg)
+        
         print("after compute gamma state 4 t={}, modes={}, Sis={},  Si_old={}, ris={}".format(
             t,
             arr_pl_M_T_vars_modif[:,t, fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]],
@@ -550,6 +554,7 @@ def test_DETERMINIST_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     used_storage = True #False
     
     manual_debug = False
+    gamma_version = 2 #1
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
     prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
@@ -575,6 +580,7 @@ def test_DETERMINIST_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
                                  arr_pl_M_T_vars_init.copy(),
                                  pi_hp_plus=pi_hp_plus, 
                                  pi_hp_minus=pi_hp_minus,
+                                 gamma_version=gamma_version,
                                  random_determinist=random_determinist,
                                  used_storage=used_storage,
                                  path_to_save="tests", 

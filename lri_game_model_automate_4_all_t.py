@@ -1106,6 +1106,7 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
 def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                                                pi_hp_plus=0.10, 
                                                pi_hp_minus=0.15,
+                                               gamma_version=1,
                                                k_steps=5, 
                                                learning_rate=0.1,
                                                p_i_j_ks=[0.5, 0.5, 0.5],
@@ -1205,6 +1206,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                gamma_version=gamma_version,
                                 manual_debug=manual_debug,
                                 dbg=dbg)
         print("t={}, pi_sg_plus_t={}, pi_sg_minus_t={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
@@ -1505,6 +1507,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
     utility_function_version= 2#1
     
     manual_debug= True #False #True
+    gamma_version = 2 #1
     fct_aux.N_DECIMALS = 2
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
@@ -1531,6 +1534,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
                                 arr_pl_M_T_vars_init,
                                 pi_hp_plus=pi_hp_plus, 
                                 pi_hp_minus=pi_hp_minus,
+                                gamma_version=gamma_version,
                                 k_steps=k_steps, 
                                 learning_rate=learning_rate,
                                 p_i_j_ks=p_i_j_ks,

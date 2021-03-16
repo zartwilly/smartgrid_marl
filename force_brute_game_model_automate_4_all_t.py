@@ -237,6 +237,7 @@ def balanced_player_game_4_mode_profil_prices_SG(arr_pl_M_T_vars_modif,
 def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                         pi_hp_plus=0.02, 
                                         pi_hp_minus=0.33,
+                                        gamma_version=1,
                                         path_to_save="tests", 
                                         name_dir="tests", 
                                         date_hhmm="DDMM_HHMM",
@@ -403,6 +404,7 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                 t=t, 
                                 pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
                                 pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                gamma_version=gamma_version,
                                 manual_debug=manual_debug,
                                 dbg=dbg)
         
@@ -925,6 +927,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     pi_hp_minus = 20 #0.33 #[15, 5]
     
     manual_debug=True
+    gamma_version = 2 #1
     debug = False
     criteria_bf = "Perf_t"
     
@@ -952,6 +955,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
                                 arr_pl_M_T_vars_init.copy(),
                                 pi_hp_plus=pi_hp_plus, 
                                 pi_hp_minus=pi_hp_minus,
+                                gamma_version = gamma_version,
                                 path_to_save="tests", 
                                 name_dir="tests", 
                                 date_hhmm="DDMM_HHMM",
@@ -968,6 +972,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period():
     pi_hp_minus = 20 #0.33 #[15, 5]
     
     manual_debug=True
+    gamma_version = 2 #1
     debug = False
     criteria_bf = "Perf_t"
     
@@ -995,6 +1000,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period():
                                 arr_pl_M_T_vars_init.copy(),
                                 pi_hp_plus=pi_hp_plus, 
                                 pi_hp_minus=pi_hp_minus,
+                                gamma_version = gamma_version,
                                 path_to_save="tests", 
                                 name_dir="tests", 
                                 date_hhmm="DDMM_HHMM",

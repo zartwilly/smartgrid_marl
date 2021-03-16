@@ -38,6 +38,7 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                             learning_rates=None,
                                             pi_hp_plus=None,
                                             pi_hp_minus=None,
+                                            gamma_version=1,
                                             used_instances=True,
                                             used_storage_det=True,
                                             manual_debug=False, 
@@ -107,6 +108,7 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                     arr_pl_M_T_vars_init.copy(),
                                     pi_hp_plus=pi_hp_plus_elt, 
                                     pi_hp_minus=pi_hp_minus_elt,
+                                    gamma_version=gamma_version,
                                     k_steps=k_steps, 
                                     learning_rate=learning_rate,
                                     p_i_j_ks=p_i_j_ks,
@@ -126,6 +128,7 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                     arr_pl_M_T_vars_init.copy(),
                                     pi_hp_plus=pi_hp_plus_elt, 
                                     pi_hp_minus=pi_hp_minus_elt,
+                                    gamma_version=gamma_version,
                                     k_steps=k_steps, 
                                     learning_rate=learning_rate,
                                     p_i_j_ks=p_i_j_ks,
@@ -142,6 +145,7 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                              arr_pl_M_T_vars_init.copy(),
                              pi_hp_plus=pi_hp_plus_elt, 
                              pi_hp_minus=pi_hp_minus_elt,
+                             gamma_version=gamma_version,
                              random_determinist=random_determinist,
                              used_storage=used_storage_det,
                              path_to_save=path_to_save, 
@@ -155,6 +159,7 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                 arr_pl_M_T_vars_init.copy(),
                                 pi_hp_plus=pi_hp_plus_elt, 
                                 pi_hp_minus=pi_hp_minus_elt,
+                                gamma_version=gamma_version,
                                 path_to_save=path_to_save, 
                                 name_dir=name_dir, 
                                 date_hhmm=date_hhmm,
@@ -169,6 +174,7 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                 arr_pl_M_T_vars_init.copy(),
                                 pi_hp_plus=pi_hp_plus_elt, 
                                 pi_hp_minus=pi_hp_minus_elt,
+                                gamma_version=gamma_version,
                                 path_to_save=path_to_save, 
                                 name_dir=name_dir, 
                                 date_hhmm=date_hhmm,
@@ -194,6 +200,7 @@ def test_execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL():
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
+    gamma_version = 1
     
     arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE(
                             setA_m_players, setB_m_players, setC_m_players, 
@@ -213,7 +220,8 @@ def test_execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL():
     execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
         arr_pl_M_T_vars_init, algos=algos, 
         k_steps=k_steps, 
-        learning_rates=learning_rates)
+        learning_rates=learning_rates, 
+        gamma_version=gamma_version)
  
 #------------------------------------------------------------------------------
 #                   definitions of functions
