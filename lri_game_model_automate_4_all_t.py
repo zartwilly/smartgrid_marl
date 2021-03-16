@@ -1269,23 +1269,6 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                     learning_rate, 
                     utility_function_version)
             
-            # cancel_update_cols = [fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"],
-            #                       fct_aux.]
-            # cols_2_update = [fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"],
-            #                  fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"],
-            #                  fct_aux.AUTOMATE_INDEX_ATTRS["bg_i"],
-            #                  fct_aux.AUTOMATE_INDEX_ATTRS["u_i"],
-            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
-            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
-            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
-            #                  fct_aux.AUTOMATE_INDEX_ATTRS[""],
-            #    "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
-            #    "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
-            #    "balanced_pl_i": 14, "formule":15, "Si_minus":16,
-            #    "Si_plus":17, "u_i": 18, "bg_i": 19,
-            #    "S1_p_i_j_k": 20, "S2_p_i_j_k": 21, 
-            #    "non_playing_players":22
-            #                  ]
             if bool_bg_i_min_eq_max and nb_repeat_k != fct_aux.NB_REPEAT_K_MAX:
                 k = k
                 arr_bg_i_nb_repeat_k[:,nb_repeat_k] \
