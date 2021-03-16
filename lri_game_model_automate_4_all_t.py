@@ -651,6 +651,7 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
         pl_i.set_R_i_old(Si_max-Si)                                             # update R_i_old
         
         # select mode for player num_pl_i
+        mode_i = None
         if random_mode:
             S1_p_i_t_k = arr_pl_M_T_K_vars_modif[num_pl_i, 
                                 t, k, 
@@ -660,6 +661,7 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_K_vars_modif, t, k,
                                 t, k-1, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]]
             pl_i.select_mode_i(p_i=S1_p_i_t_k)
+            mode_i = pl_i.get_mode_i()
         else:
             mode_i = arr_pl_M_T_K_vars_modif[num_pl_i, 
                                 t, k,
@@ -1209,6 +1211,9 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                                 gamma_version=gamma_version,
                                 manual_debug=manual_debug,
                                 dbg=dbg)
+        print("states={}, \n gamma_is={}".format(
+            arr_pl_M_T_K_vars_modif[:,t,0, fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]],
+            arr_pl_M_T_K_vars_modif[:,t,0, fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]] ))
         print("t={}, pi_sg_plus_t={}, pi_sg_minus_t={}, pi_0_plus_t={}, pi_0_minus_t={}".format(
              t, pi_sg_plus_t, pi_sg_minus_t, pi_0_plus_t, pi_0_minus_t))
         
@@ -1297,7 +1302,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
                             else arr_pl_M_T_K_vars_modif_new[
                                     indices_non_playing_players, t, k,
                                     fct_aux.AUTOMATE_INDEX_ATTRS[S1or2+"_p_i_j_k"]]
-                        
+                      
                 arr_pl_M_T_K_vars_modif[:,t,k,:] \
                     = arr_pl_M_T_K_vars_modif_new[:,t,k,:].copy()
                 
@@ -1412,7 +1417,7 @@ def lri_balanced_player_game_all_pijk_upper_08(arr_pl_M_T_vars_init,
         ## checkout NASH equilibrium    
         # ben_csts_M_t_kstop : shape (m_players,)
         ben_csts_M_t_kstop = BENs_M_T_K[:,t,k_stop_learning] \
-                         - CSTs_M_T_K[:,t,k_stop_learning]                     # shape (m_players,)
+                             - CSTs_M_T_K[:,t,k_stop_learning]                 # shape (m_players,)
         df_nash_t = None
         df_nash_t = checkout_nash_4_profils_by_periods(
                         arr_pl_M_T_K_vars_modif.copy(),
@@ -1504,10 +1509,10 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
     pi_hp_plus = 10 #0.2*pow(10,-3)
     pi_hp_minus = 20 # 0.33
     learning_rate = 0.1
-    utility_function_version= 2#1
+    utility_function_version= 2 #1,2
     
-    manual_debug= True #False #True
-    gamma_version = 2 #1
+    manual_debug= False #True #False #True
+    gamma_version = 2 #1, 2
     fct_aux.N_DECIMALS = 2
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
@@ -1517,7 +1522,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
                  (prob_B_A, prob_B_B, prob_B_C),
                  (prob_C_A, prob_C_B, prob_C_C)]
     
-    t_periods = 2#4
+    t_periods = 3#4
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
