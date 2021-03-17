@@ -1034,6 +1034,12 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 gamma_i = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
+                Si_minus = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["Si_minus"]]
+                Si_plus = arr_pl_M_T_K_vars_modif[
+                                num_pl_i, t, k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["Si_plus"]]
                 setX = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["set"]]
@@ -1041,16 +1047,6 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 cst_i = CSTs_M_T_K[num_pl_i, t, k]
                 Vi = ben_csts_MKs_t[num_pl_i, k]
                 
-                dico_pls[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
-                    = {"set":setX, "state":state_i, "mode":mode_i, 
-                       "Si_old": round(Si_old, fct_aux.N_DECIMALS),
-                       "Si": round(Si, fct_aux.N_DECIMALS),
-                       "Si_max": round(Si_max, fct_aux.N_DECIMALS),
-                       "Vi":round(Vi, fct_aux.N_DECIMALS),
-                       "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
-                       "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS),
-                       "gamma":round(gamma_i, fct_aux.N_DECIMALS)}
-                # ________________
                 Pi = arr_pl_M_T_K_vars_modif[
                                 num_pl_i, t, k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]]
@@ -1066,20 +1062,23 @@ def turn_dico_stats_res_into_df_LRI(arr_pl_M_T_K_vars_modif, t_periods,
                 
                 dico_pls[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
                     = {"set":setX, "state":state_i, "mode":mode_i, 
-                       "Si_old": round(Si_old, fct_aux.N_DECIMALS),
-                       "Si": round(Si, fct_aux.N_DECIMALS),
                        "Pi": round(Pi, fct_aux.N_DECIMALS),
                        "Ci": round(Ci, fct_aux.N_DECIMALS),
-                       "ri": round(ri, fct_aux.N_DECIMALS),
+                       "Si_max": round(Si_max, fct_aux.N_DECIMALS),
+                       "Si_old": round(Si_old, fct_aux.N_DECIMALS),
+                       "Si": round(Si, fct_aux.N_DECIMALS),
                        "prod_i": round(prod_i, fct_aux.N_DECIMALS),
                        "cons_i": round(cons_i, fct_aux.N_DECIMALS),
+                       "ri": round(ri, fct_aux.N_DECIMALS),
                        "ben_i": round(ben_i, fct_aux.N_DECIMALS),
                        "cst_i": round(cst_i, fct_aux.N_DECIMALS),
                        "Vi":round(Vi, fct_aux.N_DECIMALS),
                        "S1":round(S1_p_i_j_k, fct_aux.N_DECIMALS), 
                        "S2":round(S2_p_i_j_k, fct_aux.N_DECIMALS),
+                       "Si_minus": round(Si_minus, fct_aux.N_DECIMALS),
+                       "Si_plus": round(Si_plus, fct_aux.N_DECIMALS),
                        "gamma":round(gamma_i, fct_aux.N_DECIMALS)}
-                # ________________
+                
             dico_pls["Perf_t"] = perf_t_K_t[k]
             dico_pls["b0"] = b0_s_t_k
             dico_pls["c0"] = c0_s_t_k

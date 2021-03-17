@@ -396,7 +396,7 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
             bens_csts_t = bens_t - csts_t
             Perf_t = np.sum(bens_csts_t, axis=0)
             dico_Vis_Pref_t = dict()
-            for num_pl_i in range(bens_csts_t.shape[0]):            # bens_csts_t.shape[0] = m_players
+            for num_pl_i in range(bens_csts_t.shape[0]):                        # bens_csts_t.shape[0] = m_players
                 dico_Vis_Pref_t[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)] \
                     = (bens_csts_t[num_pl_i], 
                        bens_t[num_pl_i], 
@@ -406,9 +406,9 @@ def nash_balanced_player_game_perf_t_USE_DICT_MODE_PROFIL(
                 dico_vars["Vi"] = round(bens_csts_t[num_pl_i], 2)
                 dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
                 dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
-                variables = ["state_i", "mode_i", "prod_i", "cons_i", "r_i", 
-                             "gamma_i", "Pi", "Ci", "Si", "Si_old", 
-                             "Si_minus", "Si_plus"]
+                variables = ["set", "state_i", "mode_i", "Pi", "Ci", "Si_max", 
+                             "Si_old", "Si", "prod_i", "cons_i", "r_i", 
+                             "Si_minus", "Si_plus", "gamma_i"]
                 for variable in variables:
                     dico_vars[variable] = arr_pl_M_T_vars_mode_prof[
                                             num_pl_i, t, 

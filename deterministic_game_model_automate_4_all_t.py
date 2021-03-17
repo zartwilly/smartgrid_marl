@@ -446,9 +446,9 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
             dico_vars["Vi"] = round(Vi, 2)
             dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
             dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
-            variables = ["state_i", "mode_i", "prod_i", "cons_i", "r_i", 
-                         "gamma_i", "Pi", "Ci", "Si", "Si_old", "Si_max",
-                         "Si_minus", "Si_plus","set"]
+            variables = ["set", "state_i", "mode_i", "Pi", "Ci", "Si_max", 
+                         "Si_old", "Si", "prod_i", "cons_i", "r_i", 
+                         "Si_minus", "Si_plus", "gamma_i"]
             for variable in variables:
                 dico_vars[variable] = arr_pl_M_T_vars_modif[
                                         num_pl_i, t, 

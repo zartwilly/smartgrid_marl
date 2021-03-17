@@ -470,18 +470,14 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                 r_i = arr_pl_M_T_vars_mode_prof[
                             num_pl_i, t, 
                             fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
-                dico_mode_prof_by_players["PLAYER_"+str(num_pl_i)+"_t_"+str(t)] \
-                = {"set":setx, "state":state_i, "mode_i":mode_i, "Vi":Vi, 
-                   "gamma_i":gamma_i, "prod":prod_i, "cons":cons_i, 'r_i':r_i,
-                   "ben": bens_t[num_pl_i], "cst":csts_t[num_pl_i]}
                 
                 dico_vars = dict()
                 dico_vars["Vi"] = round(Vi, 2)
                 dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
                 dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
-                variables = ["state_i", "mode_i", "prod_i", "cons_i", "r_i", 
-                             "gamma_i", "Pi", "Ci", "Si", "Si_old", 
-                             "Si_minus", "Si_plus"]
+                variables = ["set", "state_i", "mode_i", "Pi", "Ci", "Si_max", 
+                             "Si_old", "Si", "prod_i", "cons_i", "r_i", 
+                             "Si_minus", "Si_plus", "gamma_i"]
                 for variable in variables:
                     dico_vars[variable] = arr_pl_M_T_vars_mode_prof[
                                             num_pl_i, t, 
