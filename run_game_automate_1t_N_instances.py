@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # ----   execution of 50 instances    ----
     criteria_bf = "Perf_t"
     used_storage_det = True #False #True
-    manual_debug = True #False #True
+    manual_debug = False #True #False #True
     NB_INSTANCES = 50
     for i in range(0, NB_INSTANCES):
         fct_aux.MANUEL_DBG_GAMMA_I = np.random.randint(low=2, high=21, size=1)[0]
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         autoExeGame4T\
             .execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                 arr_pl_M_T_vars_init, 
-                name_dir = name_dir,
+                name_dir = name_dir_oneperiod,
                 date_hhmm = date_hhmm_new,
                 k_steps = k_steps,
                 NB_REPEAT_K_MAX = NB_REPEAT_K_MAX,
@@ -97,12 +97,13 @@ if __name__ == "__main__":
     learning_rates_new, \
     path_2_best_learning_steps = autoVizGame1TnInstances\
                                     .get_tuple_paths_of_arrays_4_many_simu(
+                                        name_dir=name_dir_oneperiod,
                                         algos_4_showing=algos_4_showing,
                                         algos_4_no_learning=algos_4_no_learning)
     print("tuple_paths = {}".format(len(tuple_paths)))
 
     t = 0
-    k_steps_args = 250
+    k_steps_args = k_steps #250
     algos_4_learning = ["LRI1", "LRI2"]
     df_arr_M_T_Ks, \
     df_ben_cst_M_T_K, \
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     print("create_dataframe_mean_Vi: df_algo_instance_state_moyVi={}, runtime={},TERMINE"\
           .format(df_algo_instance_state_moyVi.shape, time.time()-ti_))
     
-    path_to_save = os.path.join("tests", "AVERAGE_RESULTS")
+    path_to_save = os.path.join(name_dir_oneperiod, "AVERAGE_RESULTS")
     Path(path_to_save).mkdir(parents=True, exist_ok=True)
     autoVizGame1TnInstances.group_plot_on_panel(
                         df_arr_M_T_Ks, 

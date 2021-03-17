@@ -997,11 +997,16 @@ if __name__ == "__main__":
     algos_4_no_learning=["DETERMINIST","RD-DETERMINIST"] \
                          + fct_aux.ALGO_NAMES_BF \
                          + fct_aux.ALGO_NAMES_NASH
+                         
+    name_dir = "tests"
+    name_dir_oneperiod = os.path.join(name_dir,"OnePeriod_50instances")
+    
     tuple_paths, \
     prices_new, \
     algos_new, \
     learning_rates_new, \
     path_2_best_learning_steps = get_tuple_paths_of_arrays_4_many_simu(
+                                    name_dir=name_dir_oneperiod,
                                     algos_4_showing=algos_4_showing,
                                     algos_4_no_learning=algos_4_no_learning)
     print("tuple_paths = {}".format(len(tuple_paths)))
