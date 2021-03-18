@@ -230,9 +230,13 @@ def compute_prices_inside_SG(arr_pl_M_t_vars_mode_prof,
     # compute the new prices pi_sg_plus_t, pi_sg_minus_t
     # from a pricing model in the document
     pi_sg_minus_t = pi_hp_minus * sum_diff_pos_minus_0_t_minus_1 / \
-                    sum_cons_is_0_t_minus_1
+                    sum_cons_is_0_t_minus_1 \
+                        if sum_cons_is_0_t_minus_1 != 0 \
+                        else 0
     pi_sg_plus_t = pi_hp_plus * sum_diff_pos_plus_0_t_minus_1 / \
-                    sum_prod_is_0_t_minus_1
+                    sum_prod_is_0_t_minus_1 \
+                        if sum_prod_is_0_t_minus_1 != 0 \
+                        else 0
     
     ## compute prices inside smart grids
     # compute prices of an energy unit price for cost and benefit players
@@ -546,49 +550,66 @@ def generer_balanced_players_4_modes_profils(arr_pl_M_t_vars_modif,
                                                  key="bad")
         Perf_ts.append(Perf_t)
         id_mid_key_Perf_t = np.argsort(Perf_ts)[len(Perf_ts)//2]
-        mid_key_Perf_t = Perf_ts[id_mid_key_Perf_t]
+        mid_key_Perf_t_new = Perf_ts[id_mid_key_Perf_t]
             
-        
-        
-        if best_key_Perf_t not in dico_modes_profs_by_players_t_best:
+        if best_key_Perf_t == Perf_t \
+            and best_key_Perf_t not in dico_modes_profs_by_players_t_best:
             dico_modes_profs_by_players_t_best = dict()
             dico_modes_profs_by_players_t_best[Perf_t] \
                 = [ ("BF_{}_t_{}".format(cpt_xxx,t), 
-                     dico_mode_prof_by_players) ]
-        else:
+                      dico_mode_prof_by_players) ]
+        elif best_key_Perf_t == Perf_t \
+            and best_key_Perf_t in dico_modes_profs_by_players_t_best:
             dico_modes_profs_by_players_t_best[Perf_t]\
             .append( ("BF_{}_t_{}".format(cpt_xxx,t), 
-                     dico_mode_prof_by_players) )
+                      dico_mode_prof_by_players) )
             
-        if bad_key_Perf_t not in dico_modes_profs_by_players_t_bad:
+        if bad_key_Perf_t == Perf_t \
+            and bad_key_Perf_t not in dico_modes_profs_by_players_t_bad:
             dico_modes_profs_by_players_t_bad = dict()
             dico_modes_profs_by_players_t_bad[Perf_t] \
                 = [ ("BF_{}_t_{}".format(cpt_xxx,t), 
-                     dico_mode_prof_by_players) ]
-        else:
+                      dico_mode_prof_by_players) ]
+        elif bad_key_Perf_t == Perf_t \
+            and bad_key_Perf_t in dico_modes_profs_by_players_t_bad:
             dico_modes_profs_by_players_t_bad[Perf_t]\
             .append( ("BF_{}_t_{}".format(cpt_xxx,t), 
-                     dico_mode_prof_by_players) )
-            
-        if mid_key_Perf_t not in dico_modes_profs_by_players_t_mid:
+                      dico_mode_prof_by_players) )
+        
+        #_____________   
+        mid_key_Perf_t_OLD = mid_key_Perf_t
+        if mid_key_Perf_t != mid_key_Perf_t_new:
             dico_modes_profs_by_players_t_mid = dict()
-            dico_modes_profs_by_players_t_mid[Perf_t] \
+            dico_modes_profs_by_players_t_mid[mid_key_Perf_t_new] \
                 = [ ("BF_{}_t_{}".format(cpt_xxx,t), 
-                     dico_mode_prof_by_players) ]
-        else:
-            dico_modes_profs_by_players_t_mid[Perf_t]\
-            .append( ("BF_{}_t_{}".format(cpt_xxx,t), 
-                     dico_mode_prof_by_players) )
-         
-        cpt_xxx += 1
+                      dico_mode_prof_by_players) ]
+            mid_key_Perf_t = mid_key_Perf_t_new
             
-    return dico_modes_profs_by_players_t_best, \
-            dico_modes_profs_by_players_t_bad, \
-            dico_modes_profs_by_players_t_mid
+        # print("Perf_t={}, dico_best={}, dico_bad={} mid_key_Perf_t_OLD={}, mid_key_Perf_t_new={},dico_mid={}".format(
+        #      Perf_t, list(dico_modes_profs_by_players_t_best.keys()), 
+        #      list( dico_modes_profs_by_players_t_bad.keys() ),
+        #      mid_key_Perf_t_OLD, mid_key_Perf_t_new,
+        #      list( dico_modes_profs_by_players_t_mid.keys() )
+        #      ))
+            
+        
+        cpt_xxx += 1
+        print("cpt_xxx={}".format(cpt_xxx)) if cpt_xxx % 5000==0 else None
+            
+    list_dico_modes_profs_by_players_t_best \
+        = dico_modes_profs_by_players_t_best[best_key_Perf_t]
+    list_dico_modes_profs_by_players_t_bad \
+        = dico_modes_profs_by_players_t_bad[bad_key_Perf_t]
+    list_dico_modes_profs_by_players_t_mid \
+        = dico_modes_profs_by_players_t_mid[mid_key_Perf_t]
+      
+    return list_dico_modes_profs_by_players_t_best, \
+            list_dico_modes_profs_by_players_t_bad, \
+            list_dico_modes_profs_by_players_t_mid
 # _______       balanced players 4 all modes_profils   --->  fin       _______
 
 # _______           sum of prod, cons from 0 to t-2 ---> Debut        _________
-def get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_t_vars_modif, t):
+def get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_T_vars_modif, t):
     """
     quantity of energies (prod_is, cons_is) from 0 to t-2 to get values 
     for t-1 periods
@@ -605,13 +626,13 @@ def get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_t_vars_modif, t):
         # compute the positive difference btw prod_is and cons_is from 0 to t-1
             # sum_diff_pos_plus_0_t_minus_1
         sum_cons_is_0_t_minus_2 \
-            = np.sum( np.sum(arr_pl_M_t_vars_modif[
+            = np.sum( np.sum(arr_pl_M_T_vars_modif[
                                 :,0:t,
                                 fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
                              axis=0), 
                      axis=0)
         sum_prod_is_0_t_minus_2 \
-            = np.sum( np.sum(arr_pl_M_t_vars_modif[
+            = np.sum( np.sum(arr_pl_M_T_vars_modif[
                                 :,0:t,
                                 fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
                              axis=0), 
@@ -620,11 +641,11 @@ def get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_t_vars_modif, t):
         sum_diff_pos_minus_0_t_minus_2 = 0
         sum_diff_pos_plus_0_t_minus_2 = 0
         for k in range(0,t):
-            cons_k_is = np.sum(arr_pl_M_t_vars_modif[
+            cons_k_is = np.sum(arr_pl_M_T_vars_modif[
                                 :,k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
                             axis=0)
-            prod_k_is = np.sum(arr_pl_M_t_vars_modif[
+            prod_k_is = np.sum(arr_pl_M_T_vars_modif[
                                 :,k, 
                                 fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
                             axis=0)
@@ -675,8 +696,8 @@ def checkout_nash_4_profils_by_periods(arr_pl_M_t_vars_modif_algo,
                             :,
                             fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] )
     for num_pl_i in range(0, m_players):
-        state_i = arr_pl_M_T_vars_modif[
-                        num_pl_i, t,
+        state_i = arr_pl_M_t_vars_modif_algo[
+                        num_pl_i,
                         fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] 
         mode_i = modes_profil[num_pl_i]
         mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
@@ -816,7 +837,7 @@ def compute_gamma_state_4_period_t(arr_pl_M_t_K_vars,
                              (m_players, k_steps, len(vars))
     """
     k = 0
-    shape_arr_pl = arr_pl_M_t_K_vars.shape
+    shape_arr_pl = len(arr_pl_M_t_K_vars.shape)
     
     # compute Cis_t_plus_t, Pis_t_plus_1, 
     # GC_t, GSis_t_minus, GSis_t_plus, Xis, Yis
@@ -1200,6 +1221,9 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                                 gamma_version=gamma_version,
                                 manual_debug=manual_debug,
                                 dbg=dbg)
+        arr_pl_M_T_vars_modif_BADBF[:,t,:] = arr_pl_M_t_vars_modif.copy()
+        arr_pl_M_T_vars_modif_BESTBF[:,t,:] = arr_pl_M_t_vars_modif.copy()
+        arr_pl_M_T_vars_modif_MIDBF[:,t,:] = arr_pl_M_t_vars_modif.copy()
         
         # quantity of energies (prod_is, cons_is) from 0 to t-2 to get values 
         # for t-1 periods
@@ -1212,17 +1236,21 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
         sum_diff_pos_plus_0_t_minus_2, \
         sum_cons_is_0_t_minus_2, \
         sum_prod_is_0_t_minus_2 \
-            = get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_t_vars_modif,t)
+            = get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_T_vars_modif,t)
+        print("t={}, sum_diff_pos_minus_0_t_minus_2={}, sum_diff_pos_plus_0_t_minus_2={}, sum_cons_is_0_t_minus_2={}, sum_prod_is_0_t_minus_2={}".format(t,sum_diff_pos_minus_0_t_minus_2,
+                        sum_diff_pos_plus_0_t_minus_2,
+                        sum_cons_is_0_t_minus_2, 
+                        sum_prod_is_0_t_minus_2))
         
             
         # balanced player game at instant t    
-        dico_modes_profs_by_players_t_best = dict()
-        dico_modes_profs_by_players_t_bad = dict()
-        dico_modes_profs_by_players_t_mid = dict()
+        list_dico_modes_profs_by_players_t_best = list()
+        list_dico_modes_profs_by_players_t_bad = list()
+        list_dico_modes_profs_by_players_t_mid = list()
         
-        dico_modes_profs_by_players_t_best, \
-        dico_modes_profs_by_players_t_bad, \
-        dico_modes_profs_by_players_t_mid \
+        list_dico_modes_profs_by_players_t_best, \
+        list_dico_modes_profs_by_players_t_bad, \
+        list_dico_modes_profs_by_players_t_mid\
             = generer_balanced_players_4_modes_profils(
                 arr_pl_M_t_vars_modif, 
                 m_players, t,
@@ -1234,46 +1262,51 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                 pi_0_plus_t, pi_0_minus_t,
                 manual_debug, dbg)
         
-        dico_modes_profs_by_players_t_BESTBF[t] \
-            = dico_modes_profs_by_players_t_best
-        dico_modes_profs_by_players_t_BADBF[t] \
-            = dico_modes_profs_by_players_t_bad
-        dico_modes_profs_by_players_t_MIDBF[t] \
-            = dico_modes_profs_by_players_t_mid
+        # dico_modes_profs_by_players_t_BESTBF[t] \
+        #     = dico_modes_profs_by_players_t_best
+        # dico_modes_profs_by_players_t_BADBF[t] \
+        #     = dico_modes_profs_by_players_t_bad
+        # dico_modes_profs_by_players_t_MIDBF[t] \
+        #     = dico_modes_profs_by_players_t_mid
         
         # appliquer sur chaque algo BEST, BAD, MIDDLE
         for algo_name in fct_aux.ALGO_NAMES_BF:
-            dict_modes_profs_by_players_t_algo = dict()
+            list_dico_modes_profs_by_players_t_algo = dict()
             if algo_name == fct_aux.ALGO_NAMES_BF[0]:                          # BEST-BRUTE-FORCE
-                dict_modes_profs_by_players_t_algo \
-                    = dico_modes_profs_by_players_t_best
+                list_dico_modes_profs_by_players_t_algo \
+                    = list_dico_modes_profs_by_players_t_best
                 arr_pl_M_t_vars_modif_algo \
                     = arr_pl_M_T_vars_modif_BESTBF[:,t,:].copy()
                 df_nash_algo = df_nash_BESTBF.copy()
                 pass
             elif algo_name == fct_aux.ALGO_NAMES_BF[1]:                        # BAD-BRUTE-FORCE
-                dict_modes_profs_by_players_t_algo \
-                    = dico_modes_profs_by_players_t_bad
+                list_dico_modes_profs_by_players_t_algo \
+                    = list_dico_modes_profs_by_players_t_bad
                 arr_pl_M_t_vars_modif_algo \
                     = arr_pl_M_T_vars_modif_BADBF[:,t,:].copy()
                 df_nash_algo = df_nash_BADBF.copy()
                 pass
             elif algo_name == fct_aux.ALGO_NAMES_BF[2]:                        # MIDDLE-BRUTE-FORCE
-                dict_modes_profs_by_players_t_algo \
-                    = dico_modes_profs_by_players_t_mid
+                list_dico_modes_profs_by_players_t_algo \
+                    = list_dico_modes_profs_by_players_t_mid
                 arr_pl_M_t_vars_modif_algo \
                     = arr_pl_M_T_vars_modif_MIDBF[:,t,:].copy()
                 df_nash_algo = df_nash_MIDBF.copy()
                 pass
+            
             rd_key = None
-            if len(dict_modes_profs_by_players_t_algo.keys()) == 1:
-                rd_key = list(dict_modes_profs_by_players_t_algo.keys())[0]
+            if len(list_dico_modes_profs_by_players_t_algo) == 1:
+                rd_key = 0
             else:
                 rd_key = np.random.randint(
                             0, 
-                            len(dict_modes_profs_by_players_t_algo.keys()))
+                            len(list_dico_modes_profs_by_players_t_algo))
+            
             id_cpt_xxx, dico_mode_prof_by_players_algo \
-                = dict_modes_profs_by_players_t_algo[rd_key]
+                = list_dico_modes_profs_by_players_t_algo[rd_key] 
+            print("rd_key={}, cpt_xxx={}, dico_modes_profs_by_players_t_algo={}".format(
+                    rd_key, id_cpt_xxx, dico_mode_prof_by_players_algo))
+            
             bens_t_algo = dico_mode_prof_by_players_algo["bens_t"]
             csts_t_algo = dico_mode_prof_by_players_algo["csts_t"]
             Perf_t_algo = dico_mode_prof_by_players_algo["Perf_t"]
@@ -1293,7 +1326,12 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
             arr_pl_M_t_vars_modif_algo[:, 
                                   fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] \
                 = mode_profile
-        
+            
+            print("mode_profile={}, mode_is={}".format(mode_profile, 
+                    arr_pl_M_t_vars_modif_algo[:,fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]]))
+            print("state_is={} ".format( 
+                    arr_pl_M_t_vars_modif_algo[:,fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]]))
+            
             arr_pl_M_t_vars_modif_algo = balanced_player_game_4_mode_profil(
                                              arr_pl_M_t_vars_modif_algo, 
                                              m_players,
@@ -1358,7 +1396,7 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                 = pd.DataFrame(arr_pl_M_t_vars_modif_algo, 
                                 columns=fct_aux.AUTOMATE_INDEX_ATTRS.keys(),
                                 index=dico_id_players["players"])
-            path_to_save_M_t_vars_modif_algo = None
+            path_to_save_M_t_vars_modif_algo = path_to_save
             msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
             if "simu_DDMM_HHMM" in path_to_save:
                 path_to_save_M_t_vars_modif_algo \
@@ -1392,8 +1430,7 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                         pi_sg_minus_T_BESTBF, pi_sg_minus_t_algo,
                         pi_0_plus_T_BESTBF, pi_0_plus_t_algo,
                         pi_0_minus_T_BESTBF, pi_0_minus_t_algo,
-                        df_nash_BESTBF, df_nash_algo,
-                        key=fct_aux.ALGO_NAMES_BF[0]
+                        df_nash_BESTBF, df_nash_algo
                         )
                 BB_is_M_T_BESTBF, CC_is_M_T_BESTBF, RU_is_M_T_BESTBF, \
                 B_is_M_T_BESTBF, C_is_M_T_BESTBF \
@@ -1402,7 +1439,10 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                         b0_ts_T_BESTBF, c0_ts_T_BESTBF, 
                         pi_sg_plus_T_BESTBF, pi_sg_minus_T_BESTBF,
                         pi_0_plus_T_BESTBF, pi_0_minus_T_BESTBF
-                                               )  
+                                               )
+                dico_modes_profs_by_players_t_BESTBF[t] \
+                    = dico_mode_prof_by_players_algo
+    
             elif algo_name == fct_aux.ALGO_NAMES_BF[1]:                        # BAD-BRUTE-FORCE
                 arr_pl_M_T_vars_modif_BADBF[:,t,:] \
                     = arr_pl_M_t_vars_modif_algo 
@@ -1420,8 +1460,7 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                         pi_sg_minus_T_BADBF, pi_sg_minus_t_algo,
                         pi_0_plus_T_BADBF, pi_0_plus_t_algo,
                         pi_0_minus_T_BADBF, pi_0_minus_t_algo,
-                        df_nash_BADBF, df_nash_algo,
-                        key=fct_aux.ALGO_NAMES_BF[1]
+                        df_nash_BADBF, df_nash_algo
                         )
                 BB_is_M_T_BADBF, CC_is_M_T_BADBF, RU_is_M_T_BADBF, \
                 B_is_M_T_BADBF, C_is_M_T_BADBF \
@@ -1431,6 +1470,9 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                         pi_sg_plus_T_BADBF, pi_sg_minus_T_BADBF,
                         pi_0_plus_T_BADBF, pi_0_minus_T_BADBF
                         )
+                dico_modes_profs_by_players_t_BADBF[t] \
+                    = dico_mode_prof_by_players_algo    
+                    
             elif algo_name == fct_aux.ALGO_NAMES_BF[2]:                        # MIDDLE-BRUTE-FORCE
                 arr_pl_M_T_vars_modif_MIDBF[:,t,:] \
                     = arr_pl_M_t_vars_modif_algo 
@@ -1448,8 +1490,7 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                         pi_sg_minus_T_MIDBF, pi_sg_minus_t_algo,
                         pi_0_plus_T_MIDBF, pi_0_plus_t_algo,
                         pi_0_minus_T_MIDBF, pi_0_minus_t_algo,
-                        df_nash_MIDBF, df_nash_algo,
-                        key=fct_aux.ALGO_NAMES_BF[2]
+                        df_nash_MIDBF, df_nash_algo
                         )
                 BB_is_M_T_MIDBF, CC_is_M_T_MIDBF, RU_is_M_T_MIDBF, \
                 B_is_M_T_MIDBF, C_is_M_T_MIDBF \
@@ -1459,6 +1500,8 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                         pi_sg_plus_T_MIDBF, pi_sg_minus_T_MIDBF,
                         pi_0_plus_T_MIDBF, pi_0_minus_T_MIDBF, 
                         )
+                dico_modes_profs_by_players_t_MIDBF[t] \
+                    = dico_mode_prof_by_players_algo
             #___________ update saving variables : fin   ______________________
             
     # __________        compute prices variables         ____________________
