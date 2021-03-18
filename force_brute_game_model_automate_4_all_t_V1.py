@@ -1,0 +1,1707 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 17 12:23:32 2021
+
+@author: jwehounou
+"""
+import os
+import time
+
+import numpy as np
+import pandas as pd
+import smartgrids_players as players
+import fonctions_auxiliaires as fct_aux
+import itertools as it
+
+from pathlib import Path
+
+
+###############################################################################
+#           definition  des fonctions 
+#               * calculant les valeurs des cellules des arrays ou
+#               * mettant a jour les cellules des arrays
+#
+###############################################################################
+def update_saving_variables(t, b0_ts_T_BESTBF, b0_t_algo,
+                            c0_ts_T_BESTBF, c0_t_algo,
+                            BENs_M_T_BESTBF, bens_t_algo,
+                            CSTs_M_T_BESTBF, csts_t_algo,
+                            pi_sg_plus_T_BESTBF, pi_sg_plus_t_algo,
+                            pi_sg_minus_T_BESTBF, pi_sg_minus_t_algo,
+                            pi_0_plus_T_BESTBF, pi_0_plus_t_algo,
+                            pi_0_minus_T_BESTBF, pi_0_minus_t_algo,
+                            df_nash_BESTBF, df_nash_algo):
+    b0_ts_T_BESTBF[t] = b0_t_algo
+    c0_ts_T_BESTBF[t] = c0_t_algo
+    BENs_M_T_BESTBF[:,t] = bens_t_algo
+    CSTs_M_T_BESTBF[:,t] = csts_t_algo
+    pi_sg_plus_T_BESTBF[t] = pi_sg_plus_t_algo
+    pi_sg_minus_T_BESTBF[t] = pi_sg_minus_t_algo
+    pi_0_plus_T_BESTBF[t] = pi_0_plus_t_algo
+    pi_0_minus_T_BESTBF[t] = pi_0_minus_t_algo
+    df_nash_BESTBF = df_nash_algo.copy()
+    
+    return b0_ts_T_BESTBF, c0_ts_T_BESTBF, \
+            BENs_M_T_BESTBF, CSTs_M_T_BESTBF, \
+            pi_sg_plus_T_BESTBF, pi_sg_minus_T_BESTBF, \
+            pi_0_plus_T_BESTBF, pi_0_minus_T_BESTBF, \
+            df_nash_BESTBF
+    
+    
+
+def compute_prices_variables(arr_pl_M_T_vars_modif_MIDBF, t,
+                            b0_ts_T_MIDBF, c0_ts_T_MIDBF,
+                            pi_sg_plus_T_MIDBF, pi_sg_minus_T_MIDBF,
+                            pi_0_plus_T_MIDBF, pi_0_minus_T_MIDBF):
+    # # B_is, C_is of shape (M_PLAYERS, )
+    # prod_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
+    #                         :,:t_periods, 
+    #                         fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+    # cons_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
+    #                         :,:t_periods, 
+    #                         fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+    # B_is_M_algo = np.sum(b0_ts_T_algo * prod_i_M_T_algo, axis=1)
+    # C_is_M_algo = np.sum(c0_ts_T_algo * cons_i_M_T_algo, axis=1)
+    
+    # # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
+    # CONS_is_M_algo = np.sum(cons_i_M_T_algo, axis=1)
+    # PROD_is_M_algo = np.sum(prod_i_M_T_algo, axis=1)
+    
+    # print("{}, t={}, pi_sg_plus_T={}, pi_sg_minus_T={} \n".format(
+    #         algo_name, t, pi_sg_plus_T_algo[t], pi_sg_minus_T_algo[t]))
+    
+    # BB_is_M_algo = pi_sg_plus_T_algo[t] * PROD_is_M_algo #np.sum(PROD_is)
+    # for num_pl, bb_i in enumerate(BB_is_M_algo):
+    #     if bb_i != 0:
+    #         print("player {}, BB_i={}".format(num_pl, bb_i))
+    # CC_is_M_algo = pi_sg_minus_T_algo[t] * CONS_is_M_algo #np.sum(CONS_is)
+    # RU_is_M_algo = BB_is_M_algo - CC_is_M_algo
+    
+    # pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
+    # pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
+    
+    prod_i_M_T_MIDBF = arr_pl_M_T_vars_modif_MIDBF[
+                            :,:t+1, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]] 
+    cons_i_M_T_MIDBF = arr_pl_M_T_vars_modif_MIDBF[
+                            :,:t+1, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+    B_is_M_T_MIDBF = b0_ts_T_MIDBF * prod_i_M_T_MIDBF
+    C_is_M_T_MIDBF = c0_ts_T_MIDBF * cons_i_M_T_MIDBF
+    BB_is_M_T_MIDBF = pi_sg_plus_T_MIDBF * prod_i_M_T_MIDBF
+    CC_is_M_T_MIDBF = pi_sg_minus_T_MIDBF * cons_i_M_T_MIDBF 
+    RU_is_M_T_MIDBF = BB_is_M_T_MIDBF - CC_is_M_T_MIDBF
+
+    return BB_is_M_T_MIDBF, CC_is_M_T_MIDBF, RU_is_M_T_MIDBF, \
+           B_is_M_T_MIDBF, C_is_M_T_MIDBF
+           
+           
+           
+###############################################################################
+#                   definition  des fonctions annexes
+#
+###############################################################################
+# __________            find best, bad, mid key --> debut             _________
+def select_perf_t_from_key(best=None, current=0, key="best"):
+    """
+    select the Perf_t respecting the key criter
+    key could be best and bad
+    """
+    best_key_Perf_t = None
+    if best is None:
+        best_key_Perf_t = current
+    elif best >= current and key=="best":
+        best_key_Perf_t = best
+    elif best < current and key=="best":
+        best_key_Perf_t = current
+    elif best >= current and key=="bad":
+        best_key_Perf_t = current
+    elif best < current and key=="bad":
+        best_key_Perf_t = best
+    
+    return best_key_Perf_t
+
+def select_mid_perf_t_from_key(Perf_ts):
+    """
+    select the median key of Perf_t: mid_key_Perf_t
+    """
+    return np.argsort(Perf_ts)[len(Perf_ts)//2]
+    
+# __________            find best, bad, mid key --> fin               _________
+
+# __________            find possibles modes --> debut               _________
+def possibles_modes_players_automate(arr_pl_M_t_k_vars, m_players, t=0):
+    """
+    generate the list of possible modes by the states of players
+
+    Parameters
+    ----------
+    arr_pl_M_t_k_vars : TYPE, shape (m_players,)
+        DESCRIPTION. The default is None.
+        it means that t and k are the fixed values 
+    t : TYPE, optional
+        DESCRIPTION. The default is 0.
+    k : TYPE, optional
+        DESCRIPTION. The default is 0.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    possibles_modes = list()
+    
+    for num_pl_i in range(0, m_players):
+        state_i = arr_pl_M_t_k_vars[num_pl_i, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] 
+        
+        # get mode_i
+        if state_i == "state1":
+            possibles_modes.append(fct_aux.STATE1_STRATS)
+        elif state_i == "state2":
+            possibles_modes.append(fct_aux.STATE2_STRATS)
+        elif state_i == "state3":
+            possibles_modes.append(fct_aux.STATE3_STRATS)
+            # print("3: num_pl_i={}, state_i = {}".format(num_pl_i, state_i))
+        
+    return possibles_modes
+# __________            find possibles modes --> debut               _________
+
+# __________                compute prices --> debut                  _________
+def compute_ben_cst_players(arr_pl_M_t_vars_mode_prof, gamma_is, b0_t, c0_t):
+    """
+    calculate the benefit and the cost of each player at time t
+
+    Parameters
+    ----------
+    arr_pl_M_t_vars_mode_prof : array of shape M_PLAYERS, len(AUTOMATE_INDEX_ATTRS)
+        DESCRIPTION.
+    gamma_is :  array of shape (M_PLAYERS,)
+        DESCRIPTION.
+    
+    b0_t : float
+        benefit per unit.
+    c0_t : float
+        cost per unit.
+
+    Returns
+    -------
+    bens: benefits of M_PLAYERS, shape (M_PLAYERS,).
+    csts: costs of M_PLAYERS, shape (M_PLAYERS,)
+    """
+    bens_t = b0_t \
+            * arr_pl_M_t_vars_mode_prof[:, 
+                                        fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]] \
+            + gamma_is \
+                * arr_pl_M_t_vars_mode_prof[:, 
+                                            fct_aux.AUTOMATE_INDEX_ATTRS["r_i"]]
+    csts_t = c0_t \
+            * arr_pl_M_t_vars_mode_prof[:, 
+                                        fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+    return bens_t, csts_t
+
+def compute_prices_inside_SG(arr_pl_M_t_vars_mode_prof,
+                             sum_diff_pos_minus_0_t_minus_2,
+                             sum_diff_pos_plus_0_t_minus_2,
+                             sum_cons_is_0_t_minus_2,                             
+                             sum_prod_is_0_t_minus_2,
+                             pi_hp_plus, pi_hp_minus,
+                             pi_0_plus_t, pi_0_minus_t,
+                             manual_debug, dbg):
+    
+    In_sg = np.sum(arr_pl_M_t_vars_mode_prof[
+                            :,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]])
+    Out_sg = np.sum(arr_pl_M_t_vars_mode_prof[
+                        :,
+                        fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]])
+    sum_cons_is_0_t_minus_1 = sum_cons_is_0_t_minus_2 + Out_sg
+    sum_prod_is_0_t_minus_1 = sum_prod_is_0_t_minus_2 + In_sg
+    sum_diff_pos_minus_t = fct_aux.fct_positive(sum_list1=Out_sg, 
+                                                sum_list2=In_sg)
+    sum_diff_pos_plus_t = fct_aux.fct_positive(sum_list1=In_sg, 
+                                               sum_list2=Out_sg)
+    sum_diff_pos_minus_0_t_minus_1 = sum_diff_pos_minus_0_t_minus_2 \
+                                     + sum_diff_pos_minus_t
+    sum_diff_pos_plus_0_t_minus_1 = sum_diff_pos_plus_0_t_minus_2 \
+                                        + sum_diff_pos_plus_t
+    
+    # compute the new prices pi_sg_plus_t, pi_sg_minus_t
+    # from a pricing model in the document
+    pi_sg_minus_t = pi_hp_minus * sum_diff_pos_minus_0_t_minus_1 / \
+                    sum_cons_is_0_t_minus_1
+    pi_sg_plus_t = pi_hp_plus * sum_diff_pos_plus_0_t_minus_1 / \
+                    sum_prod_is_0_t_minus_1
+    
+    ## compute prices inside smart grids
+    # compute prices of an energy unit price for cost and benefit players
+    b0_t, c0_t = fct_aux.compute_energy_unit_price(
+                    pi_0_plus_t, pi_0_minus_t, 
+                    pi_hp_plus, pi_hp_minus,
+                    In_sg, Out_sg)
+    
+    # compute ben, cst of shape (M_PLAYERS,) 
+    # compute cost (csts) and benefit (bens) players by energy exchanged.
+    gamma_is = arr_pl_M_t_vars_mode_prof[:, 
+                                         fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]]
+    bens_t, csts_t = compute_ben_cst_players(arr_pl_M_t_vars_mode_prof, 
+                                             gamma_is, b0_t, c0_t)
+    
+    return In_sg, Out_sg, \
+            b0_t, c0_t, \
+            bens_t, csts_t, \
+            pi_sg_plus_t, pi_sg_minus_t
+    
+# __________                compute prices --> fin                  _________
+
+# ________       balanced players 4 one modes_profile   ---> debut      ______
+def balanced_player_game_4_mode_profil(arr_pl_M_t_vars_mode_prof, 
+                                       m_players,
+                                       dbg):
+    """
+    attribute modes of all players and get players' variables as prod_i, 
+    cons_i, r_i, gamma_i saved to  arr_pl_M_T_vars_mode_prof
+
+    Parameters
+    ----------
+    arr_pl_M_t_vars_mode_prof : shape (m_players, len(AUTOMATE_INDEX_ATTRS))
+        DESCRIPTION.
+    m_players : number of players
+        DESCRIPTION.
+
+    Returns
+    -------
+    arr_pl_M_t_vars_mode_prof
+
+    """
+    
+    for num_pl_i in range(0, m_players):
+        Pi = arr_pl_M_t_vars_mode_prof[num_pl_i, 
+                                       fct_aux.AUTOMATE_INDEX_ATTRS['Pi']]
+        Ci = arr_pl_M_t_vars_mode_prof[num_pl_i,
+                                       fct_aux.AUTOMATE_INDEX_ATTRS['Ci']]
+        Si = arr_pl_M_t_vars_mode_prof[num_pl_i, 
+                                       fct_aux.AUTOMATE_INDEX_ATTRS['Si']]
+        Si_max = arr_pl_M_t_vars_mode_prof[num_pl_i,
+                                        fct_aux.AUTOMATE_INDEX_ATTRS['Si_max']]
+        gamma_i = arr_pl_M_t_vars_mode_prof[num_pl_i,
+                                       fct_aux.AUTOMATE_INDEX_ATTRS['gamma_i']]
+        state_i = arr_pl_M_t_vars_mode_prof[num_pl_i,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['state_i']]
+        mode_i = arr_pl_M_t_vars_mode_prof[num_pl_i,
+                                 fct_aux.AUTOMATE_INDEX_ATTRS['mode_i']]
+        
+        prod_i, cons_i, r_i = 0, 0, 0
+        pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                              prod_i, cons_i, r_i, state_i)
+        
+        pl_i.set_R_i_old(Si_max-Si)
+        pl_i.set_mode_i(mode_i)
+        
+        # update prod, cons and r_i
+        pl_i.update_prod_cons_r_i()
+        
+        # is pl_i balanced?
+        boolean, formule = fct_aux.balanced_player(pl_i, thres=0.1)
+        
+        # update variables in arr_pl_M_T_modif
+        tup_cols_values = [("prod_i", pl_i.get_prod_i()), 
+                ("cons_i", pl_i.get_cons_i()), ("r_i", pl_i.get_r_i()),
+                ("R_i_old", pl_i.get_R_i_old()), ("Si", pl_i.get_Si()),
+                ("Si_old", pl_i.get_Si_old()), ("mode_i", mode_i), 
+                ("gamma_i", gamma_i),
+                ("balanced_pl_i", boolean), ("formule", formule)]
+        for col, val in tup_cols_values:
+            arr_pl_M_t_vars_mode_prof[num_pl_i, 
+                                    fct_aux.AUTOMATE_INDEX_ATTRS[col]] = val
+            
+    return arr_pl_M_t_vars_mode_prof
+
+# ________       balanced players 4 one modes_profile   --->   fin      ______
+
+
+# ________       balanced players 4 all modes_profiles   ---> debut      ______
+def generer_balanced_players_4_modes_profils_OLD(arr_pl_M_t_vars_modif, 
+                                             m_players, t,
+                                             sum_diff_pos_minus_0_t_minus_2,
+                                             sum_diff_pos_plus_0_t_minus_2,
+                                             sum_cons_is_0_t_minus_2,                             
+                                             sum_prod_is_0_t_minus_2,
+                                             pi_hp_plus, pi_hp_minus,
+                                             pi_0_plus_t, pi_0_minus_t,
+                                             manual_debug, dbg):
+    """
+    generate the combinaison of all modes' profils and 
+    for each modes' profil, balance the players' game
+    
+    parameters:
+        
+    sum_diff_pos_minus_0_t_minus_2 : sum of the positive difference btw cons_is and prod_is from 0 to t-2
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} cons_i^k - sum_{i=1}^{M} prod_i^k|)
+    sum_diff_pos_plus_0_t_minus_2 : sum of the positive difference btw prod_is and cons_is from 0 to t-2
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} cons_i^k - sum_{i=1}^{M} prod_i^k|)
+    sum_cons_is_0_t_minus_2 : sum of the cons of all players from 0 to t-2 (t-1 periods)
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} cons_i^k)
+    sum_prod_is_0_t_minus_2 : sum of the prod of all players from 0 to t-2 (t-1 periods)
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} prod_i^k
+    
+    M = m_players
+    
+    """
+    possibles_modes = possibles_modes_players_automate(
+                                        arr_pl_M_t_vars_modif, m_players)
+    print("possibles_modes={}".format(len(possibles_modes)))
+    mode_profiles = it.product(*possibles_modes)
+        
+    dico_modes_profs_by_perfs_t, dico_modes_profs_by_players_t = dict(), dict()
+    cpt_xxx = 0
+    for mode_profile in mode_profiles:
+        arr_pl_M_t_vars_mode_prof = arr_pl_M_t_vars_modif.copy()
+        arr_pl_M_t_vars_mode_prof[:, 
+                                  fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] \
+            = mode_profile
+        
+        arr_pl_M_t_vars_mode_prof = balanced_player_game_4_mode_profil(
+                                       arr_pl_M_t_vars_mode_prof, 
+                                       m_players,
+                                       dbg)
+        
+        # compute pi_sg_{plus,minus}_t, pi_0_{plus,minus}_t, b0_t, c0_t, ben_t, cst_t
+        In_sg, Out_sg, b0_t, c0_t = None, None, None, None 
+        bens_t, csts_t = None, None 
+        pi_sg_plus_t, pi_sg_minus_t = None, None
+        In_sg, Out_sg, \
+        b0_t, c0_t, \
+        bens_t, csts_t, \
+        pi_sg_plus_t, pi_sg_minus_t \
+            = compute_prices_inside_SG(arr_pl_M_t_vars_mode_prof,
+                                       sum_diff_pos_minus_0_t_minus_2,
+                                       sum_diff_pos_plus_0_t_minus_2,
+                                       sum_cons_is_0_t_minus_2,                             
+                                       sum_prod_is_0_t_minus_2,
+                                       pi_hp_plus, pi_hp_minus,
+                                       pi_0_plus_t, pi_0_minus_t,
+                                       manual_debug, dbg)
+        
+        # compute Perf_t
+        bens_csts_t = bens_t - csts_t
+        Perf_t = np.sum(bens_csts_t, axis=0)
+        dico_mode_prof_by_players = dict()
+        for num_pl_i in range(0, m_players):
+            dico_vars = dict()
+            Vi = bens_csts_t[num_pl_i]
+            dico_vars["Vi"] = round(Vi, 2)
+            dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
+            dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
+            variables = ["set", "state_i", "mode_i", "Pi", "Ci", "Si_max", 
+                         "Si_old", "Si", "prod_i", "cons_i", "r_i", 
+                         "Si_minus", "Si_plus", "gamma_i"]
+            for variable in variables:
+                dico_vars[variable] = arr_pl_M_t_vars_mode_prof[
+                                        num_pl_i, 
+                                        fct_aux.AUTOMATE_INDEX_ATTRS[variable]]
+                
+            dico_mode_prof_by_players[fct_aux.RACINE_PLAYER
+                                        +str(num_pl_i)
+                                        +"_t_"+str(t)
+                                        +"_"+str(cpt_xxx)] \
+                = dico_vars
+        
+        dico_mode_prof_by_players["Perf_t"] = round(Perf_t, 2)                  # utility of the game
+        dico_mode_prof_by_players["b0_t"] = round(b0_t,2)
+        dico_mode_prof_by_players["c0_t"] = round(c0_t,2)
+        dico_mode_prof_by_players["Out_sg"] = round(Out_sg,2)
+        dico_mode_prof_by_players["In_sg"] = round(In_sg,2)
+        dico_mode_prof_by_players["pi_sg_plus_t"] = round(pi_sg_plus_t,2)
+        dico_mode_prof_by_players["pi_sg_minus_t"] = round(pi_sg_minus_t,2)
+        dico_mode_prof_by_players["pi_0_plus_t"] = round(pi_0_plus_t,2)
+        dico_mode_prof_by_players["pi_0_minus_t"] = round(pi_0_minus_t,2)
+        dico_mode_prof_by_players["mode_profile"] = mode_profile
+        
+        dico_modes_profs_by_players_t["BF_cpt_{}_t_{}".format(cpt_xxx,t)] \
+            = dico_mode_prof_by_players
+        if Perf_t in dico_modes_profs_by_perfs_t:
+            dico_modes_profs_by_perfs_t[Perf_t].append(
+                ("BF"+str(cpt_xxx), dico_mode_prof_by_players))
+        else:
+            dico_modes_profs_by_perfs_t[Perf_t] \
+                = [ ("BF"+str(cpt_xxx), dico_mode_prof_by_players) ]
+         
+        cpt_xxx += 1
+        
+    # best_key_Perf_t, mid_key_Perf_t, bad_key_Perf_t
+    
+    return dico_modes_profs_by_perfs_t, dico_modes_profs_by_players_t
+
+def generer_balanced_players_4_modes_profils(arr_pl_M_t_vars_modif, 
+                                             m_players, t,
+                                             sum_diff_pos_minus_0_t_minus_2,
+                                             sum_diff_pos_plus_0_t_minus_2,
+                                             sum_cons_is_0_t_minus_2,                             
+                                             sum_prod_is_0_t_minus_2,
+                                             pi_hp_plus, pi_hp_minus,
+                                             pi_0_plus_t, pi_0_minus_t,
+                                             manual_debug, dbg):
+    """
+    generate the combinaison of all modes' profils and 
+    for each modes' profil, balance the players' game
+    
+    parameters:
+        
+    sum_diff_pos_minus_0_t_minus_2 : sum of the positive difference btw cons_is and prod_is from 0 to t-2
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} cons_i^k - sum_{i=1}^{M} prod_i^k|)
+    sum_diff_pos_plus_0_t_minus_2 : sum of the positive difference btw prod_is and cons_is from 0 to t-2
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} cons_i^k - sum_{i=1}^{M} prod_i^k|)
+    sum_cons_is_0_t_minus_2 : sum of the cons of all players from 0 to t-2 (t-1 periods)
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} cons_i^k)
+    sum_prod_is_0_t_minus_2 : sum of the prod of all players from 0 to t-2 (t-1 periods)
+        sum_{k=0}^{t-2} (|sum_{i=1}^{M} prod_i^k
+    
+    M = m_players
+    
+    """
+    best_key_Perf_t, mid_key_Perf_t, bad_key_Perf_t = None, None, None
+    dico_modes_profs_by_players_t_best = dict() 
+    dico_modes_profs_by_players_t_bad = dict()
+    dico_modes_profs_by_players_t_mid = dict()
+    possibles_modes = possibles_modes_players_automate(
+                                        arr_pl_M_t_vars_modif, m_players)
+    print("possibles_modes={}".format(len(possibles_modes)))
+    mode_profiles = it.product(*possibles_modes)
+        
+    Perf_ts = list()
+    cpt_xxx = 0
+    for mode_profile in mode_profiles:
+        arr_pl_M_t_vars_mode_prof = arr_pl_M_t_vars_modif.copy()
+        arr_pl_M_t_vars_mode_prof[:, 
+                                  fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] \
+            = mode_profile
+        
+        arr_pl_M_t_vars_mode_prof = balanced_player_game_4_mode_profil(
+                                       arr_pl_M_t_vars_mode_prof, 
+                                       m_players,
+                                       dbg)
+        
+        # compute pi_sg_{plus,minus}_t, pi_0_{plus,minus}_t, b0_t, c0_t, ben_t, cst_t
+        In_sg, Out_sg, b0_t, c0_t = None, None, None, None 
+        bens_t, csts_t = None, None 
+        pi_sg_plus_t, pi_sg_minus_t = None, None
+        In_sg, Out_sg, \
+        b0_t, c0_t, \
+        bens_t, csts_t, \
+        pi_sg_plus_t, pi_sg_minus_t \
+            = compute_prices_inside_SG(arr_pl_M_t_vars_mode_prof, 
+                                       sum_diff_pos_minus_0_t_minus_2,
+                                       sum_diff_pos_plus_0_t_minus_2,
+                                       sum_cons_is_0_t_minus_2,                             
+                                       sum_prod_is_0_t_minus_2,
+                                       pi_hp_plus, pi_hp_minus,
+                                       pi_0_plus_t, pi_0_minus_t,
+                                       manual_debug, dbg)
+        
+        # compute Perf_t
+        bens_csts_t = bens_t - csts_t
+        Perf_t = np.sum(bens_csts_t, axis=0)
+        
+        dico_mode_prof_by_players = dict()
+        for num_pl_i in range(0, m_players):
+            dico_vars = dict()
+            Vi = bens_csts_t[num_pl_i]
+            dico_vars["Vi"] = round(Vi, 2)
+            dico_vars["ben_i"] = round(bens_t[num_pl_i], 2)
+            dico_vars["cst_i"] = round(csts_t[num_pl_i], 2)
+            variables = ["set", "state_i", "mode_i", "Pi", "Ci", "Si_max", 
+                         "Si_old", "Si", "prod_i", "cons_i", "r_i", 
+                         "Si_minus", "Si_plus", "gamma_i"]
+            for variable in variables:
+                dico_vars[variable] = arr_pl_M_t_vars_mode_prof[
+                                        num_pl_i, 
+                                        fct_aux.AUTOMATE_INDEX_ATTRS[variable]]
+                
+            dico_mode_prof_by_players[fct_aux.RACINE_PLAYER
+                                        +str(num_pl_i)
+                                        +"_t_"+str(t)
+                                        +"_"+str(cpt_xxx)] \
+                = dico_vars
+        
+        dico_mode_prof_by_players["bens_t"] = bens_t
+        dico_mode_prof_by_players["csts_t"] = csts_t
+        dico_mode_prof_by_players["Perf_t"] = round(Perf_t, 2)                  # utility of the game
+        dico_mode_prof_by_players["b0_t"] = round(b0_t,2)
+        dico_mode_prof_by_players["c0_t"] = round(c0_t,2)
+        dico_mode_prof_by_players["Out_sg"] = round(Out_sg,2)
+        dico_mode_prof_by_players["In_sg"] = round(In_sg,2)
+        dico_mode_prof_by_players["pi_sg_plus_t"] = round(pi_sg_plus_t,2)
+        dico_mode_prof_by_players["pi_sg_minus_t"] = round(pi_sg_minus_t,2)
+        dico_mode_prof_by_players["pi_0_plus_t"] = round(pi_0_plus_t,2)
+        dico_mode_prof_by_players["pi_0_minus_t"] = round(pi_0_minus_t,2)
+        dico_mode_prof_by_players["mode_profile"] = mode_profile
+            
+        best_key_Perf_t = select_perf_t_from_key(best=best_key_Perf_t,
+                                                 current=Perf_t,
+                                                 key="best")
+        bad_key_Perf_t = select_perf_t_from_key(best=bad_key_Perf_t,
+                                                 current=Perf_t,
+                                                 key="bad")
+        Perf_ts.append(Perf_t)
+        id_mid_key_Perf_t = np.argsort(Perf_ts)[len(Perf_ts)//2]
+        mid_key_Perf_t = Perf_ts[id_mid_key_Perf_t]
+            
+        
+        
+        if best_key_Perf_t not in dico_modes_profs_by_players_t_best:
+            dico_modes_profs_by_players_t_best = dict()
+            dico_modes_profs_by_players_t_best[Perf_t] \
+                = [ ("BF_{}_t_{}".format(cpt_xxx,t), 
+                     dico_mode_prof_by_players) ]
+        else:
+            dico_modes_profs_by_players_t_best[Perf_t]\
+            .append( ("BF_{}_t_{}".format(cpt_xxx,t), 
+                     dico_mode_prof_by_players) )
+            
+        if bad_key_Perf_t not in dico_modes_profs_by_players_t_bad:
+            dico_modes_profs_by_players_t_bad = dict()
+            dico_modes_profs_by_players_t_bad[Perf_t] \
+                = [ ("BF_{}_t_{}".format(cpt_xxx,t), 
+                     dico_mode_prof_by_players) ]
+        else:
+            dico_modes_profs_by_players_t_bad[Perf_t]\
+            .append( ("BF_{}_t_{}".format(cpt_xxx,t), 
+                     dico_mode_prof_by_players) )
+            
+        if mid_key_Perf_t not in dico_modes_profs_by_players_t_mid:
+            dico_modes_profs_by_players_t_mid = dict()
+            dico_modes_profs_by_players_t_mid[Perf_t] \
+                = [ ("BF_{}_t_{}".format(cpt_xxx,t), 
+                     dico_mode_prof_by_players) ]
+        else:
+            dico_modes_profs_by_players_t_mid[Perf_t]\
+            .append( ("BF_{}_t_{}".format(cpt_xxx,t), 
+                     dico_mode_prof_by_players) )
+         
+        cpt_xxx += 1
+            
+    return dico_modes_profs_by_players_t_best, \
+            dico_modes_profs_by_players_t_bad, \
+            dico_modes_profs_by_players_t_mid
+# _______       balanced players 4 all modes_profils   --->  fin       _______
+
+# _______           sum of prod, cons from 0 to t-2 ---> Debut        _________
+def get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_t_vars_modif, t):
+    """
+    quantity of energies (prod_is, cons_is) from 0 to t-2 to get values 
+    for t-1 periods
+    """ 
+    if t == 0:
+        sum_diff_pos_minus_0_t_minus_2 = 0
+        sum_diff_pos_plus_0_t_minus_2 = 0
+        sum_cons_is_0_t_minus_2 = 0                                        
+        sum_prod_is_0_t_minus_2 = 0
+    else:
+        # TODO : utiliser les vecteurs pour calculer la somme
+        # compute the positive difference btw cons_is and prod_is from 0 to t-1:
+            # sum_diff_pos_minus_0_t_minus_1
+        # compute the positive difference btw prod_is and cons_is from 0 to t-1
+            # sum_diff_pos_plus_0_t_minus_1
+        sum_cons_is_0_t_minus_2 \
+            = np.sum( np.sum(arr_pl_M_t_vars_modif[
+                                :,0:t,
+                                fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
+                             axis=0), 
+                     axis=0)
+        sum_prod_is_0_t_minus_2 \
+            = np.sum( np.sum(arr_pl_M_t_vars_modif[
+                                :,0:t,
+                                fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
+                             axis=0), 
+                     axis=0)
+        
+        sum_diff_pos_minus_0_t_minus_2 = 0
+        sum_diff_pos_plus_0_t_minus_2 = 0
+        for k in range(0,t):
+            cons_k_is = np.sum(arr_pl_M_t_vars_modif[
+                                :,k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]], 
+                            axis=0)
+            prod_k_is = np.sum(arr_pl_M_t_vars_modif[
+                                :,k, 
+                                fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]], 
+                            axis=0)
+            diff_pos_minus_k = fct_aux.fct_positive(sum_list1=cons_k_is, 
+                                                    sum_list2=prod_k_is)
+            diff_pos_plus_k = fct_aux.fct_positive(sum_list1=prod_k_is, 
+                                                    sum_list2=cons_k_is)
+            sum_diff_pos_minus_0_t_minus_2 += diff_pos_minus_k
+            sum_diff_pos_plus_0_t_minus_2 += diff_pos_plus_k 
+            
+    return sum_diff_pos_minus_0_t_minus_2, \
+            sum_diff_pos_plus_0_t_minus_2, \
+            sum_cons_is_0_t_minus_2, \
+            sum_prod_is_0_t_minus_2
+# _______           sum of prod, cons from 0 to t-2 ---> fin        _________
+
+# ____________        checkout NASH equilibrium --> debut        ______________
+def checkout_nash_4_profils_by_periods(arr_pl_M_t_vars_modif_algo,
+                                        arr_pl_M_t_vars_init,
+                                        sum_diff_pos_minus_0_t_minus_2,
+                                        sum_diff_pos_plus_0_t_minus_2,
+                                        sum_cons_is_0_t_minus_2,                             
+                                        sum_prod_is_0_t_minus_2,
+                                        pi_hp_plus, pi_hp_minus, 
+                                        pi_0_minus_t, pi_0_plus_t, 
+                                        bens_csts_M_t,
+                                        m_players,
+                                        t,
+                                        manual_debug,
+                                        dbg):
+    """
+    verify if the modes' profil of players at time t is a Nash equilibrium.
+    """
+    # create a result dataframe of checking players' stability and nash equilibrium
+    cols = ["players", "nash_modes_t{}".format(t), 'states_t{}'.format(t), 
+            'Vis_t{}'.format(t), 'Vis_bar_t{}'.format(t), 
+               'res_t{}'.format(t)] 
+    
+    id_players = list(range(0, m_players))
+    df_nash_t = pd.DataFrame(index=id_players, columns=cols)
+    
+    # revert Si to the initial value ie at t and k=0
+    Sis_init = arr_pl_M_t_vars_init[:, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+    arr_pl_M_t_vars_modif_algo[:, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] = Sis_init
+    
+    # stability of each player
+    modes_profil = list(arr_pl_M_t_vars_modif_algo[
+                            :,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] )
+    for num_pl_i in range(0, m_players):
+        state_i = arr_pl_M_T_vars_modif[
+                        num_pl_i, t,
+                        fct_aux.AUTOMATE_INDEX_ATTRS["state_i"]] 
+        mode_i = modes_profil[num_pl_i]
+        mode_i_bar = fct_aux.find_out_opposite_mode(state_i, mode_i)
+        
+        opposite_modes_profil = modes_profil.copy()
+        opposite_modes_profil[num_pl_i] = mode_i_bar
+        opposite_modes_profil = tuple(opposite_modes_profil)
+        
+        df_nash_t.loc[num_pl_i, "players"] = fct_aux.RACINE_PLAYER+"_"+str(num_pl_i)
+        df_nash_t.loc[num_pl_i, "nash_modes_t{}".format(t)] = mode_i
+        df_nash_t.loc[num_pl_i, "states_t{}".format(t)] = state_i
+        
+        arr_pl_M_t_vars_modif_algo = balanced_player_game_4_mode_profil(
+                                             arr_pl_M_t_vars_modif_algo, 
+                                             m_players,
+                                             dbg)
+        ## test if there are the same values like these in dico_mode_prof_by_players
+        In_sg_bar, Out_sg_bar, b0_t_bar, c0_t_bar = None, None, None, None
+        bens_t_bar, csts_t_bar = None, None
+        pi_sg_plus_t_bar, pi_sg_minus_t_bar = None, None
+        In_sg_bar, Out_sg_bar, \
+        b0_t_bar, c0_t_bar, \
+        bens_t_bar, csts_t_bar, \
+        pi_sg_plus_t_bar, pi_sg_minus_t_bar \
+            = compute_prices_inside_SG(
+                arr_pl_M_t_vars_modif_algo, 
+                sum_diff_pos_minus_0_t_minus_2,
+                sum_diff_pos_plus_0_t_minus_2,
+                sum_cons_is_0_t_minus_2,                             
+                sum_prod_is_0_t_minus_2,
+                pi_hp_plus, pi_hp_minus,
+                pi_0_plus_t, pi_0_minus_t,
+                manual_debug, dbg)
+        bens_csts_t_bar = bens_t_bar - csts_t_bar
+        
+        Vi = bens_csts_M_t[num_pl_i]
+        Vi_bar = bens_csts_t_bar[num_pl_i]
+        
+        df_nash_t.loc[num_pl_i, 'Vis_t{}'.format(t)] = Vi
+        df_nash_t.loc[num_pl_i, 'Vis_bar_t{}'.format(t)] = Vi_bar
+        res = None
+        if Vi >= Vi_bar:
+            res = "STABLE"
+            df_nash_t.loc[num_pl_i, 'res_t{}'.format(t)] = res
+        else:
+            res = "INSTABLE"
+            df_nash_t.loc[num_pl_i, 'res_t{}'.format(t)] = res   
+            
+    return df_nash_t
+    
+# ____________        checkout NASH equilibrium --> fin          ______________
+
+# ____________          turn dico in2 df  --> debut             ______________
+def turn_dico_stats_res_into_df_BF(dico_modes_profs_players_algo, 
+                                  path_to_save, 
+                                  t_periods, 
+                                  manual_debug, 
+                                  algo_name):
+    """
+    transform the dico into a DataFrame
+
+    """
+    df = None
+    for t in range(0, t_periods):
+        dico_algo = dict()
+        tuple_bf_dico = dico_modes_profs_players_algo[t]
+        for cpt, dico_modes_profs_players in tuple_bf_dico:
+            dico_algo[cpt] = dico_modes_profs_players
+    
+        df_t = pd.DataFrame.from_dict(dico_algo, orient='columns')
+        if df is None:
+            df = df_t.copy()
+        else:
+            df = pd.concat([df, df_t], axis=0)
+                
+    # save df to xlsx
+    df.to_excel(os.path.join(*[path_to_save,
+                               "{}_dico_BF.xlsx".format(algo_name)]), 
+                index=True)
+
+# ____________          turn dico in2 df  -->   fin             ______________
+
+# _________          add gamma & state 4 players  -->   debut         _________
+def get_values_Pi_Ci_Si_Simax_Pi1_Ci1(arr_pl_M_t_K_vars, 
+                                      arr_pl_M_t_minus_1_K_vars,
+                                      arr_pl_M_t_plus_1_K_vars,
+                                      num_pl_i, k,
+                                      shape_arr_pl):
+    """
+    return the values of Pi, Ci, Si, Si_max, Pi_t_plus_1, Ci_t_plus_1 from arrays
+    """
+    Pi = arr_pl_M_t_K_vars[num_pl_i, fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
+        if shape_arr_pl == 2 \
+        else arr_pl_M_t_K_vars[num_pl_i, k, 
+                               fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]]
+    Ci = arr_pl_M_t_K_vars[num_pl_i, fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
+        if shape_arr_pl == 2 \
+        else arr_pl_M_t_K_vars[num_pl_i, k, 
+                               fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]]
+    Si_max = arr_pl_M_t_K_vars[num_pl_i, 
+                               fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]] \
+        if shape_arr_pl == 2 \
+        else arr_pl_M_t_K_vars[num_pl_i, k, 
+                               fct_aux.AUTOMATE_INDEX_ATTRS["Si_max"]]
+    Si = arr_pl_M_t_minus_1_K_vars[num_pl_i, 
+                               fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] \
+        if shape_arr_pl == 2 \
+        else arr_pl_M_t_minus_1_K_vars[num_pl_i, k,
+                               fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+    Ci_t_plus_1 = arr_pl_M_t_plus_1_K_vars[num_pl_i,
+                                   fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]] \
+        if shape_arr_pl == 2 \
+        else arr_pl_M_t_plus_1_K_vars[num_pl_i,
+                                   fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]]
+    Pi_t_plus_1 = arr_pl_M_t_plus_1_K_vars[num_pl_i,
+                                   fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]] \
+        if shape_arr_pl == 2 \
+        else arr_pl_M_t_plus_1_K_vars[num_pl_i,
+                                       fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]]
+    
+    return Pi, Ci, Si, Si_max, Pi_t_plus_1, Ci_t_plus_1
+
+def compute_gamma_state_4_period_t(arr_pl_M_t_K_vars, 
+                                   arr_pl_M_t_minus_1_K_vars,
+                                   arr_pl_M_t_plus_1_K_vars,
+                                   t,
+                                   pi_0_plus, pi_0_minus,
+                                   pi_hp_plus, pi_hp_minus,
+                                   m_players,
+                                   t_periods,
+                                   gamma_version,
+                                   manual_debug=False, dbg=False):
+    """
+    compute gamma_i et determinate the state for all players 
+    
+    arr_pl_M_T_K_vars: shape (m_players, len(vars)) or 
+                             (m_players, k_steps, len(vars))
+    """
+    k = 0
+    shape_arr_pl = arr_pl_M_t_K_vars.shape
+    
+    # compute Cis_t_plus_t, Pis_t_plus_1, 
+    # GC_t, GSis_t_minus, GSis_t_plus, Xis, Yis
+    Cis_t_plus_1 = arr_pl_M_t_plus_1_K_vars[:,fct_aux.AUTOMATE_INDEX_ATTRS["Ci"]]
+    Pis_t_plus_1 = arr_pl_M_t_plus_1_K_vars[:,fct_aux.AUTOMATE_INDEX_ATTRS["Pi"]]
+    Cis_Pis_t_plus_1 = Cis_t_plus_1 - Pis_t_plus_1
+    Cis_Pis_t_plus_1[Cis_Pis_t_plus_1 < 0] = 0
+    GC_t = np.sum(Cis_Pis_t_plus_1)
+    
+    # initialisation of variables for gamma_version = 2
+    state_is = np.empty(shape=(m_players,), dtype=object)
+    Sis = np.zeros(shape=(m_players,))
+    GSis_t_minus = np.zeros(shape=(m_players,)) 
+    GSis_t_plus = np.zeros(shape=(m_players,))
+    Xis = np.zeros(shape=(m_players,)) 
+    Yis = np.zeros(shape=(m_players,))
+    
+    for num_pl_i in range(0, m_players):
+        Pi, Ci, Si, Si_max, Pi_t_plus_1, Ci_t_plus_1 \
+            = get_values_Pi_Ci_Si_Simax_Pi1_Ci1(
+                arr_pl_M_t_K_vars, 
+                arr_pl_M_t_minus_1_K_vars,
+                arr_pl_M_t_plus_1_K_vars,
+                num_pl_i, k,
+                shape_arr_pl)
+        
+        prod_i, cons_i, r_i, gamma_i, state_i = 0, 0, 0, 0, ""
+        pl_i = None
+        pl_i = players.Player(Pi, Ci, Si, Si_max, gamma_i, 
+                              prod_i, cons_i, r_i, state_i)
+        state_i = pl_i.find_out_state_i()
+        state_is[num_pl_i] = state_i
+        
+        Si_t_minus, Si_t_plus = None, None
+        Xi, Yi = None, None
+        if state_i == fct_aux.STATES[0]:                                            # state1 or Deficit
+            Si_t_minus = 0
+            Si_t_plus = Si
+            Xi = pi_0_minus
+            Yi = pi_hp_minus
+        elif state_i == fct_aux.STATES[1]:                                          # state2 or Self
+            Si_t_minus = Si - (Ci - Pi)
+            Si_t_plus = Si
+            Xi = pi_0_minus
+            Yi = pi_hp_minus
+        elif state_i == fct_aux.STATES[2]:                                          # state3 or Surplus
+            Si_t_minus = Si
+            Si_t_plus = max(Si_max, Si+(Pi-Ci))
+            Xi = pi_0_plus
+            Yi = pi_hp_plus
+        Sis[num_pl_i] = Si
+        GSis_t_minus[num_pl_i] = Si_t_minus
+        GSis_t_plus[num_pl_i] = Si_t_plus
+        Xis[num_pl_i] = Xi; Yis[num_pl_i] = Yi
+        
+        if gamma_version == 1:
+            gamma_i = None
+            if manual_debug:
+                gamma_i = fct_aux.MANUEL_DBG_GAMMA_I
+            else:
+                Si_t_plus_1 = fct_aux.fct_positive(Ci_t_plus_1, Pi_t_plus_1)
+                if Si_t_plus_1 < Si_t_minus:
+                    gamma_i = Xi - 1
+                elif Si_t_plus_1 >= Si_t_plus:
+                    gamma_i = Yi + 1
+                elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
+                    res = ( Si_t_plus_1 - Si_t_minus) / \
+                            (Si_t_plus - Si_t_minus)
+                    Z = Xi + (Yi-Xi)*res
+                    gamma_i = int(np.floor(Z))
+                          
+            variables = [("Si", Si), ("state_i", state_i), ("gamma_i", gamma_i), 
+                         ("Si_minus", Si_t_minus), ("Si_plus", Si_t_plus)]
+            if shape_arr_pl == 2:
+                for (var,val) in variables:
+                    arr_pl_M_t_K_vars[num_pl_i, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS[var]] = val
+            elif shape_arr_pl == 3:
+                for (var,val) in variables:
+                    arr_pl_M_t_K_vars[num_pl_i, k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS[var]] = val
+            
+            bool_gamma_i = (gamma_i >= min(pi_0_minus, pi_0_plus)-1) \
+                            & (gamma_i <= max(pi_hp_minus, pi_hp_plus)+1)
+            print("GAMMA : t={}, player={}, val={}, bool_gamma_i={}"\
+                  .format(t, num_pl_i, gamma_i, bool_gamma_i)) if dbg else None
+            Si_t_minus_1 = arr_pl_M_t_minus_1_K_vars[num_pl_i, 
+                                       fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] \
+                            if shape_arr_pl == 2 \
+                            else arr_pl_M_t_minus_1_K_vars[num_pl_i, k, 
+                                             fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+            print("Si_t_minus_1={}, Si={}".format(Si_t_minus_1, Si)) \
+                if dbg else None
+                    
+    if gamma_version == 2:
+        GS_t_minus = np.sum(GSis_t_minus)
+        GS_t_plus = np.sum(GSis_t_plus)
+        gamma_is = None
+        if GC_t <= GS_t_minus:
+            gamma_is = Xis - 1
+        elif GC_t > GS_t_plus:
+            gamma_is = Yis + 1
+        else:
+            frac = (GC_t - GS_t_minus) / (GS_t_plus - GS_t_minus)
+            res_is = Xis + (Yis-Xis)*frac
+            gamma_is = np.floor(res_is)
+            
+        # ____              update cell arrays: debut               _______
+        variables = [("Si", Sis), ("state_i", state_is), 
+                     ("Si_minus", GSis_t_minus), ("Si_plus", GSis_t_plus)]
+        if shape_arr_pl == 2:
+            for (var,vals) in variables:
+                arr_pl_M_t_K_vars[:, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS[var]] = vals
+            if manual_debug:
+                arr_pl_M_t_K_vars[:, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]] \
+                    = fct_aux.MANUEL_DBG_GAMMA_I
+            else:
+                arr_pl_M_t_K_vars[:, 
+                        fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is
+        elif shape_arr_pl == 3:
+            for (var,vals) in variables:
+                arr_pl_M_t_K_vars[:, k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS[var]] = vals
+                if manual_debug:
+                    arr_pl_M_t_K_vars[:, k,
+                            fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]] \
+                        = fct_aux.MANUEL_DBG_GAMMA_I
+                else:
+                    arr_pl_M_t_K_vars[:, 
+                            fct_aux.AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is
+                
+        # ____              update cell arrays: fin               _______
+        
+        bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
+                            & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
+        print("GAMMA : t={}, val={}, bool_gamma_is={}"\
+              .format(t, gamma_is, bool_gamma_is)) if dbg else None
+        GSis_t_minus_1 = arr_pl_M_t_minus_1_K_vars[
+                            :, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]] \
+                        if shape_arr_pl == 2 \
+                        else arr_pl_M_t_minus_1_K_vars[
+                            :, k, fct_aux.AUTOMATE_INDEX_ATTRS["Si"]]
+        print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
+            if dbg else None
+                
+    return arr_pl_M_t_K_vars
+# _________          add gamma & state 4 players  -->   fin           _________
+
+    
+    
+###############################################################################
+#                   definition  des fonctions principales
+#
+###############################################################################
+# __________       main function of DETERMINIST   ---> debut      ____________
+def bf_balanced_player_game_t(arr_pl_M_t_vars_init, t,
+                            pi_hp_plus=0.02, 
+                            pi_hp_minus=0.33,
+                            gamma_version=1,
+                            path_to_save="tests", 
+                            name_dir="tests", 
+                            date_hhmm="DDMM_HHMM",
+                            manual_debug=False, 
+                            criteria_bf="Perf_t", dbg=False):
+    
+    """
+    brute force algorithm for balanced players' game.
+    determine the best solution by enumerating all players' profils.
+    The comparison critera is the Pref_t value with
+    Perf_t = \sum\limits_{1\leq i \leq N}ben_i-cst_i
+
+    NB : I use the same dico_mode_profs to show the bad, middle best Brute Force
+    Returns
+    -------
+    None.
+
+    """
+    
+    print("\n \n game: pi_hp_plus={}, pi_hp_minus={} ---> debut \n"\
+          .format(pi_hp_plus, pi_hp_minus))
+        
+    pass
+        
+def bf_balanced_player_game(arr_pl_M_T_vars_init,
+                            pi_hp_plus=0.02, 
+                            pi_hp_minus=0.33,
+                            gamma_version=1,
+                            path_to_save="tests", 
+                            name_dir="tests", 
+                            date_hhmm="DDMM_HHMM",
+                            manual_debug=False, 
+                            criteria_bf="Perf_t", dbg=False):
+    """
+    """
+    print("\n \n game: pi_hp_plus={}, pi_hp_minus={} ---> debut \n"\
+          .format(pi_hp_plus, pi_hp_minus))
+        
+    m_players = arr_pl_M_T_vars_init.shape[0]
+    t_periods = arr_pl_M_T_vars_init.shape[1]
+    
+    # _______ variables' initialization --> debut ________________
+    pi_sg_plus_t, pi_sg_minus_t = 0, 0
+    pi_sg_plus_T = np.empty(shape=(t_periods,))                                 # shape (T_PERIODS,)
+    pi_sg_plus_T.fill(np.nan)
+    pi_sg_minus_T = np.empty(shape=(t_periods,))                                # shape (T_PERIODS,)
+    pi_sg_plus_T.fill(np.nan)
+    pi_0_plus_t, pi_0_minus_t = 0, 0
+    pi_0_plus_T = np.empty(shape=(t_periods,))                                  # shape (T_PERIODS,)
+    pi_0_plus_T.fill(np.nan)
+    pi_0_minus_T = np.empty(shape=(t_periods,))                                 # shape (T_PERIODS,)
+    pi_0_minus_T.fill(np.nan)
+    B_is_M = np.empty(shape=(m_players,))                                       # shape (M_PLAYERS, )
+    B_is_M.fill(np.nan)
+    C_is_M = np.empty(shape=(m_players,))                                       # shape (M_PLAYERS, )
+    C_is_M.fill(np.nan)
+    B_is_M_T = np.empty(shape=(m_players, t_periods))                                       # shape (M_PLAYERS, )
+    B_is_M_T.fill(np.nan)
+    C_is_M_T = np.empty(shape=(m_players, t_periods))                                       # shape (M_PLAYERS, )
+    C_is_M_T.fill(np.nan)
+    b0_ts_T = np.empty(shape=(t_periods,))                                      # shape (T_PERIODS,)
+    b0_ts_T.fill(np.nan)
+    c0_ts_T = np.empty(shape=(t_periods,))
+    c0_ts_T.fill(np.nan)
+    BENs_M_T = np.empty(shape=(m_players, t_periods))                           # shape (M_PLAYERS, T_PERIODS)
+    CSTs_M_T = np.empty(shape=(m_players, t_periods))
+    CC_is_M = np.empty(shape=(m_players,))                                      # shape (M_PLAYERS, )
+    CC_is_M.fill(np.nan)
+    BB_is_M = np.empty(shape=(m_players,))                                      # shape (M_PLAYERS, )
+    BB_is_M.fill(np.nan)
+    RU_is_M = np.empty(shape=(m_players,))                                      # shape (M_PLAYERS, )
+    RU_is_M.fill(np.nan)
+    CC_is_M_T = np.empty(shape=(m_players, t_periods))                                      # shape (M_PLAYERS, )
+    CC_is_M_T.fill(np.nan)
+    BB_is_M_T = np.empty(shape=(m_players, t_periods))                                      # shape (M_PLAYERS, )
+    BB_is_M_T.fill(np.nan)
+    RU_is_M_T = np.empty(shape=(m_players, t_periods))                                      # shape (M_PLAYERS, )
+    RU_is_M_T.fill(np.nan)
+    
+    arr_pl_M_T_vars_modif = arr_pl_M_T_vars_init.copy()
+    arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si_minus"]] = np.nan
+    arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["Si_plus"]] = np.nan
+    arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["bg_i"]] = 0
+    arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["u_i"]] = 0
+    arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S1_p_i_j_k"]] = 0.5
+    arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["S2_p_i_j_k"]] = 0.5
+    arr_pl_M_T_vars_modif[:,:,fct_aux.AUTOMATE_INDEX_ATTRS["non_playing_players"]] \
+        = fct_aux.NON_PLAYING_PLAYERS["PLAY"]
+        
+    dico_id_players = {"players":[fct_aux.RACINE_PLAYER+"_"+str(num_pl_i) 
+                                  for num_pl_i in range(0, m_players)]}
+    df_nash = pd.DataFrame.from_dict(dico_id_players)
+        
+    # _________  creation des arrays pour chaque algo  _______________________
+    arr_pl_M_T_vars_modif_BADBF = None
+    arr_pl_M_T_vars_modif_BESTBF = None
+    arr_pl_M_T_vars_modif_MIDBF = None
+    
+    pi_sg_plus_T_BESTBF = pi_sg_plus_T.copy()
+    pi_sg_minus_T_BESTBF = pi_sg_minus_T.copy()
+    pi_0_plus_T_BESTBF = pi_0_plus_T.copy()
+    pi_0_minus_T_BESTBF = pi_0_minus_T.copy()
+    B_is_M_BESTBF = B_is_M.copy()
+    C_is_M_BESTBF = C_is_M.copy()
+    b0_ts_T_BESTBF = b0_ts_T.copy()
+    c0_ts_T_BESTBF = c0_ts_T.copy()
+    BENs_M_T_BESTBF = BENs_M_T.copy()
+    CSTs_M_T_BESTBF = CSTs_M_T.copy()
+    CC_is_M_BESTBF = CC_is_M.copy()
+    BB_is_M_BESTBF = BB_is_M.copy()
+    RU_is_M_BESTBF = RU_is_M.copy()
+    C_is_M_BESTBF = CC_is_M.copy()
+    B_is_M_BESTBF = BB_is_M.copy()
+    BB_is_M_T_BESTBF = BB_is_M_T.copy()
+    CC_is_M_T_BESTBF = CC_is_M_T.copy()
+    RU_is_M_T_BESTBF = RU_is_M_T.copy()
+    B_is_M_T_BESTBF = B_is_M_T.copy()
+    C_is_M_T_BESTBF = C_is_M_T.copy()
+    dico_modes_profs_by_players_t_BESTBF = dict()
+    df_nash_BESTBF = df_nash.copy()
+    
+    pi_sg_plus_T_BADBF = pi_sg_plus_T.copy()
+    pi_sg_minus_T_BADBF = pi_sg_minus_T.copy()
+    pi_0_plus_T_BADBF = pi_0_plus_T.copy()
+    pi_0_minus_T_BADBF = pi_0_minus_T.copy()
+    B_is_M_BADBF = B_is_M.copy()
+    C_is_M_BADBF = C_is_M.copy()
+    b0_ts_T_BADBF = b0_ts_T.copy()
+    c0_ts_T_BADBF = c0_ts_T.copy()
+    BENs_M_T_BADBF = BENs_M_T.copy()
+    CSTs_M_T_BADBF = CSTs_M_T.copy()
+    CC_is_M_BADBF = CC_is_M.copy()
+    BB_is_M_BADBF = BB_is_M.copy()
+    RU_is_M_BADBF = RU_is_M.copy()
+    C_is_M_BADBF = CC_is_M.copy()
+    B_is_M_BADBF = BB_is_M.copy()
+    BB_is_M_T_BADBF = BB_is_M_T.copy()
+    CC_is_M_T_BADBF = CC_is_M_T.copy()
+    RU_is_M_T_BADBF = RU_is_M_T.copy()
+    B_is_M_T_BADBF = B_is_M_T.copy()
+    C_is_M_T_BADBF = C_is_M_T.copy()
+    dico_modes_profs_by_players_t_BADBF = dict()
+    df_nash_BADBF = df_nash.copy()
+    
+    pi_sg_plus_T_MIDBF = pi_sg_plus_T.copy()
+    pi_sg_minus_T_MIDBF = pi_sg_minus_T.copy()
+    pi_0_plus_T_MIDBF = pi_0_plus_T.copy()
+    pi_0_minus_T_MIDBF = pi_0_minus_T.copy()
+    B_is_M_MIDBF = B_is_M.copy()
+    C_is_M_MIDBF = C_is_M.copy()
+    b0_ts_T_MIDBF = b0_ts_T.copy()
+    c0_ts_T_MIDBF = c0_ts_T.copy()
+    BENs_M_T_MIDBF = BENs_M_T.copy()
+    CSTs_M_T_MIDBF = CSTs_M_T.copy()
+    CC_is_M_MIDBF = CC_is_M.copy()
+    BB_is_M_MIDBF = BB_is_M.copy()
+    RU_is_M_MIDBF = RU_is_M.copy()
+    C_is_M_MIDBF = CC_is_M.copy()
+    B_is_M_MIDBF = BB_is_M.copy()
+    BB_is_M_T_MIDBF = BB_is_M_T.copy()
+    CC_is_M_T_MIDBF = CC_is_M_T.copy()
+    RU_is_M_T_MIDBF = RU_is_M_T.copy()
+    B_is_M_T_MIDBF = B_is_M_T.copy()
+    C_is_M_T_MIDBF = C_is_M_T.copy()
+    dico_modes_profs_by_players_t_MIDBF = dict()
+    df_nash_MIDBF = df_nash.copy()
+    
+    arr_pl_M_T_vars_modif_BADBF = None
+    arr_pl_M_T_vars_modif_BESTBF = None
+    arr_pl_M_T_vars_modif_MIDBF = None
+    arr_pl_M_T_vars_modif_BADBF = arr_pl_M_T_vars_modif.copy()
+    arr_pl_M_T_vars_modif_BESTBF = arr_pl_M_T_vars_modif.copy()
+    arr_pl_M_T_vars_modif_MIDBF = arr_pl_M_T_vars_modif.copy()
+        
+    
+    # ____      game beginning for all t_period ---> debut      _____
+    pi_sg_plus_t0_minus_1 = pi_hp_plus-1
+    pi_sg_minus_t0_minus_1 = pi_hp_minus-1
+    pi_sg_plus_t_minus_1, pi_sg_minus_t_minus_1 = 0, 0
+    pi_sg_plus_t, pi_sg_minus_t = None, None
+    pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
+    pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
+        
+    for t in range(0, t_periods):
+        print("----- t = {} ------ ".format(t))
+        if manual_debug:
+            pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
+            pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
+            pi_0_plus_t = fct_aux.MANUEL_DBG_PI_0_PLUS_T_K #2 
+            pi_0_minus_t = fct_aux.MANUEL_DBG_PI_0_MINUS_T_K #3
+        else:
+            pi_sg_plus_t_minus_1 = pi_sg_plus_t0_minus_1 if t == 0 \
+                                                         else pi_sg_plus_t
+            pi_sg_minus_t_minus_1 = pi_sg_minus_t0_minus_1 if t == 0 \
+                                                            else pi_sg_minus_t
+            pi_0_plus_t = round(pi_sg_minus_t_minus_1*pi_hp_plus/pi_hp_minus, 
+                                fct_aux.N_DECIMALS)
+            pi_0_minus_t = pi_sg_minus_t_minus_1
+            if t == 0:
+               pi_0_plus_t = 4
+               pi_0_minus_t = 3
+               
+        arr_pl_M_t_vars_init = arr_pl_M_T_vars_modif[:,t,:].copy()
+        arr_pl_M_t_plus_1_vars_init = arr_pl_M_T_vars_modif[:,t+1,:].copy() \
+                                        if t+1 < t_periods \
+                                        else arr_pl_M_T_vars_modif[:,t,:].copy()
+        arr_pl_M_t_minus_1_vars_init = arr_pl_M_T_vars_modif[:,t-1,:].copy() \
+                                        if t-1 > 0 \
+                                        else arr_pl_M_T_vars_modif[:,t,:].copy()
+        
+        arr_pl_M_t_vars_modif = compute_gamma_state_4_period_t(
+                                arr_pl_M_t_K_vars=arr_pl_M_t_vars_init,
+                                arr_pl_M_t_minus_1_K_vars=arr_pl_M_t_minus_1_vars_init,
+                                arr_pl_M_t_plus_1_K_vars=arr_pl_M_t_plus_1_vars_init,
+                                t=t,
+                                pi_0_plus=pi_0_plus_t, pi_0_minus=pi_0_minus_t,
+                                pi_hp_plus=pi_hp_plus, pi_hp_minus=pi_hp_minus,
+                                m_players=m_players,
+                                t_periods=t_periods,
+                                gamma_version=gamma_version,
+                                manual_debug=manual_debug,
+                                dbg=dbg)
+        
+        # quantity of energies (prod_is, cons_is) from 0 to t-2 to get values 
+        # for t-1 periods
+        sum_diff_pos_minus_0_t_minus_2 = None                                  # sum of the positive difference btw cons_is and prod_is from 0 to t-2 
+        sum_diff_pos_plus_0_t_minus_2 = None                                   # sum of the positive difference btw prod_is and cons_is from 0 to t-2
+        sum_cons_is_0_t_minus_2 = None                                         # sum of the cons of all players from 0 to t-2
+        sum_prod_is_0_t_minus_2 = None                                         # sum of the prod of all players from 0 to t-2
+        
+        sum_diff_pos_minus_0_t_minus_2, \
+        sum_diff_pos_plus_0_t_minus_2, \
+        sum_cons_is_0_t_minus_2, \
+        sum_prod_is_0_t_minus_2 \
+            = get_sum_cons_prod_from_0_t_minus_2(arr_pl_M_t_vars_modif,t)
+        
+            
+        # balanced player game at instant t    
+        dico_modes_profs_by_players_t_best = dict()
+        dico_modes_profs_by_players_t_bad = dict()
+        dico_modes_profs_by_players_t_mid = dict()
+        
+        dico_modes_profs_by_players_t_best, \
+        dico_modes_profs_by_players_t_bad, \
+        dico_modes_profs_by_players_t_mid \
+            = generer_balanced_players_4_modes_profils(
+                arr_pl_M_t_vars_modif, 
+                m_players, t,
+                sum_diff_pos_minus_0_t_minus_2,
+                sum_diff_pos_plus_0_t_minus_2,
+                sum_cons_is_0_t_minus_2,                             
+                sum_prod_is_0_t_minus_2,
+                pi_hp_plus, pi_hp_minus,
+                pi_0_plus_t, pi_0_minus_t,
+                manual_debug, dbg)
+        
+        dico_modes_profs_by_players_t_BESTBF[t] \
+            = dico_modes_profs_by_players_t_best
+        dico_modes_profs_by_players_t_BADBF[t] \
+            = dico_modes_profs_by_players_t_bad
+        dico_modes_profs_by_players_t_MIDBF[t] \
+            = dico_modes_profs_by_players_t_mid
+        
+        # appliquer sur chaque algo BEST, BAD, MIDDLE
+        for algo_name in fct_aux.ALGO_NAMES_BF:
+            dict_modes_profs_by_players_t_algo = dict()
+            if algo_name == fct_aux.ALGO_NAMES_BF[0]:                          # BEST-BRUTE-FORCE
+                dict_modes_profs_by_players_t_algo \
+                    = dico_modes_profs_by_players_t_best
+                arr_pl_M_t_vars_modif_algo \
+                    = arr_pl_M_T_vars_modif_BESTBF[:,t,:].copy()
+                df_nash_algo = df_nash_BESTBF.copy()
+                pass
+            elif algo_name == fct_aux.ALGO_NAMES_BF[1]:                        # BAD-BRUTE-FORCE
+                dict_modes_profs_by_players_t_algo \
+                    = dico_modes_profs_by_players_t_bad
+                arr_pl_M_t_vars_modif_algo \
+                    = arr_pl_M_T_vars_modif_BADBF[:,t,:].copy()
+                df_nash_algo = df_nash_BADBF.copy()
+                pass
+            elif algo_name == fct_aux.ALGO_NAMES_BF[2]:                        # MIDDLE-BRUTE-FORCE
+                dict_modes_profs_by_players_t_algo \
+                    = dico_modes_profs_by_players_t_mid
+                arr_pl_M_t_vars_modif_algo \
+                    = arr_pl_M_T_vars_modif_MIDBF[:,t,:].copy()
+                df_nash_algo = df_nash_MIDBF.copy()
+                pass
+            rd_key = None
+            if len(dict_modes_profs_by_players_t_algo.keys()) == 1:
+                rd_key = list(dict_modes_profs_by_players_t_algo.keys())[0]
+            else:
+                rd_key = np.random.randint(
+                            0, 
+                            len(dict_modes_profs_by_players_t_algo.keys()))
+            id_cpt_xxx, dico_mode_prof_by_players_algo \
+                = dict_modes_profs_by_players_t_algo[rd_key]
+            bens_t_algo = dico_mode_prof_by_players_algo["bens_t"]
+            csts_t_algo = dico_mode_prof_by_players_algo["csts_t"]
+            Perf_t_algo = dico_mode_prof_by_players_algo["Perf_t"]
+            b0_t_algo = dico_mode_prof_by_players_algo["b0_t"]
+            c0_t_algo = dico_mode_prof_by_players_algo["c0_t"]
+            Out_sg_algo = dico_mode_prof_by_players_algo["Out_sg"]
+            In_sg_algo = dico_mode_prof_by_players_algo["In_sg"]
+            pi_sg_plus_t_algo = dico_mode_prof_by_players_algo["pi_sg_plus_t"]
+            pi_sg_minus_t_algo = dico_mode_prof_by_players_algo["pi_sg_minus_t"]
+            pi_0_plus_t_algo = dico_mode_prof_by_players_algo["pi_0_plus_t"]
+            pi_0_minus_t_algo = dico_mode_prof_by_players_algo["pi_0_minus_t"]
+            mode_profile = dico_mode_prof_by_players_algo["mode_profile"]
+            
+            pi_sg_plus_t = pi_sg_plus_t_algo
+            pi_sg_minus_t = pi_sg_minus_t_algo
+            
+            arr_pl_M_t_vars_modif_algo[:, 
+                                  fct_aux.AUTOMATE_INDEX_ATTRS["mode_i"]] \
+                = mode_profile
+        
+            arr_pl_M_t_vars_modif_algo = balanced_player_game_4_mode_profil(
+                                             arr_pl_M_t_vars_modif_algo, 
+                                             m_players,
+                                             dbg)
+            ## test if there are the same values like these in dico_mode_prof_by_players
+            In_sg_new, Out_sg_new, b0_t_new, c0_t_new = None, None, None, None
+            bens_t_new, csts_t_new = None, None
+            pi_sg_plus_t_new, pi_sg_minus_t_new = None, None
+            In_sg_new, Out_sg_new, \
+            b0_t_new, c0_t_new, \
+            bens_t_new, csts_t_new, \
+            pi_sg_plus_t_new, pi_sg_minus_t_new \
+                = compute_prices_inside_SG(
+                    arr_pl_M_t_vars_modif_algo, 
+                    sum_diff_pos_minus_0_t_minus_2,
+                    sum_diff_pos_plus_0_t_minus_2,
+                    sum_cons_is_0_t_minus_2,                             
+                    sum_prod_is_0_t_minus_2,
+                    pi_hp_plus, pi_hp_minus,
+                    pi_0_plus_t, pi_0_minus_t,
+                    manual_debug, dbg)
+            bens_csts_t_new = bens_t_new - csts_t_new
+            Perf_t_new = np.sum(bens_csts_t_new, axis=0)
+            ##### verification of best key quality 
+            diff = np.abs(Perf_t_new - Perf_t_algo)
+            print(" Perf_t_algo == Perf_t_new --> OK (diff={}) ".format(diff)) \
+                if diff < 0.1 \
+                else print("Perf_t_algo != Perf_t_new --> NOK (diff={}) \n"\
+                           .format(diff))     
+            print("b0_t={}, c0_t={}, Out_sg={},In_sg={} \n".format(
+                    b0_t_algo, c0_t_algo, Out_sg_algo, In_sg_algo))
+            
+            # pi_sg_{plus,minus} of shape (T_PERIODS,)
+            if np.isnan(pi_sg_plus_t_algo):
+                pi_sg_plus_t_algo = 0
+            if np.isnan(pi_sg_minus_t_algo):
+                pi_sg_minus_t_algo = 0
+                
+            
+            # checkout NASH equilibrium
+            bens_csts_M_t = bens_t_algo - csts_t_algo
+            df_nash_t = None
+            df_nash_t = checkout_nash_4_profils_by_periods(
+                            arr_pl_M_t_vars_modif_algo.copy(),
+                            arr_pl_M_T_vars_init[:,t,:],
+                            sum_diff_pos_minus_0_t_minus_2,
+                            sum_diff_pos_plus_0_t_minus_2,
+                            sum_cons_is_0_t_minus_2,                             
+                            sum_prod_is_0_t_minus_2,
+                            pi_hp_plus, pi_hp_minus, 
+                            pi_0_minus_t, pi_0_plus_t, 
+                            bens_csts_M_t,
+                            m_players,
+                            t,
+                            manual_debug,
+                            dbg)
+            df_nash_algo = pd.merge(df_nash_algo, df_nash_t, on='players', 
+                                    how='outer')
+            
+            #_______     save arr_M_t_vars at t in dataframe : debut    _______
+            df_arr_M_t_vars_modif_algo \
+                = pd.DataFrame(arr_pl_M_t_vars_modif_algo, 
+                                columns=fct_aux.AUTOMATE_INDEX_ATTRS.keys(),
+                                index=dico_id_players["players"])
+            path_to_save_M_t_vars_modif_algo = None
+            msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
+            if "simu_DDMM_HHMM" in path_to_save:
+                path_to_save_M_t_vars_modif_algo \
+                    = os.path.join(name_dir, "simu_"+date_hhmm,
+                                   msg, algo_name, "intermediate_t"
+                                   )
+            Path(path_to_save_M_t_vars_modif_algo).mkdir(parents=True, 
+                                                         exist_ok=True)
+            df_arr_M_t_vars_modif_algo.to_excel(
+                os.path.join(
+                    *[path_to_save_M_t_vars_modif_algo,
+                      "arr_M_t{}_vars_{}.xlsx".format(t,algo_name)]), 
+                    index=False)
+            #_______     save arr_M_t_vars at t in dataframe : fin     _______
+            
+            #___________ update saving variables : debut ______________________
+            if algo_name == fct_aux.ALGO_NAMES_BF[0]:                          # BEST-BRUTE-FORCE
+                arr_pl_M_T_vars_modif_BESTBF[:,t,:] \
+                    = arr_pl_M_t_vars_modif_algo 
+                b0_ts_T_BESTBF, c0_ts_T_BESTBF, \
+                BENs_M_T_BESTBF, CSTs_M_T_BESTBF, \
+                pi_sg_plus_T_BESTBF, pi_sg_minus_T_BESTBF, \
+                pi_0_plus_T_BESTBF, pi_0_minus_T_BESTBF, \
+                df_nash_BESTBF \
+                    = update_saving_variables(t, 
+                        b0_ts_T_BESTBF, b0_t_algo,
+                        c0_ts_T_BESTBF, c0_t_algo,
+                        BENs_M_T_BESTBF, bens_t_algo,
+                        CSTs_M_T_BESTBF, csts_t_algo,
+                        pi_sg_plus_T_BESTBF, pi_sg_plus_t_algo,
+                        pi_sg_minus_T_BESTBF, pi_sg_minus_t_algo,
+                        pi_0_plus_T_BESTBF, pi_0_plus_t_algo,
+                        pi_0_minus_T_BESTBF, pi_0_minus_t_algo,
+                        df_nash_BESTBF, df_nash_algo,
+                        key=fct_aux.ALGO_NAMES_BF[0]
+                        )
+                BB_is_M_T_BESTBF, CC_is_M_T_BESTBF, RU_is_M_T_BESTBF, \
+                B_is_M_T_BESTBF, C_is_M_T_BESTBF \
+                    = compute_prices_variables(
+                        arr_pl_M_T_vars_modif_BESTBF, t,
+                        b0_ts_T_BESTBF, c0_ts_T_BESTBF, 
+                        pi_sg_plus_T_BESTBF, pi_sg_minus_T_BESTBF,
+                        pi_0_plus_T_BESTBF, pi_0_minus_T_BESTBF
+                                               )  
+            elif algo_name == fct_aux.ALGO_NAMES_BF[1]:                        # BAD-BRUTE-FORCE
+                arr_pl_M_T_vars_modif_BADBF[:,t,:] \
+                    = arr_pl_M_t_vars_modif_algo 
+                b0_ts_T_BADBF, c0_ts_T_BADBF, \
+                BENs_M_T_BADBF, CSTs_M_T_BADBF, \
+                pi_sg_plus_T_BADBF, pi_sg_minus_T_BADBF, \
+                pi_0_plus_T_BADBF, pi_0_minus_T_BADBF, \
+                df_nash_BADBF \
+                    = update_saving_variables(t, 
+                        b0_ts_T_BADBF, b0_t_algo,
+                        c0_ts_T_BADBF, c0_t_algo,
+                        BENs_M_T_BADBF, bens_t_algo,
+                        CSTs_M_T_BADBF, csts_t_algo,
+                        pi_sg_plus_T_BADBF, pi_sg_plus_t_algo,
+                        pi_sg_minus_T_BADBF, pi_sg_minus_t_algo,
+                        pi_0_plus_T_BADBF, pi_0_plus_t_algo,
+                        pi_0_minus_T_BADBF, pi_0_minus_t_algo,
+                        df_nash_BADBF, df_nash_algo,
+                        key=fct_aux.ALGO_NAMES_BF[1]
+                        )
+                BB_is_M_T_BADBF, CC_is_M_T_BADBF, RU_is_M_T_BADBF, \
+                B_is_M_T_BADBF, C_is_M_T_BADBF \
+                    = compute_prices_variables(
+                        arr_pl_M_T_vars_modif_BADBF, t,
+                        b0_ts_T_BADBF, c0_ts_T_BADBF,
+                        pi_sg_plus_T_BADBF, pi_sg_minus_T_BADBF,
+                        pi_0_plus_T_BADBF, pi_0_minus_T_BADBF
+                        )
+            elif algo_name == fct_aux.ALGO_NAMES_BF[2]:                        # MIDDLE-BRUTE-FORCE
+                arr_pl_M_T_vars_modif_MIDBF[:,t,:] \
+                    = arr_pl_M_t_vars_modif_algo 
+                b0_ts_T_MIDBF, c0_ts_T_MIDBF, \
+                BENs_M_T_MIDBF, CSTs_M_T_MIDBF, \
+                pi_sg_plus_T_MIDBF, pi_sg_minus_T_MIDBF, \
+                pi_0_plus_T_MIDBF, pi_0_minus_T_MIDBF, \
+                df_nash_MIDBF \
+                    = update_saving_variables(t,
+                        b0_ts_T_MIDBF, b0_t_algo,
+                        c0_ts_T_MIDBF, c0_t_algo,
+                        BENs_M_T_MIDBF, bens_t_new,
+                        CSTs_M_T_MIDBF, csts_t_new,
+                        pi_sg_plus_T_MIDBF, pi_sg_plus_t_algo,
+                        pi_sg_minus_T_MIDBF, pi_sg_minus_t_algo,
+                        pi_0_plus_T_MIDBF, pi_0_plus_t_algo,
+                        pi_0_minus_T_MIDBF, pi_0_minus_t_algo,
+                        df_nash_MIDBF, df_nash_algo,
+                        key=fct_aux.ALGO_NAMES_BF[2]
+                        )
+                BB_is_M_T_MIDBF, CC_is_M_T_MIDBF, RU_is_M_T_MIDBF, \
+                B_is_M_T_MIDBF, C_is_M_T_MIDBF \
+                    = compute_prices_variables(
+                        arr_pl_M_T_vars_modif_MIDBF, t,
+                        b0_ts_T_MIDBF, c0_ts_T_MIDBF,
+                        pi_sg_plus_T_MIDBF, pi_sg_minus_T_MIDBF,
+                        pi_0_plus_T_MIDBF, pi_0_minus_T_MIDBF, 
+                        )
+            #___________ update saving variables : fin   ______________________
+            
+    # __________        compute prices variables         ____________________
+    # # B_is, C_is of shape (M_PLAYERS, )
+    # prod_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
+    #                         :,:t_periods, 
+    #                         fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]]
+    # cons_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
+    #                         :,:t_periods, 
+    #                         fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
+    # B_is_M_algo = np.sum(b0_ts_T_algo * prod_i_M_T_algo, axis=1)
+    # C_is_M_algo = np.sum(c0_ts_T_algo * cons_i_M_T_algo, axis=1)
+    
+    # # BB_is, CC_is, RU_is of shape (M_PLAYERS, )
+    # CONS_is_M_algo = np.sum(cons_i_M_T_algo, axis=1)
+    # PROD_is_M_algo = np.sum(prod_i_M_T_algo, axis=1)
+    
+    # print("{}, t={}, pi_sg_plus_T={}, pi_sg_minus_T={} \n".format(
+    #         algo_name, t, pi_sg_plus_T_algo[t], pi_sg_minus_T_algo[t]))
+    
+    # BB_is_M_algo = pi_sg_plus_T_algo[t] * PROD_is_M_algo #np.sum(PROD_is)
+    # for num_pl, bb_i in enumerate(BB_is_M_algo):
+    #     if bb_i != 0:
+    #         print("player {}, BB_i={}".format(num_pl, bb_i))
+    # CC_is_M_algo = pi_sg_minus_T_algo[t] * CONS_is_M_algo #np.sum(CONS_is)
+    # RU_is_M_algo = BB_is_M_algo - CC_is_M_algo
+    
+    # pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
+    # pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object) 
+    # # __________        compute prices variables         ____________________ 
+
+    B_is_M_BESTBF = np.sum(B_is_M_T_BESTBF, axis=1)
+    C_is_M_BESTBF = np.sum(C_is_M_T_BESTBF, axis=1)
+    BB_is_M_BESTBF = np.sum(BB_is_M_T_BESTBF, axis=1) 
+    CC_is_M_BESTBF = np.sum(CC_is_M_T_BESTBF, axis=1) 
+    RU_is_M_BESTBF = np.sum(RU_is_M_T_BESTBF, axis=1)
+
+    B_is_M_BADBF = np.sum(B_is_M_T_BADBF, axis=1)
+    C_is_M_BADBF = np.sum(C_is_M_T_BADBF, axis=1)
+    BB_is_M_BADBF = np.sum(BB_is_M_T_BADBF, axis=1) 
+    CC_is_M_BADBF = np.sum(CC_is_M_T_BADBF, axis=1) 
+    RU_is_M_BADBF = np.sum(RU_is_M_T_BADBF, axis=1) 
+
+    B_is_M_MIDBF = np.sum(B_is_M_T_MIDBF, axis=1)
+    C_is_M_MIDBF = np.sum(C_is_M_T_MIDBF, axis=1)
+    BB_is_M_MIDBF = np.sum(BB_is_M_T_MIDBF, axis=1) 
+    CC_is_M_MIDBF = np.sum(CC_is_M_T_MIDBF, axis=1) 
+    RU_is_M_MIDBF = np.sum(RU_is_M_T_MIDBF, axis=1)          
+
+    #_______      save computed variables locally from algo_name     __________
+    msg = "pi_hp_plus_"+str(pi_hp_plus)+"_pi_hp_minus_"+str(pi_hp_minus)
+    
+    print("path_to_save={}".format(path_to_save))
+    algo_name = fct_aux.ALGO_NAMES_BF[0]
+    if "simu_DDMM_HHMM" in path_to_save:
+        path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
+                                    msg, algo_name
+                                    )
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    df_nash_BESTBF.to_excel(os.path.join(
+                *[path_to_save,
+                  "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
+                index=False)
+
+    fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BESTBF, 
+               b0_ts_T_BESTBF, c0_ts_T_BESTBF, B_is_M_BESTBF, C_is_M_BESTBF, 
+               BENs_M_T_BESTBF, CSTs_M_T_BESTBF, 
+               BB_is_M_BESTBF, CC_is_M_BESTBF, RU_is_M_BESTBF, 
+               pi_sg_minus_T_BESTBF, pi_sg_plus_T_BESTBF, 
+               pi_0_minus_T_BESTBF, pi_0_plus_T_BESTBF,
+               pi_hp_plus_s, pi_hp_minus_s, 
+               dico_modes_profs_by_players_t_BESTBF, 
+               algo=algo_name,
+               dico_best_steps=dict())
+    turn_dico_stats_res_into_df_BF(
+          dico_modes_profs_players_algo= dico_modes_profs_by_players_t_BESTBF, 
+          path_to_save = path_to_save, 
+          t_periods = t_periods, 
+          manual_debug = manual_debug, 
+          algo_name = algo_name)
+    
+    algo_name = fct_aux.ALGO_NAMES_BF[1]
+    if "simu_DDMM_HHMM" in path_to_save:
+        path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
+                                    msg, algo_name
+                                    )
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    df_nash_BADBF.to_excel(os.path.join(
+                *[path_to_save,
+                  "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
+                index=False)
+    fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_BADBF, 
+                   b0_ts_T_BADBF, c0_ts_T_BADBF, B_is_M_BADBF, C_is_M_BADBF, 
+                   BENs_M_T_BADBF, CSTs_M_T_BADBF, 
+                   BB_is_M_BADBF, CC_is_M_BADBF, RU_is_M_BADBF, 
+                   pi_sg_minus_T_BADBF, pi_sg_plus_T_BADBF, 
+                   pi_0_minus_T_BADBF, pi_0_plus_T_BADBF,
+                   pi_hp_plus_s, pi_hp_minus_s, 
+                   dico_modes_profs_by_players_t_BADBF, 
+                   algo=algo_name,
+                   dico_best_steps=dict())
+    turn_dico_stats_res_into_df_BF(
+          dico_modes_profs_players_algo= dico_modes_profs_by_players_t_BADBF, 
+          path_to_save = path_to_save, 
+          t_periods = t_periods, 
+          manual_debug = manual_debug, 
+          algo_name = algo_name)
+    
+    algo_name = fct_aux.ALGO_NAMES_BF[2]
+    if "simu_DDMM_HHMM" in path_to_save:
+        path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
+                                    msg, algo_name
+                                    )
+    Path(path_to_save).mkdir(parents=True, exist_ok=True)
+    df_nash_MIDBF.to_excel(os.path.join(
+                *[path_to_save,
+                  "resume_verify_Nash_equilibrium_{}.xlsx".format(algo_name)]), 
+                index=False)
+    fct_aux.save_variables(path_to_save, arr_pl_M_T_vars_modif_MIDBF, 
+                   b0_ts_T_MIDBF, c0_ts_T_MIDBF, B_is_M_MIDBF, C_is_M_MIDBF, 
+                   BENs_M_T_MIDBF, CSTs_M_T_MIDBF, 
+                   BB_is_M_MIDBF, CC_is_M_MIDBF, RU_is_M_MIDBF, 
+                   pi_sg_minus_T_MIDBF, pi_sg_plus_T_MIDBF, 
+                   pi_0_minus_T_MIDBF, pi_0_plus_T_MIDBF,
+                   pi_hp_plus_s, pi_hp_minus_s, 
+                   dico_modes_profs_by_players_t_MIDBF, 
+                   algo=algo_name,
+                   dico_best_steps=dict())
+    turn_dico_stats_res_into_df_BF(
+          dico_modes_profs_players_algo= dico_modes_profs_by_players_t_MIDBF, 
+          path_to_save = path_to_save, 
+          t_periods = t_periods, 
+          manual_debug = manual_debug, 
+          algo_name = algo_name)
+    return arr_pl_M_T_vars_modif
+    
+# __________       main function of DETERMINIST   ---> fin        ____________
+
+###############################################################################
+#                   definition  des unittests
+#
+###############################################################################
+def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
+    fct_aux.N_DECIMALS = 8
+    
+    pi_hp_plus = 10 #0.2*pow(10,-3) #[5, 15]
+    pi_hp_minus = 20 #0.33 #[15, 5]
+    
+    manual_debug = True
+    gamma_version = 2 #1,2
+    debug = False
+    criteria_bf = "Perf_t"
+    
+    prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
+    prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
+    prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7;
+    scenario1 = [(prob_A_A, prob_A_B, prob_A_C), 
+                 (prob_B_A, prob_B_B, prob_B_C),
+                 (prob_C_A, prob_C_B, prob_C_C)]
+    
+    t_periods = 2
+    setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
+    setA_m_players, setB_m_players, setC_m_players = 8, 3, 3
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False #True
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE(
+                            setA_m_players, setB_m_players, setC_m_players, 
+                            t_periods, 
+                            scenario1,
+                            path_to_arr_pl_M_T, used_instances)
+    fct_aux.checkout_values_Pi_Ci_arr_pl(arr_pl_M_T_vars_init)
+    
+    arr_pl_M_T_vars = bf_balanced_player_game(
+                                arr_pl_M_T_vars_init.copy(),
+                                pi_hp_plus=pi_hp_plus, 
+                                pi_hp_minus=pi_hp_minus,
+                                gamma_version = gamma_version,
+                                path_to_save="tests", 
+                                name_dir="tests", 
+                                date_hhmm="DDMM_HHMM",
+                                manual_debug=manual_debug, 
+                                criteria_bf=criteria_bf, dbg=debug)
+    
+    return arr_pl_M_T_vars
+    
+def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period():
+    
+    fct_aux.N_DECIMALS = 8
+    
+    pi_hp_plus = 10 #0.2*pow(10,-3) #[5, 15]
+    pi_hp_minus = 20 #0.33 #[15, 5]
+    
+    manual_debug=True
+    gamma_version = 2 #1,2
+    debug = False
+    criteria_bf = "Perf_t"
+    
+    setA_m_players = 15; setB_m_players = 10; setC_m_players = 10
+    setA_m_players, setB_m_players, setC_m_players = 8, 3, 3
+    setA_m_players, setB_m_players, setC_m_players = 6, 2, 2
+    t_periods = 1 
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = True #False#True
+    
+    prob_A_A = 0.7; prob_A_B = 0.3; prob_A_C = 0.0;
+    prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
+    prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7;
+    scenario = [(prob_A_A, prob_A_B, prob_A_C), (prob_B_A, prob_B_B, prob_B_C),
+                (prob_C_A, prob_C_B, prob_C_C)]
+    
+    arr_pl_M_T_vars_init = fct_aux.get_or_create_instance_Pi_Ci_one_period(
+                        setA_m_players, setB_m_players, setC_m_players, 
+                        t_periods, 
+                        scenario,
+                        path_to_arr_pl_M_T, used_instances)
+    fct_aux.checkout_values_Pi_Ci_arr_pl_one_period(arr_pl_M_T_vars_init)
+    
+    arr_pl_M_T_vars = bf_balanced_player_game(
+                                arr_pl_M_T_vars_init.copy(),
+                                pi_hp_plus=pi_hp_plus, 
+                                pi_hp_minus=pi_hp_minus,
+                                gamma_version = gamma_version,
+                                path_to_save="tests", 
+                                name_dir="tests", 
+                                date_hhmm="DDMM_HHMM",
+                                manual_debug=manual_debug, 
+                                criteria_bf=criteria_bf, dbg=debug)
+    
+    return arr_pl_M_T_vars
+    
+
+###############################################################################
+#                   Execution
+#
+###############################################################################
+if __name__ == "__main__":
+    ti = time.time()
+    
+    arr_pl_M_T_vars_modif \
+        = test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE()
+        
+    # arr_pl_M_T_vars_modif \
+    #     = test_BRUTE_FORCE_balanced_player_game_Pi_Ci_one_period()
+    
+    print("runtime = {}".format(time.time() - ti))
