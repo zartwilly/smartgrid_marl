@@ -6,6 +6,7 @@ Created on Wed Mar 17 12:23:32 2021
 """
 import os
 import time
+import psutil
 
 import numpy as np
 import pandas as pd
@@ -576,7 +577,6 @@ def generer_balanced_players_4_modes_profils(arr_pl_M_t_vars_modif,
             .append( ("BF_{}_t_{}".format(cpt_xxx,t), 
                       dico_mode_prof_by_players) )
         
-        #_____________   
         mid_key_Perf_t_OLD = mid_key_Perf_t
         if mid_key_Perf_t != mid_key_Perf_t_new:
             dico_modes_profs_by_players_t_mid = dict()
@@ -762,12 +762,45 @@ def turn_dico_stats_res_into_df_BF(dico_modes_profs_players_algo,
     """
     df = None
     for t in range(0, t_periods):
-        dico_algo = dict()
-        tuple_bf_dico = dico_modes_profs_players_algo[t]
-        for cpt, dico_modes_profs_players in tuple_bf_dico:
-            dico_algo[cpt] = dico_modes_profs_players
-    
-        df_t = pd.DataFrame.from_dict(dico_algo, orient='columns')
+        dico_bf_t = dico_modes_profs_players_algo[t]
+        dico_bf_t_new = dict()
+        
+        Perf_t = dico_bf_t["Perf_t"]
+        b0_t = dico_bf_t["b0_t"] 
+        c0_t = dico_bf_t["c0_t"]
+        Out_sg = dico_bf_t["Out_sg"]
+        In_sg = dico_bf_t["In_sg"]
+        pi_sg_plus_t = dico_bf_t["pi_sg_plus_t"]
+        pi_sg_minus_t = dico_bf_t["pi_sg_minus_t"]
+        pi_0_plus_t = dico_bf_t["pi_0_plus_t"]
+        pi_0_minus_t = dico_bf_t["pi_0_minus_t"]
+        mode_profile = dico_bf_t["mode_profile"]
+        bens_t = dico_bf_t["bens_t"]
+        csts_t = dico_bf_t["csts_t"]
+        dico_keys_2_delete = {'Out_sg':Out_sg, 'In_sg':In_sg, 
+            'Perf_t':Perf_t, 'b0_t':b0_t, 'c0_t':c0_t,
+            'pi_sg_plus_t':pi_sg_plus_t, 'pi_sg_minus_t':pi_sg_minus_t, 
+            'pi_0_plus_t':pi_0_plus_t, 'pi_0_minus_t':pi_0_minus_t, 
+            'mode_profile': mode_profile, 
+            'bens_t':bens_t, 'csts_t':csts_t}
+        
+        for key, val in dico_keys_2_delete.items():
+            dico_bf_t.pop(key, None)
+                
+        keys_to_delete = ['mode_profile', 'bens_t', 'csts_t']
+        for player, dico_vals in dico_bf_t.items():
+            if player not in dico_keys_2_delete.keys():
+                cpt_combi = player.split('_')[3]
+                player = player.split('_')[0]
+                dico_vals["cpt_comb"] = cpt_combi
+                for key, val in dico_keys_2_delete.items():
+                    dico_vals.pop(key, None)
+                    if key not in keys_to_delete:
+                        dico_vals[key] = val
+            dico_bf_t_new[player] = dico_vals
+                
+        # df_t = pd.DataFrame.from_dict(dico_bf_t_new, orient='columns')
+        df_t = pd.DataFrame.from_dict(dico_bf_t_new)
         if df is None:
             df = df_t.copy()
         else:
@@ -777,6 +810,7 @@ def turn_dico_stats_res_into_df_BF(dico_modes_profs_players_algo,
     df.to_excel(os.path.join(*[path_to_save,
                                "{}_dico_BF.xlsx".format(algo_name)]), 
                 index=True)
+    
 
 # ____________          turn dico in2 df  -->   fin             ______________
 
@@ -873,17 +907,17 @@ def compute_gamma_state_4_period_t(arr_pl_M_t_K_vars,
         
         Si_t_minus, Si_t_plus = None, None
         Xi, Yi = None, None
-        if state_i == fct_aux.STATES[0]:                                            # state1 or Deficit
+        if state_i == fct_aux.STATES[0]:                                       # state1 or Deficit
             Si_t_minus = 0
             Si_t_plus = Si
             Xi = pi_0_minus
             Yi = pi_hp_minus
-        elif state_i == fct_aux.STATES[1]:                                          # state2 or Self
+        elif state_i == fct_aux.STATES[1]:                                     # state2 or Self
             Si_t_minus = Si - (Ci - Pi)
             Si_t_plus = Si
             Xi = pi_0_minus
             Yi = pi_hp_minus
-        elif state_i == fct_aux.STATES[2]:                                          # state3 or Surplus
+        elif state_i == fct_aux.STATES[2]:                                     # state3 or Surplus
             Si_t_minus = Si
             Si_t_plus = max(Si_max, Si+(Pi-Ci))
             Xi = pi_0_plus
@@ -1183,7 +1217,8 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
     pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
         
     for t in range(0, t_periods):
-        print("----- t = {} ------ ".format(t))
+        print("----- t = {} , free memory={}% ------ ".format(
+            t, list(psutil.virtual_memory())[2]))
         if manual_debug:
             pi_sg_plus_t = fct_aux.MANUEL_DBG_PI_SG_PLUS_T_K #8
             pi_sg_minus_t = fct_aux.MANUEL_DBG_PI_SG_MINUS_T_K #10
@@ -1262,13 +1297,6 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                 pi_0_plus_t, pi_0_minus_t,
                 manual_debug, dbg)
         
-        # dico_modes_profs_by_players_t_BESTBF[t] \
-        #     = dico_modes_profs_by_players_t_best
-        # dico_modes_profs_by_players_t_BADBF[t] \
-        #     = dico_modes_profs_by_players_t_bad
-        # dico_modes_profs_by_players_t_MIDBF[t] \
-        #     = dico_modes_profs_by_players_t_mid
-        
         # appliquer sur chaque algo BEST, BAD, MIDDLE
         for algo_name in fct_aux.ALGO_NAMES_BF:
             list_dico_modes_profs_by_players_t_algo = dict()
@@ -1278,21 +1306,20 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                 arr_pl_M_t_vars_modif_algo \
                     = arr_pl_M_T_vars_modif_BESTBF[:,t,:].copy()
                 df_nash_algo = df_nash_BESTBF.copy()
-                pass
+                
             elif algo_name == fct_aux.ALGO_NAMES_BF[1]:                        # BAD-BRUTE-FORCE
                 list_dico_modes_profs_by_players_t_algo \
                     = list_dico_modes_profs_by_players_t_bad
                 arr_pl_M_t_vars_modif_algo \
                     = arr_pl_M_T_vars_modif_BADBF[:,t,:].copy()
                 df_nash_algo = df_nash_BADBF.copy()
-                pass
+                
             elif algo_name == fct_aux.ALGO_NAMES_BF[2]:                        # MIDDLE-BRUTE-FORCE
                 list_dico_modes_profs_by_players_t_algo \
                     = list_dico_modes_profs_by_players_t_mid
                 arr_pl_M_t_vars_modif_algo \
                     = arr_pl_M_T_vars_modif_MIDBF[:,t,:].copy()
                 df_nash_algo = df_nash_MIDBF.copy()
-                pass
             
             rd_key = None
             if len(list_dico_modes_profs_by_players_t_algo) == 1:
@@ -1304,8 +1331,7 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
             
             id_cpt_xxx, dico_mode_prof_by_players_algo \
                 = list_dico_modes_profs_by_players_t_algo[rd_key] 
-            print("rd_key={}, cpt_xxx={}, dico_modes_profs_by_players_t_algo={}".format(
-                    rd_key, id_cpt_xxx, dico_mode_prof_by_players_algo))
+            print("rd_key={}, cpt_xxx={}".format(rd_key, id_cpt_xxx))
             
             bens_t_algo = dico_mode_prof_by_players_algo["bens_t"]
             csts_t_algo = dico_mode_prof_by_players_algo["csts_t"]
@@ -1503,7 +1529,9 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                 dico_modes_profs_by_players_t_MIDBF[t] \
                     = dico_mode_prof_by_players_algo
             #___________ update saving variables : fin   ______________________
-            
+        
+        print("----- t={} After running free memory={}% ------ ".format(
+            t, list(psutil.virtual_memory())[2]))
     # __________        compute prices variables         ____________________
     # # B_is, C_is of shape (M_PLAYERS, )
     # prod_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
@@ -1664,7 +1692,7 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     
     t_periods = 2
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
-    setA_m_players, setB_m_players, setC_m_players = 8, 3, 3
+    setA_m_players, setB_m_players, setC_m_players = 8, 3, 3                   # 14 players
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
