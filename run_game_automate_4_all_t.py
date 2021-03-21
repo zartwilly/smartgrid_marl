@@ -64,8 +64,8 @@ if __name__ == "__main__":
         nb_periods = None
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm = "DDMM_HHMM"
-        t_periods = 10 #30 #50 #30 #35 #55 #117 #15 #3
-        k_steps = 100#250 #5000 #2000 #50 #250
+        t_periods = 4 #10 #30 #50 #30 #35 #55 #117 #15 #3
+        k_steps = 3 #100 #250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
         fct_aux.N_DECIMALS = 8
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         dbg_234_players = False #True #False
         used_storage_det= True #False #True
         manual_debug = False #True #False #True
-        gamma_version = 1 # 2
+        gamma_version = 2 #1 # 2
         Visualisation = True #False, True
         
         scenario = "scenario3"
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
         setA_m_players, setB_m_players, setC_m_players = 15, 10, 10
         setA_m_players, setB_m_players, setC_m_players = 6, 3, 3               # 12 players
-        setA_m_players, setB_m_players, setC_m_players = 2, 1, 1
+        setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
         if dbg_234_players:
             t_periods = 2
             setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
