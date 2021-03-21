@@ -17,6 +17,7 @@ import fonctions_auxiliaires as fct_aux
 import deterministic_game_model_automate_4_all_t as autoDetGameModel
 import lri_game_model_automate_4_all_t as autoLriGameModel
 import force_brute_game_model_automate_4_all_t as autoBfGameModel
+import force_brute_game_model_automate_4_all_t_V1 as autoBfGameModel_V1
 import detection_nash_game_model_automate_4_all_t as autoNashGameModel
 
 from datetime import datetime
@@ -165,6 +166,18 @@ def execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                                 date_hhmm=date_hhmm,
                                 manual_debug=manual_debug, 
                                 criteria_bf=criteria_bf, dbg=debug)
+            
+            # arr_M_T_vars = autoBfGameModel_V1.bf_balanced_player_game(
+            #                     arr_pl_M_T_vars_init.copy(),
+            #                     pi_hp_plus=pi_hp_plus_elt, 
+            #                     pi_hp_minus=pi_hp_minus_elt,
+            #                     gamma_version=gamma_version,
+            #                     path_to_save=path_to_save, 
+            #                     name_dir=name_dir, 
+            #                     date_hhmm=date_hhmm,
+            #                     manual_debug=manual_debug, 
+            #                     criteria_bf=criteria_bf, dbg=debug)
+                           
         elif algo_name == fct_aux.ALGO_NAMES_NASH[0] :
             # 0: "BEST-NASH", 1: "BAD-NASH", 2: "MIDDLE-NASH"
             print("*** ALGO: {} *** ".format(algo_name))
