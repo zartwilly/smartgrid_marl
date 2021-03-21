@@ -594,8 +594,12 @@ def generer_balanced_players_4_modes_profils(arr_pl_M_t_vars_modif,
             
         
         cpt_xxx += 1
-        print("cpt_xxx={}".format(cpt_xxx)) if cpt_xxx % 5000==0 else None
-            
+        mod = 65000 #int(0.10*pow(2, m_players))
+        print("cpt_xxx={}, After running free memory={}%".format(cpt_xxx,
+                    list(psutil.virtual_memory())[2]    )) \
+            if cpt_xxx % mod==0 else None
+        
+        
     list_dico_modes_profs_by_players_t_best \
         = dico_modes_profs_by_players_t_best[best_key_Perf_t]
     list_dico_modes_profs_by_players_t_bad \
@@ -1690,9 +1694,11 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
                  (prob_B_A, prob_B_B, prob_B_C),
                  (prob_C_A, prob_C_B, prob_C_C)]
     
-    t_periods = 2
+    t_periods = 2#4 #2
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
     setA_m_players, setB_m_players, setC_m_players = 8, 3, 3                   # 14 players
+    t_periods = 4
+    setA_m_players, setB_m_players, setC_m_players = 10, 6, 5                  # 21 players
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
