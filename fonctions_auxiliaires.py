@@ -71,14 +71,17 @@ RACINE_PLAYER = "player"
 #AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_set1_{}_repSet1_{}_set2_{}_repSet2_{}_periods_{}.npy"
 AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_setA_{}_setB_{}_setC_{}_periods_{}.npy"
 
-AUTOMATE_INDEX_ATTRS_DBG = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+AUTOMATE_INDEX_ATTRS_DBG = {"Ci":0, "Pi":1, "Si_init":24, "Si":2, "Si_max":3, 
+               "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
                "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
                "balanced_pl_i": 14, "formule":15, "Si_minus":16,
                "Si_plus":17, "u_i": 18, "bg_i": 19,
-               "p_i_j_k": 20, "non_playing_players":21, "set":22}
+               "S1_p_i_j_k": 20, "S2_p_i_j_k": 21, 
+               "non_playing_players":22, "set":23}
 
-AUTOMATE_INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, "gamma_i":4, 
+AUTOMATE_INDEX_ATTRS = {"Ci":0, "Pi":1, "Si":2, "Si_max":3, 
+               "gamma_i":4, 
                "prod_i":5, "cons_i":6, "r_i":7, "state_i":8, "mode_i":9,
                "Profili":10, "Casei":11, "R_i_old":12, "Si_old":13, 
                "balanced_pl_i": 14, "formule":15, "Si_minus":16,
