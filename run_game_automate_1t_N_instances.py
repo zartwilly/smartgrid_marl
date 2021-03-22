@@ -17,15 +17,19 @@ from pathlib import Path
 if __name__ == "__main__":
     ti = time.time()
     
-    name_dir = "tests"
-    name_dir_oneperiod = os.path.join("tests","OnePeriod_50instances")
-    
     date_hhmm="DDMM_HHMM"
     t_periods = 1 #50 #30 #35 #55 #117 #15 #3
     k_steps = 250 #5000 #2000 #50 #250
     NB_REPEAT_K_MAX= 10 #3 #15 #30
     learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
     fct_aux.N_DECIMALS = 8
+    gamma_version = 1
+    
+    name_dir = "tests"
+    name_dir_oneperiod = os.path.join(
+                            name_dir,
+                            "OnePeriod_50instances"+"GammaV"+str(gamma_version))
+    
     
     pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
     pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
@@ -68,6 +72,7 @@ if __name__ == "__main__":
             
         # ---- execution of various data  ----
         date_hhmm_new = "_".join([date_hhmm, str(i), "t", str(t_periods)])
+        
         autoExeGame4T\
             .execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
                 arr_pl_M_T_vars_init, 
@@ -79,6 +84,7 @@ if __name__ == "__main__":
                 learning_rates = learning_rates,
                 pi_hp_plus = pi_hp_plus,
                 pi_hp_minus = pi_hp_minus,
+                gamma_version=gamma_version,
                 used_instances = used_instances,
                 used_storage_det = used_storage_det,
                 manual_debug = manual_debug, 
