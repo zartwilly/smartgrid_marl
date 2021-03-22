@@ -1075,6 +1075,12 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                             manual_debug=False, 
                             criteria_bf="Perf_t", dbg=False):
     """
+    TODO GROS PROBLEME quand au regroupement des algos dans une meme fonction.
+    En effet, les algos ont des etats differents et cela implique des stocks 
+    differents. utiliser la fonction compute_gamma en dehors de la boucle for 
+    des algos ne me permet pas de choisir le bon stock pour chaque algo.
+    
+    NE PLUS UTILISER CETTE FONCTION
     """
     print("\n \n game: pi_hp_plus={}, pi_hp_minus={} ---> debut \n"\
           .format(pi_hp_plus, pi_hp_minus))
@@ -1249,8 +1255,8 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                                         if t+1 < t_periods \
                                         else arr_pl_M_T_vars_modif[:,t,:].copy()
         arr_pl_M_t_minus_1_vars_init = arr_pl_M_T_vars_modif[:,t-1,:].copy() \
-                                        if t-1 > 0 \
-                                        else arr_pl_M_T_vars_modif[:,t,:].copy()
+                                        if t-1 >= 0 \
+                                        else arr_pl_M_T_vars_modif[:,t,:].copy()                        
         
         arr_pl_M_t_vars_modif = compute_gamma_state_4_period_t(
                                 arr_pl_M_t_K_vars=arr_pl_M_t_vars_init,
