@@ -87,7 +87,8 @@ if __name__ == "__main__":
         
         scenario = "scenario3"
         date_hhmm = "_".join([date_hhmm, scenario, 
-                              "".join(["T", str(t_periods)])])
+                              "".join(["T", str(t_periods),
+                                "".join(["gammaV", str(gamma_version)])])])
         
         # ---- initialization of variables for generating instances ----
         setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
@@ -131,6 +132,9 @@ if __name__ == "__main__":
         Visualisation = True #False, True
         
         scenario = scenario1
+        date_hhmm = "_".join([date_hhmm, scenario, 
+                              "".join(["T", str(t_periods),
+                                "".join(["gammaV", str(gamma_version)])])])
         
         # ---- initialization of variables for generating instances ----
         setA_m_players, setB_m_players, setC_m_players = 15, 10, 10
@@ -163,6 +167,10 @@ if __name__ == "__main__":
         gamma_version = 1 # 2
         Visualisation = True #False, True
        
+        scenario = scenario1
+        date_hhmm = "_".join([date_hhmm, scenario, 
+                              "".join(["T", str(t_periods),
+                                "".join(["gammaV", str(gamma_version)])])])
         # ---- initialization of variables for generating instances ----
         setA_m_players, setB_m_players, setC_m_players = 20, 12, 6
        
