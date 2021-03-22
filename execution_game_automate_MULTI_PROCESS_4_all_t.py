@@ -141,7 +141,7 @@ def execute_one_algo_used_Generated_instances(arr_pl_M_T_vars_init,
         print("*** ALGO: {} *** ".format(algo_name))
         random_determinist = False if algo_name == ALGOS_DET[0] else True
         path_to_save = os.path.join(name_dir, "simu_"+date_hhmm,
-                                msg, algo_name, str(learning_rate)
+                                msg, algo_name
                                 )
         Path(path_to_save).mkdir(parents=True, exist_ok=True)
         arr_M_T_vars = autoDetGameModel.determinist_balanced_player_game(
