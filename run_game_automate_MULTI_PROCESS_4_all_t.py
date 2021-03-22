@@ -73,6 +73,8 @@ if __name__ == "__main__":
         
         pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
+        fct_aux.PI_0_PLUS_INIT = 10 #4
+        fct_aux.PI_0_MINUS_INIT = 20 #3
         tuple_pi_hp_plus_minus = tuple(zip(pi_hp_plus, pi_hp_minus))
         
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
@@ -118,6 +120,8 @@ if __name__ == "__main__":
         
         pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
+        fct_aux.PI_0_PLUS_INIT = 10 #4
+        fct_aux.PI_0_MINUS_INIT = 20 #3
         tuple_pi_hp_plus_minus = tuple(zip(pi_hp_plus, pi_hp_minus))
         
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
@@ -157,6 +161,8 @@ if __name__ == "__main__":
        
         pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [0.33] #[15, 5]
+        fct_aux.PI_0_PLUS_INIT = 10 #4
+        fct_aux.PI_0_MINUS_INIT = 20 #3
         tuple_pi_hp_plus_minus = tuple(zip(pi_hp_plus, pi_hp_minus))
        
         dbg_234_players = False

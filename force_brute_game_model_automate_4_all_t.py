@@ -395,8 +395,8 @@ def bf_balanced_player_game_USE_DICT_MODE_PROFIL(arr_pl_M_T_vars_init,
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
             if t == 0:
-               pi_0_plus_t = 4
-               pi_0_minus_t = 3
+               pi_0_plus_t = fct_aux.PI_0_PLUS_INIT #4
+               pi_0_minus_t = fct_aux.PI_0_MINUS_INIT #3
                
         
         arr_pl_M_T_vars_modif = fct_aux.compute_gamma_state_4_period_t(

@@ -33,6 +33,9 @@ STOP_LEARNING_PROBA = 0.9
 Ci_LOW = 10
 Ci_HIGH = 60
 
+PI_0_PLUS_INIT = 4
+PI_0_MINUS_INIT = 3
+
 SET_ABC = ["setA", "setB", "setC"]
 STATES = ["state1", "state2", "state3"]
 

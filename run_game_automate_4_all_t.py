@@ -65,17 +65,19 @@ if __name__ == "__main__":
         # ---- new constances simu_DDMM_HHMM --- **** debug *****
         date_hhmm = "DDMM_HHMM"
         t_periods = 4 #10 #30 #50 #30 #35 #55 #117 #15 #3
-        k_steps = 3 #100 #250 #5000 #2000 #50 #250
+        k_steps = 5 #100 #250 #5000 #2000 #50 #250
         NB_REPEAT_K_MAX= 10 #3 #15 #30
         learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
         fct_aux.N_DECIMALS = 8
         
         pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
+        fct_aux.PI_0_PLUS_INIT = 10 #4
+        fct_aux.PI_0_MINUS_INIT = 20 #3
         
         algos = ["LRI1", "LRI2", "DETERMINIST"] \
                 + fct_aux.ALGO_NAMES_BF
-        algos = ["LRI1", "LRI2", "DETERMINIST"]
+        #algos = ["LRI1", "LRI2", "DETERMINIST"]
         
         dbg_234_players = False #True #False
         used_storage_det= True #False #True
@@ -91,7 +93,7 @@ if __name__ == "__main__":
         setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
         setA_m_players, setB_m_players, setC_m_players = 15, 10, 10
         setA_m_players, setB_m_players, setC_m_players = 6, 3, 3               # 12 players
-        setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
+        # setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
         if dbg_234_players:
             t_periods = 2
             setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
@@ -198,7 +200,7 @@ if __name__ == "__main__":
                 criteria_bf = criteria_bf, 
                 debug = False
                 )
-    
+    print("Procedural running time ={}".format(time.time()-ti))
     
     if Visualisation: 
         autoVizGameV1.MULT_WIDTH = 2.0 #2.25;

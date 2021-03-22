@@ -346,8 +346,8 @@ def determinist_balanced_player_game(arr_pl_M_T_vars_init,
                                 fct_aux.N_DECIMALS)
             pi_0_minus_t = pi_sg_minus_t_minus_1
             if t == 0:
-               pi_0_plus_t = 4
-               pi_0_minus_t = 3
+               pi_0_plus_t = fct_aux.PI_0_PLUS_INIT #4
+               pi_0_minus_t = fct_aux.PI_0_MINUS_INIT #3
                
         if t == 0:
             print("before compute gamma state 4 t={}, modes={}, Sis={},  Si_old={}, ris={}".format(
