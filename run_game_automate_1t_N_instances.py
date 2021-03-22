@@ -74,7 +74,7 @@ if __name__ == "__main__":
         date_hhmm_new = "_".join([date_hhmm, str(i), "t", str(t_periods)])
         
         autoExeGame4T\
-            .execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
+            .execute_algos_used_Generated_instances(
                 arr_pl_M_T_vars_init, 
                 name_dir = name_dir_oneperiod,
                 date_hhmm = date_hhmm_new,
