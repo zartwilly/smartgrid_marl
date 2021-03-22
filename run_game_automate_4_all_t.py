@@ -175,23 +175,7 @@ if __name__ == "__main__":
         setA_m_players, setB_m_players, setC_m_players = 20, 12, 6
        
     
-    # autoExeGame.execute_algos_used_Generated_instances(
-    #             arr_pl_M_T_vars_init, 
-    #             name_dir = name_dir,
-    #             date_hhmm = date_hhmm,
-    #             k_steps = k_steps,
-    #             NB_REPEAT_K_MAX = NB_REPEAT_K_MAX,
-    #             algos = algos,
-    #             learning_rates = learning_rates,
-    #             pi_hp_plus = pi_hp_plus,
-    #             pi_hp_minus = pi_hp_minus,
-    #             used_instances = used_instances,
-    #             used_storage_det = used_storage_det,
-    #             manual_debug = manual_debug, 
-    #             criteria_bf = criteria_bf, 
-    #             debug = False
-    #             )
-    autoExeGame4T.execute_algos_used_Generated_instances_USE_DICT_MODE_PROFIL(
+    autoExeGame4T.execute_algos_used_Generated_instances(
                 arr_pl_M_T_vars_init, 
                 name_dir = name_dir,
                 date_hhmm = date_hhmm,
