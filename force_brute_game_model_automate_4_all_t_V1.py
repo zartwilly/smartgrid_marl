@@ -50,10 +50,10 @@ def update_saving_variables(t, b0_ts_T_BESTBF, b0_t_algo,
     
     
 
-def compute_prices_variables(arr_pl_M_T_vars_modif_MIDBF, t,
-                            b0_ts_T_MIDBF, c0_ts_T_MIDBF,
-                            pi_sg_plus_T_MIDBF, pi_sg_minus_T_MIDBF,
-                            pi_0_plus_T_MIDBF, pi_0_minus_T_MIDBF):
+def compute_prices_variables(arr_pl_M_T_vars_modif_algo, t,
+                            b0_ts_T_algo, c0_ts_T_algo,
+                            pi_sg_plus_T_algo, pi_sg_minus_T_algo,
+                            pi_0_plus_T_algo, pi_0_minus_T_algo):
     # # B_is, C_is of shape (M_PLAYERS, )
     # prod_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
     #                         :,:t_periods, 
@@ -81,20 +81,20 @@ def compute_prices_variables(arr_pl_M_T_vars_modif_MIDBF, t,
     # pi_hp_plus_s = np.array([pi_hp_plus] * t_periods, dtype=object)
     # pi_hp_minus_s = np.array([pi_hp_minus] * t_periods, dtype=object)
     
-    prod_i_M_T_MIDBF = arr_pl_M_T_vars_modif_MIDBF[
+    prod_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
                             :,:t+1, 
                             fct_aux.AUTOMATE_INDEX_ATTRS["prod_i"]] 
-    cons_i_M_T_MIDBF = arr_pl_M_T_vars_modif_MIDBF[
+    cons_i_M_T_algo = arr_pl_M_T_vars_modif_algo[
                             :,:t+1, 
                             fct_aux.AUTOMATE_INDEX_ATTRS["cons_i"]]
-    B_is_M_T_MIDBF = b0_ts_T_MIDBF * prod_i_M_T_MIDBF
-    C_is_M_T_MIDBF = c0_ts_T_MIDBF * cons_i_M_T_MIDBF
-    BB_is_M_T_MIDBF = pi_sg_plus_T_MIDBF * prod_i_M_T_MIDBF
-    CC_is_M_T_MIDBF = pi_sg_minus_T_MIDBF * cons_i_M_T_MIDBF 
-    RU_is_M_T_MIDBF = BB_is_M_T_MIDBF - CC_is_M_T_MIDBF
+    B_is_M_T_algo = b0_ts_T_algo[:t+1] * prod_i_M_T_algo
+    C_is_M_T_algo = c0_ts_T_algo[:t+1] * cons_i_M_T_algo
+    BB_is_M_T_algo = pi_sg_plus_T_algo[:t+1] * prod_i_M_T_algo
+    CC_is_M_T_algo = pi_sg_minus_T_algo[:t+1] * cons_i_M_T_algo 
+    RU_is_M_T_algo = BB_is_M_T_algo - CC_is_M_T_algo
 
-    return BB_is_M_T_MIDBF, CC_is_M_T_MIDBF, RU_is_M_T_MIDBF, \
-           B_is_M_T_MIDBF, C_is_M_T_MIDBF
+    return BB_is_M_T_algo, CC_is_M_T_algo, RU_is_M_T_algo, \
+           B_is_M_T_algo, C_is_M_T_algo
            
            
            
@@ -1469,7 +1469,7 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                         b0_ts_T_BESTBF, c0_ts_T_BESTBF, 
                         pi_sg_plus_T_BESTBF, pi_sg_minus_T_BESTBF,
                         pi_0_plus_T_BESTBF, pi_0_minus_T_BESTBF
-                                               )
+                        )
                 dico_modes_profs_by_players_t_BESTBF[t] \
                     = dico_mode_prof_by_players_algo
     
@@ -1694,11 +1694,11 @@ def test_BRUTE_FORCE_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
                  (prob_B_A, prob_B_B, prob_B_C),
                  (prob_C_A, prob_C_B, prob_C_C)]
     
-    t_periods = 2#4 #2
+    t_periods = 4 #2
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
     setA_m_players, setB_m_players, setC_m_players = 8, 3, 3                   # 14 players
-    t_periods = 4
-    setA_m_players, setB_m_players, setC_m_players = 10, 6, 5                  # 21 players
+    # t_periods = 4
+    # setA_m_players, setB_m_players, setC_m_players = 10, 6, 5                  # 21 players
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
