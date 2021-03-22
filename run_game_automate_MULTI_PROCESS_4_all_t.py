@@ -207,7 +207,7 @@ if __name__ == "__main__":
     p = mp.Pool(mp.cpu_count()-1)
     p.starmap(
         autoExeGameMulProc4T\
-            .execute_one_algo_used_Generated_instances_USE_DICT_MODE_PROFIL, 
+            .execute_one_algo_used_Generated_instances, 
         params)
     # multi processing execution
     
