@@ -15,7 +15,7 @@ import fonctions_auxiliaires as fct_aux
 import itertools as it
 
 from pathlib import Path
-
+from openpyxl import load_workbook
 
 ###############################################################################
 #           definition  des fonctions 
@@ -792,16 +792,20 @@ def turn_dico_stats_res_into_df_BF(dico_modes_profs_players_algo,
             dico_bf_t.pop(key, None)
                 
         keys_to_delete = ['mode_profile', 'bens_t', 'csts_t']
+        dico_vals_new = dict()
         for player, dico_vals in dico_bf_t.items():
             if player not in dico_keys_2_delete.keys():
                 cpt_combi = player.split('_')[3]
                 player = player.split('_')[0]
-                dico_vals["cpt_comb"] = cpt_combi
+                dico_vals_new["cpt_comb_"+str(t)] = cpt_combi
                 for key, val in dico_keys_2_delete.items():
                     dico_vals.pop(key, None)
                     if key not in keys_to_delete:
-                        dico_vals[key] = val
-            dico_bf_t_new[player] = dico_vals
+                        #dico_vals[key "{}_t{}".format(key,t)] = val
+                        dico_vals_new["{}_t{}".format(key,t)] = val
+            for k, v in dico_vals.items():
+                dico_vals_new["{}_t{}".format(k,t)] = v
+            dico_bf_t_new[player] = dico_vals_new
                 
         # df_t = pd.DataFrame.from_dict(dico_bf_t_new, orient='columns')
         df_t = pd.DataFrame.from_dict(dico_bf_t_new)
@@ -1435,11 +1439,29 @@ def bf_balanced_player_game(arr_pl_M_T_vars_init,
                                    )
             Path(path_to_save_M_t_vars_modif_algo).mkdir(parents=True, 
                                                          exist_ok=True)
-            df_arr_M_t_vars_modif_algo.to_excel(
-                os.path.join(
-                    *[path_to_save_M_t_vars_modif_algo,
-                      "arr_M_t{}_vars_{}.xlsx".format(t,algo_name)]), 
-                    index=False)
+                
+            path_2_xls_df_arr_M_t_vars_modif_algo \
+                = os.path.join(
+                    path_to_save_M_t_vars_modif_algo,
+                      "arr_M_T_vars_{}.xlsx".format(algo_name)
+                    )
+            if not os.path.isfile(path_2_xls_df_arr_M_t_vars_modif_algo):
+                df_arr_M_t_vars_modif_algo.to_excel(
+                    path_2_xls_df_arr_M_t_vars_modif_algo,
+                    sheet_name="t{}".format(t),
+                    index=True)
+            else:
+                book = load_workbook(filename=path_2_xls_df_arr_M_t_vars_modif_algo)
+                with pd.ExcelWriter(path_2_xls_df_arr_M_t_vars_modif_algo, 
+                                    engine='openpyxl') as writer:
+                    writer.book = book
+                    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)    
+                
+                    ## Your dataframe to append. 
+                    df_arr_M_t_vars_modif_algo.to_excel(writer, "t{}".format(t))  
+                
+                    writer.save() 
+            
             #_______     save arr_M_t_vars at t in dataframe : fin     _______
             
             #___________ update saving variables : debut ______________________
