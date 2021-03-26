@@ -513,7 +513,7 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
                               prod_i, cons_i, r_i, state_i)
         state_i = pl_i.find_out_state_i()
         state_is[num_pl_i] = state_i
-        Si_t_minus, Si_t_plus = None, None
+        Si_t_plus_1, Si_t_minus, Si_t_plus = None, None, None
         Xi, Yi = None, None
         if state_i == STATES[0]:                                               # state1 or Deficit
             Si_t_minus = 0
@@ -546,11 +546,8 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
             Si_t_plus_1 = fct_positive(Ci_t_plus_1, Pi_t_plus_1)
             gamma_i_min = Xi - 1
             gamma_i_max = Yi + 1
-            print("Pi={}, Ci={}, Si={}, Si_t_minus={}, Si_t_plus={}".format(Pi, 
-                    Ci, Si, Si_t_minus, Si_t_plus))
-            res_mid = (Si_t_plus_1 - Si_t_minus) / (Si_t_plus - Si_t_minus) \
-                        if np.abs(Si_t_plus - Si_t_minus) > 0 \
-                        else 0
+            # print("Pi={}, Ci={}, Si={}, Si_t_plus_1={}, Si_t_minus={}, Si_t_plus={}".format(Pi, 
+            #         Ci, Si, Si_t_plus_1, Si_t_minus, Si_t_plus))
             if Si_t_plus_1 < Si_t_minus:
                 # Xi - 1
                 gamma_i = gamma_i_min
@@ -564,8 +561,8 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
                 gamma_i_mid = int(np.floor(Z))
                 gamma_i = gamma_i_mid
               
-        print("num_pl_i={},gamma_i={}, gamma_i_min={}, state_i={}".format(num_pl_i, 
-                gamma_i, gamma_i_min, state_i))
+        # print("num_pl_i={},gamma_i={}, gamma_i_min={}, state_i={}, gamma_V{}".format(num_pl_i, 
+        #         gamma_i, gamma_i_min, state_i, gamma_version))
         if gamma_version == 1:
             variables = [("Si", Si), ("state_i", state_i), ("gamma_i", gamma_i), 
                      ("Si_minus", Si_t_minus), ("Si_plus", Si_t_plus)]
@@ -595,13 +592,19 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
             if manual_debug:
                 gamma_i = MANUEL_DBG_GAMMA_I
             else:
-                # Z = Xi + np.sqrt((Yi-Xi)*res_mid)
-                # Z = Xi +  np.sqrt((np.abs((Yi-Xi)*res_mid)))
-                Z = Xi + (Yi-Xi) * np.sqrt(res_mid)
-                gamma_i_mid = int(np.floor(Z))
-                gamma_i = gamma_i_mid
-                print("num_pl_i={}, Yi={}, Xi={}, res_mid={}, Z={}, gamma_i={}".format(
-                            num_pl_i, Yi, Xi, res_mid, Z, gamma_i))
+                if Si_t_plus_1 < Si_t_minus:
+                    # Xi - 1
+                    gamma_i = gamma_i_min
+                elif Si_t_plus_1 >= Si_t_plus:
+                    # Yi + 1
+                    gamma_i = gamma_i_max
+                elif Si_t_plus_1 >= Si_t_minus and Si_t_plus_1 < Si_t_plus:
+                    res_mid = ( Si_t_plus_1 - Si_t_minus) / \
+                            (Si_t_plus - Si_t_minus)
+                    Z = Xi + (Yi-Xi) * np.sqrt(res_mid)
+                    gamma_i_mid = int(np.floor(Z))
+                    gamma_i = gamma_i_mid
+                
             variables = [("Si", Si), ("state_i", state_i), ("gamma_i", gamma_i), 
                      ("Si_minus", Si_t_minus), ("Si_plus", Si_t_plus)]
             arr_pl_M_T_K_vars = update_variables(
@@ -685,53 +688,6 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
                             :, t, k, AUTOMATE_INDEX_ATTRS["Si"]]
         print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
             if dbg else None
-                
-        # ####__________________________________________________________________
-        # #TODO turn Sis 1D to 2D
-        # arrs_Sis_2D = []; arrs_state_is_2D = []; arrs_GSis_t_minus_2D = []
-        # arrs_GSis_t_plus_2D = []; arrs_gamma_is_2D = []; 
-        # arrs_manuel_dbg_gamma_i_2D = []; 
-        # manuel_dbg_gamma_is = [MANUEL_DBG_GAMMA_I for _ in range(0, m_players)]
-        # for k in range(0, k_steps):
-        #     arrs_Sis_2D.append(list(Sis))
-        #     arrs_state_is_2D.append(list(state_is))
-        #     arrs_GSis_t_minus_2D.append(list(GSis_t_minus))
-        #     arrs_GSis_t_plus_2D.append(list(GSis_t_plus))
-        #     arrs_gamma_is_2D.append(list(gamma_is))
-        #     arrs_manuel_dbg_gamma_i_2D.append(manuel_dbg_gamma_is)
-        # Sis_2D = np.array(arrs_Sis_2D, dtype=object).T
-        # state_is_2D = np.array(arrs_state_is_2D, dtype=object).T
-        # GSis_t_minus_2D = np.array(arrs_GSis_t_minus_2D, dtype=object).T
-        # GSis_t_plus_2D = np.array(arrs_GSis_t_plus_2D, dtype=object).T
-        # gamma_is_2D = np.array(arrs_gamma_is_2D, dtype=object).T
-        # manuel_dbg_gamma_i_2D = np.array(arrs_manuel_dbg_gamma_i_2D, 
-        #                                  dtype=object).T
-        
-        # arr_pl_M_T_K_vars[:, t, :, AUTOMATE_INDEX_ATTRS["Si"]] = Sis_2D
-        # arr_pl_M_T_K_vars[:, t, :,
-        #             AUTOMATE_INDEX_ATTRS["state_i"]] = state_is_2D          
-        # arr_pl_M_T_K_vars[:, t, :,
-        #             AUTOMATE_INDEX_ATTRS["Si_minus"]] = GSis_t_minus_2D
-        # arr_pl_M_T_K_vars[:, t, :,
-        #             AUTOMATE_INDEX_ATTRS["Si_plus"]] = GSis_t_plus_2D 
-        # if manual_debug:
-        #     arr_pl_M_T_K_vars[:, t, :,
-        #                 AUTOMATE_INDEX_ATTRS["gamma_i"]] = manuel_dbg_gamma_i_2D
-        # else:
-        #     arr_pl_M_T_K_vars[:, t, :,
-        #             AUTOMATE_INDEX_ATTRS["gamma_i"]] = gamma_is_2D
-    
-        # bool_gamma_is = (gamma_is >= min(pi_0_minus, pi_0_plus)-1) \
-        #                 & (gamma_is <= max(pi_hp_minus, pi_hp_plus)+1)
-        # print("GAMMA : t={}, val={}, bool_gamma_is={}"\
-        #       .format(t, gamma_is, bool_gamma_is)) if dbg else None
-        # GSis_t_minus_1 = arr_pl_M_T_K_vars[:, t, k, AUTOMATE_INDEX_ATTRS["Si"]] \
-        #                 if t == 0 \
-        #                 else arr_pl_M_T_K_vars[:, t-1, k, 
-        #                                  AUTOMATE_INDEX_ATTRS["Si"]]
-        # print("GSis_t_minus_1={}, Sis={}".format(GSis_t_minus_1, Sis)) \
-        #     if dbg else None
-        # ####__________________________________________________________________
         
     return arr_pl_M_T_K_vars
     
