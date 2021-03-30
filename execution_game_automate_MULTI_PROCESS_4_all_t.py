@@ -60,6 +60,43 @@ def define_parameters(dico_params):
                         dico_params["debug"]
                         ) )
     return params
+
+def define_parameters_multi_gammaV(dico_params):
+    """
+    create a list of parameters applied to the running of each algo 
+    in the multiprocessing execution 
+
+    """
+    
+    params = list()
+    
+    for algo_name, pi_hp_plus_minus, learning_rate, gamma_version \
+        in it.product(dico_params["algos"], 
+                      dico_params["tuple_pi_hp_plus_minus"],
+                      dico_params['learning_rates'], 
+                      dico_params["gamma_versions"]):
+        
+        date_hhmm_new = "_".join([dico_params["date_hhmm"], dico_params["scenario"], 
+                              "".join(["T", str(dico_params["t_periods"]),
+                                "".join(["gammaV", str(gamma_version)])])])
+            
+        params.append( (dico_params["arr_pl_M_T_vars_init"], 
+                        algo_name, 
+                        pi_hp_plus_minus[0], 
+                        pi_hp_plus_minus[1],
+                        learning_rate, 
+                        dico_params["k_steps"],
+                        dico_params["name_dir"], 
+                        date_hhmm_new,
+                        gamma_version, 
+                        dico_params["used_instances"], 
+                        dico_params["used_storage_det"], 
+                        dico_params["manual_debug"], 
+                        dico_params["criteria_bf"],
+                        dico_params["debug"]
+                        ) )
+    return params
+
 #_________              create dico of parameters: fin           ______________ 
 
 #_________                  One algo: debut             _______________________ 
