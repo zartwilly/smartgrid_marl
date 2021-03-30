@@ -23,7 +23,7 @@ if __name__ == "__main__":
     NB_REPEAT_K_MAX= 10 #3 #15 #30
     learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
     fct_aux.N_DECIMALS = 8
-    gamma_version = 1
+    gamma_version = 2 #1 #2
     
     name_dir = "tests"
     name_dir_oneperiod = os.path.join(
@@ -33,8 +33,8 @@ if __name__ == "__main__":
     
     pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
     pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
-    fct_aux.PI_0_PLUS_INIT = 10 #4
-    fct_aux.PI_0_MINUS_INIT = 20 #3
+    fct_aux.PI_0_PLUS_INIT = 20 #4
+    fct_aux.PI_0_MINUS_INIT = 10 #3
     
     algos = ["LRI1", "LRI2", "DETERMINIST"] \
             + fct_aux.ALGO_NAMES_NASH \

@@ -84,7 +84,7 @@ if __name__ == "__main__":
         dbg_234_players = False #True #False
         used_storage_det= True #False #True
         manual_debug = False #True #False #True
-        gamma_version = 2 #1 # 2
+        gamma_version = 2 #2 #1 # 2
         Visualisation = True #False, True
         
         scenario = "scenario3"
@@ -96,6 +96,7 @@ if __name__ == "__main__":
         setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
         setA_m_players, setB_m_players, setC_m_players = 15, 10, 10
         setA_m_players, setB_m_players, setC_m_players = 6, 3, 3               # 12 players
+        setA_m_players, setB_m_players, setC_m_players = 3, 3, 6               # 12 players
         # setA_m_players, setB_m_players, setC_m_players = 1, 1, 1
         if dbg_234_players:
             t_periods = 2
