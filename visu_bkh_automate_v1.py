@@ -1140,7 +1140,7 @@ def plot_utility_OLD(df_al_pr_ra, algo, rate, price,
     
     return px
     
-def plot_utility(df_res, algo, rate, price,
+def plot_players_utility(df_res, algo, rate, price,
                  path_2_best_learning_steps):
     """
     plot the bar plot of each player relying on the real utility RU
@@ -1258,7 +1258,7 @@ def plot_utilities_by_player_4_periods(df_arr_M_T_Ks,
             algo, df_PROD_CONS.shape, df_prod_cons.shape))
         # merge on column pl_i
         df_res = pd.merge(df_al_pr_ra, df_PROD_CONS, on="pl_i")
-        pxs_al_pr_ra = plot_utility(
+        pxs_al_pr_ra = plot_players_utility(
                             df_res, algo, rate, price,
                             path_2_best_learning_steps)
         pxs_al_pr_ra.legend.click_policy="hide"
@@ -1281,6 +1281,111 @@ def plot_utilities_by_player_4_periods(df_arr_M_T_Ks,
 # _____________________________________________________________________________
 #
 #                   utility of players for periods ---> fin
+# _____________________________________________________________________________
+
+# _____________________________________________________________________________
+#
+#                   utility for periods ---> debut
+# _____________________________________________________________________________
+    
+def plot_utility(df_res, rate, price,
+                 path_2_best_learning_steps):
+    """
+    plot the bar plot of each player relying on the real utility RU
+    """
+    
+    idx = df_res.algo.unique().tolist()
+    cols = ['B', 'C', 'BB', 'CC', 'RU']
+    df_res[cols] = df_res[cols].astype(float)
+    df_grouped = df_res.groupby(by='algo')[cols] \
+                    .agg([np.min, np.max, np.std, np.mean])
+    df_grouped.columns = ["_".join(x) for x in df_grouped.columns.ravel()]
+    df_grouped = df_grouped.reset_index()
+    aggs = ["amin", "amax", "std", "mean"]
+    tooltips = [("{}_{}".format(col, agg), "@{}_{}".format(col, agg)) 
+                for (col, agg) in it.product(cols, aggs)]
+    TOOLS[7] = HoverTool(tooltips = tooltips)
+    
+    new_cols = [col[1].split("@")[1] 
+                for col in tooltips if col[1].split("_")[1] == "mean"] 
+    
+    px = figure(x_range=idx, 
+                y_range=(0, df_grouped[new_cols].values.max() + 5), 
+                plot_height = int(350), 
+                plot_width = int(WIDTH*MULT_WIDTH), tools = TOOLS, 
+                toolbar_location="above")
+    title = "utility (rate:{}, price={})".format(rate, price)
+    px.title.text = title
+           
+    source = ColumnDataSource(data = df_grouped)
+    
+    width= 0.2 #0.5
+    px.vbar(x=dodge('algo', -0.3, range=px.x_range), top=new_cols[0], 
+                    width=width, source=source,
+                    color="#2E8B57", legend_label=new_cols[0])
+    px.vbar(x=dodge('algo', -0.3+1*width, range=px.x_range), top=new_cols[1], 
+                    width=width, source=source,
+                    color="#718dbf", legend_label=new_cols[1])
+    px.vbar(x=dodge('algo', -0.3+2*width, range=px.x_range), top=new_cols[2], 
+                   width=width, source=source,
+                   color="#e84d60", legend_label=new_cols[2])
+    px.vbar(x=dodge('algo', -0.3+3*width, range=px.x_range), top=new_cols[3], 
+                   width=width, source=source,
+                   color="#ddb7b1", legend_label=new_cols[3])
+    px.vbar(x=dodge('algo', -0.3+4*width, range=px.x_range), top=new_cols[4], 
+                   width=width, source=source,
+                   color="#FFD700", legend_label=new_cols[4])
+    
+    px.y_range.start = df_grouped.RU_mean.min() - 1
+    px.x_range.range_padding = width
+    px.xgrid.grid_line_color = None
+    px.legend.location = "top_right" #"top_left"
+    px.legend.orientation = "horizontal"
+    px.xaxis.axis_label = "algo"
+    px.yaxis.axis_label = "values"
+    
+    return px
+    
+def plot_utilities_4_periods(df_B_C_BB_CC_RU_M, 
+                             path_2_best_learning_steps):
+    """
+    plot the utility RU, B, C, BB and CC of players.
+    plot the utility of each algorithm 
+    """
+    rates = df_B_C_BB_CC_RU_M.rate.unique(); rates = rates[rates!=0].tolist()
+    prices = df_B_C_BB_CC_RU_M.prices.unique().tolist()
+    
+    dico_pxs = dict()
+    for price, rate in it.product( prices, rates):
+        
+        mask_pr_ra = ((df_B_C_BB_CC_RU_M.rate == str(rate)) 
+                                 | (df_B_C_BB_CC_RU_M.rate == 0)) \
+                            & (df_B_C_BB_CC_RU_M.prices == price) 
+        
+        df_res = df_B_C_BB_CC_RU_M[mask_pr_ra].copy()
+        
+        pxs_pr_ra = plot_utility(
+                            df_res, rate, price,
+                            path_2_best_learning_steps)
+        pxs_pr_ra.legend.click_policy="hide"
+        
+        if (price, rate) not in dico_pxs.keys():
+            dico_pxs[(price, rate)] \
+                = [pxs_pr_ra]
+        else:
+            dico_pxs[(price, rate)].append(pxs_pr_ra)
+        
+    rows_RU_C_B_CC_BB = list()
+    for key, pxs_pr_ra in dico_pxs.items():
+        col_px_sts = column(pxs_pr_ra)
+        rows_RU_C_B_CC_BB.append(col_px_sts)
+    rows_RU_C_B_CC_BB=column(children=rows_RU_C_B_CC_BB, 
+                                sizing_mode='stretch_both')
+    return rows_RU_C_B_CC_BB
+
+# _____________________________________________________________________________
+#
+#                   utility for periods ---> fin
 # _____________________________________________________________________________
 
 # _____________________________________________________________________________
@@ -2356,6 +2461,87 @@ def plot_bar_meanVi_over_time(df_algo_t_periods_moyVi):
 
 # _____________________________________________________________________________
 #
+#           distribution de moyenne de Vi a chaque periode  ---> debut
+# _____________________________________________________________________________
+def plot_distribution_algo(df_al_pr_ra, algo, price, rate):
+    """
+    """
+    
+    moy_Vi = df_al_pr_ra.moy_Vi.tolist()
+    TOOLS[7] = HoverTool(tooltips=[
+                            ("algo", "@algo"),
+                            ("t", "@t"),
+                            ("moy_Vi", "@moy_Vi"),
+                            ("std_Vi", "@std_Vi")
+                            ]
+                        )
+    
+    title = "{}: distribution of moy_Vi over time (price={},rate={}"\
+                .format(algo, price, rate)
+    ts = df_al_pr_ra.t.tolist()
+    px= figure(x_range=ts, 
+                plot_height=int(HEIGHT*MULT_HEIGHT), 
+                plot_width = int(WIDTH*MULT_WIDTH),
+                title=title,
+                toolbar_location="above", tools=TOOLS)
+
+    data = dict(x=ts, moy_Vi=moy_Vi, std_Vi=df_al_pr_ra.std_Vi.tolist(),
+                t=df_al_pr_ra.t.tolist(),
+                algo=df_al_pr_ra.algo.tolist())
+    source = ColumnDataSource(data=data)
+    px.vbar(x='x', top='moy_Vi', width=0.9, source=source, 
+            fill_color=factor_cmap('x', 
+                                    palette=Category20[20], 
+                                    factors=list(df_al_pr_ra.t.unique()), 
+                                    start=1, end=2))
+    
+    px.y_range.start = df_al_pr_ra.moy_Vi.min() - 1
+    px.x_range.range_padding = 0.1
+    px.xaxis.major_label_orientation = 1
+    px.xgrid.grid_line_color = None
+    px.xaxis.axis_label = 't_periods'
+    px.yaxis.axis_label = 'moy_Vi'
+    
+    return px
+    
+def plot_distribution_over_time(df_algo_t_periods_moyVi, 
+                                algos=["LRI1","LRI2"]):
+    """
+    distribution of moy_Vi over the time for algo LRIx
+    """
+    rates = df_algo_t_periods_moyVi.rate.unique(); 
+    rates = rates[rates!=0].tolist()
+    prices = df_algo_t_periods_moyVi.prices.unique().tolist();
+    
+    dico_pxs = dict()
+    for (algo, price, rate) in it.product(algos, prices, rates):
+        mask_al_pr_ra = (df_algo_t_periods_moyVi.rate == rate) \
+                            & (df_algo_t_periods_moyVi.prices == price) \
+                            & (df_algo_t_periods_moyVi.algo == algo)
+        df_al_pr_ra = df_algo_t_periods_moyVi[mask_al_pr_ra]
+        
+        px = plot_distribution_algo(df_al_pr_ra, algo, price, rate)
+        
+        if (price, rate, algo) not in dico_pxs:
+            dico_pxs[(price, rate, algo)] = [px]
+        else:
+            dico_pxs[(price, rate, algo)].append(px)
+            
+    col_pxs = []
+    for key, pxs in dico_pxs.items():
+        row_px_sts = row(pxs)
+        col_pxs.append(row_px_sts)
+    col_pxs=column(children=col_pxs, 
+                   sizing_mode='stretch_both')
+    return col_pxs   
+                            
+# _____________________________________________________________________________
+#
+#           distribution de moyenne de Vi a chaque periode  ---> fin
+# _____________________________________________________________________________
+
+# _____________________________________________________________________________
+#
 #           representation de moyenne de Vi par algo  ---> debut
 # _____________________________________________________________________________
 def plot_bar_meanVi_all_algos(df_ra_pr, price, rate):
@@ -2469,8 +2655,15 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                             df_B_C_BB_CC_RU_M, 
                             path_2_best_learning_steps)
     tab_RU_CONS_PROD_ts = Panel(child=rows_RU_CONS_PROD_ts, 
-                                title="utility of players")
-    print("Utility of RU: TERMINEE")
+                                title="Players utility of players")
+    print("Players Utility of RU: TERMINEE")
+    
+    rows_RU_C_B_CC_BB = plot_utilities_4_periods(
+                            df_B_C_BB_CC_RU_M, 
+                            path_2_best_learning_steps)
+    tab_RU_C_B_CC_BB = Panel(child=rows_RU_C_B_CC_BB, 
+                                title="utility by algo")
+    print("Players Utility of RU: TERMINEE")
     
     ##### to add to group_plot_on_panel with plot_bar_meanVi_over_time() #####
     df_algo_t_periods_moyVi = create_dataframe_mean_Vi_for(
@@ -2478,6 +2671,13 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                                         df_LRI_12, 
                                         k_steps_args, 
                                         algos_4_learning)
+    
+    cols_distri_over_time = plot_distribution_over_time(
+                                df_algo_t_periods_moyVi,
+                                algos=["LRI1","LRI2","DETERMINIST"])
+    tab_distri_over_time = Panel(child=cols_distri_over_time, 
+                                  title="distribution of moy_Vi over time")
+    print("distribution of moy_Vi over time: TERMINEE")
 
     cols_meanVi_over_time = plot_bar_meanVi_over_time(df_algo_t_periods_moyVi)
     tab_meanVi_over_time = Panel(child=cols_meanVi_over_time, 
@@ -2551,6 +2751,8 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     tabs = Tabs(tabs= [ 
                         tab_dists_ts,
                         tab_RU_CONS_PROD_ts,
+                        tab_RU_C_B_CC_BB,
+                        tab_distri_over_time,
                         tab_meanVi_over_time,
                         tab_meanVi_by_algo,
                         tab_pls_CONS_PROD_ts,
@@ -2558,6 +2760,7 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
                         tab_Pref_algo_t,
                         tab_S1S2,
                         tab_PISG_b0c0_ts, 
+                        
                         #tab_Pref_t, 
                         #tab_Pref_algo_t,
                         #tab_S1S2,
@@ -2571,6 +2774,8 @@ def group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K,
     output_file( os.path.join(name_dir, NAME_RESULT_SHOW_VARS)  )
     save(tabs)
     show(tabs)
+    
+    return df_algo_t_periods_moyVi
     
 # _____________________________________________________________________________
 #
@@ -2598,8 +2803,10 @@ if __name__ == "__main__":
     
     #name_simu = "simu_DDMM_HHMM_scenario1_T20"
     #name_simu = "simu_DDMM_HHMM_scenario2_T20"
-    name_simu = "simu_DDMM_HHMM_scenario2_T20"
-    k_steps_args = 250 #350 #2000#250
+    name_simu = "simu_DDMM_HHMM_scenario2_T20"; k_steps_args = 250 #350 #2000#250
+    name_simu = "simu_DDMM_HHMM_scenario3_T3gammaV1"; k_steps_args = 5
+    
+    name_simu = "simu_DDMM_HHMM_scenario2_T10gammaV4"; k_steps_args = 250
     
     
     algos_4_no_learning = ["DETERMINIST","RD-DETERMINIST"] \
@@ -2644,7 +2851,7 @@ if __name__ == "__main__":
     
     ## -- plot figures
     name_dir = os.path.join("tests", name_simu)
-    group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
+    df_algo_t_periods_moyVi = group_plot_on_panel(df_arr_M_T_Ks, df_ben_cst_M_T_K, 
                         df_B_C_BB_CC_RU_M,
                         df_b0_c0_pisg_pi0_T_K,
                         t, k_steps_args, name_dir, 
