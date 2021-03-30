@@ -130,7 +130,10 @@ def balanced_player_game_4_random_mode(arr_pl_M_T_vars_modif, t,
         
         # get mode_i
         mode_i = None
-        if t == 0 or random_determinist:
+        # if t == 0 or random_determinist:
+        #     pl_i.select_mode_i(p_i = 0.5)
+        #     mode_i = pl_i.get_mode_i()
+        if random_determinist:
             pl_i.select_mode_i(p_i = 0.5)
             mode_i = pl_i.get_mode_i()
         else:
@@ -554,7 +557,7 @@ def test_DETERMINIST_balanced_player_game_Pi_Ci_NEW_AUTOMATE():
     used_storage = True #False
     
     manual_debug = False
-    gamma_version = 1 #2 #1
+    gamma_version = 4 #2 #1 #3: gamma_i_min #4: square_root
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
     prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
