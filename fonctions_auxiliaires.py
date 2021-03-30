@@ -37,6 +37,7 @@ global PI_0_PLUS_INIT, PI_0_MINUS_INIT
 PI_0_PLUS_INIT = 4 #20
 PI_0_MINUS_INIT = 3 #10
 
+SET_AC = ["setA", "setC"]
 SET_ABC = ["setA", "setB", "setC"]
 SET_AB1B2C = ["setA", "setB1",  "setB2", "setC"]
 STATES = ["state1", "state2", "state3"]
@@ -76,6 +77,8 @@ RACINE_PLAYER = "player"
 #AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_set1_{}_repSet1_{}_set2_{}_repSet2_{}_periods_{}.npy"
 AUTOMATE_FILENAME_ARR_PLAYERS_ROOT = "arr_pl_M_T_players_setA_{}_setB_{}_setC_{}_periods_{}.npy"
 AUTOMATE_FILENAME_ARR_PLAYERS_ROOT_SETAB1B2C = "arr_pl_M_T_players_setA_{}_setB1_{}_setB2_{}_setC_{}_periods_{}.npy"
+AUTOMATE_FILENAME_ARR_PLAYERS_ROOT_SETAC = "arr_pl_M_T_players_setA_{}_setC_{}_periods_{}.npy"
+
 
 AUTOMATE_INDEX_ATTRS_DBG = {"Ci":0, "Pi":1, "Si_init":24, "Si":2, "Si_max":3, 
                "gamma_i":4, 
@@ -3600,6 +3603,504 @@ def checkout_values_Pi_Ci_arr_pl_one_period_SETAB1B2C(arr_pl_M_T_vars_init):
 ###############################################################################
 
 ###############################################################################
+#            generate Pi, Ci by automate SET_AC --> debut
+###############################################################################
+def generate_Pi_Ci_one_period_SETAC(setA_m_players, 
+                                    setC_m_players, 
+                                    t_periods, 
+                                    scenario=None):
+    """
+    generate the variables' values for each player using the automata 
+    defined in the section 5.1
+    
+    consider setA_m_players = number of players in setA
+             setC_m_players = number of players in setC
+    scenario : list of tuple. 
+                each tuple is the moving transition from one state to the other sates
+        DESCRIPTION
+        contains the transition probability of each state
+        exple  [(prob_A_A, prob_A_C), 
+                (prob_C_A, prob_C_C)]
+                with prob_A_A = 0.6; prob_A_C = 0.4;
+                     prob_C_A = 0.4; prob_C_C = 0.6 
+                and 
+                prob_A_A : float [0,1] - moving transition probability from A to A
+                prob_A_C : float [0,1] - moving transition probability from A to C
+    Returns
+    -------
+    None.
+
+    """
+                        
+    # ____ generation of sub set of players in set1 and set2 : debut _________
+    m_players = setA_m_players + setC_m_players
+    list_players = range(0, m_players)
+    
+    setA_id_players = list(np.random.choice(list(list_players), 
+                                            size=setA_m_players, 
+                                            replace=False))
+    remain_players = list(set(list_players) - set(setA_id_players))
+    setC_id_players = list(np.random.choice(list(remain_players), 
+                                            size=setC_m_players, 
+                                            replace=False))
+    remain_players = list(set(list_players) 
+                          - set(setA_id_players) 
+                          - set(setC_id_players))
+    print("Remain_players: {} -> OK ".format(remain_players)) \
+        if len(remain_players) == 0 \
+        else print("Remain_players: {} -> NOK ".format(remain_players))
+    print("generation players par setA, setC = OK") \
+        if len(set(setA_id_players)
+                   .intersection(
+                       set(setC_id_players)
+                    )
+            ) == 0 \
+        else print("generation players par setA, setC = NOK")
+        
+    # ____ generation of sub set of players in setA, setB and setC : fin   ____
+    
+    # ____          creation of arr_pl_M_T_vars : debut             _________
+    arr_pl_M_T_vars = np.zeros((m_players,
+                                t_periods,
+                                len(AUTOMATE_INDEX_ATTRS.keys())),
+                                 dtype=object)
+    # ____          creation of arr_pl_M_T_vars : fin               _________
+    
+    # ____ attribution of players' states in arr_pl_M_T_vars : debut _________
+    t = 0
+    arr_pl_M_T_vars[setA_id_players, t, 
+                    AUTOMATE_INDEX_ATTRS["set"]] = SET_AC[0]                   # setA
+    arr_pl_M_T_vars[setC_id_players, t, 
+                    AUTOMATE_INDEX_ATTRS["set"]] = SET_AC[1]                   # setC
+    
+    (prob_A_A, prob_A_C) = scenario[0]
+    (prob_C_A, prob_C_C) = scenario[1]
+    
+    Si_t_max = 20
+    for t in range(0, t_periods):
+        for num_pl_i in range(0, m_players):
+            Pi_t, Ci_t, Si_t, state_i = None, None, None, None
+            setX = arr_pl_M_T_vars[num_pl_i, t, 
+                                  AUTOMATE_INDEX_ATTRS["set"]]
+            if setX == SET_AC[0]:                                              # setA
+                Si_t = 3
+                Ci_t = 20
+                Pi_t = 10
+                state_i = STATES[0]
+                
+            elif setX == SET_AC[3]:                                            # setC
+                Si_t = 10
+                Ci_t = 24
+                Pi_t = 32
+                state_i = STATES[2]
+
+            # update arrays cells with variables
+            cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si",Si_t), ("Si_max",Si_t_max), 
+                    ("mode_i",""), ("state_i", state_i)]
+            for col, val in cols:
+                arr_pl_M_T_vars[num_pl_i, t, 
+                                AUTOMATE_INDEX_ATTRS[col]] = val
+    
+    # ____ attribution of players' states in arr_pl_M_T_vars : fin   _________
+    
+    return arr_pl_M_T_vars    
+
+def generate_Pi_Ci_by_automate_SETAC(setA_m_players,  
+                                         setC_m_players, 
+                                         t_periods, 
+                                         scenario=None):
+    """
+    generate the variables' values for each player using the automata 
+    defined in the section 5.1
+    
+    consider setA_m_players = number of players in setA
+             setC_m_players = number of players in setC
+    scenario : list of tuple. 
+                each tuple is the moving transition from one state to the other sates
+        DESCRIPTION
+        contains the transition probability of each state
+        exple  [(prob_A_A, prob_A_C), 
+                (prob_C_A, prob_C_C)]
+                with prob_A_A = 0.6; prob_A_C = 0.4;
+                     prob_C_A = 0.4; prob_C_C = 0.6 
+                and 
+                prob_A_A : float [0,1] - moving transition probability from A to A
+                prob_A_C : float [0,1] - moving transition probability from A to C
+    Returns
+    -------
+    None.
+
+    """
+                        
+    # ____ generation of sub set of players in set1 and set2 : debut _________
+    m_players = setA_m_players + setC_m_players
+    list_players = range(0, m_players)
+    
+    setA_id_players = list(np.random.choice(list(list_players), 
+                                            size=setA_m_players, 
+                                            replace=False))
+    remain_players = list(set(list_players) - set(setA_id_players))
+    setC_id_players = list(np.random.choice(list(remain_players), 
+                                            size=setC_m_players, 
+                                            replace=False))
+    remain_players = list(set(list_players) 
+                          - set(setA_id_players) 
+                          - set(setC_id_players))
+    print("Remain_players: {} -> OK ".format(remain_players)) \
+        if len(remain_players) == 0 \
+        else print("Remain_players: {} -> NOK ".format(remain_players))
+    print("generation players par setA, setC = OK") \
+        if len(set(setA_id_players)
+                   .intersection(
+                       set(setC_id_players)
+                       )
+                ) == 0 \
+        else print("generation players par setA, setC = NOK")
+        
+    # ____ generation of sub set of players in setA, setB and setC : fin   ____
+    
+    # ____          creation of arr_pl_M_T_vars : debut             _________
+    arr_pl_M_T_vars = np.zeros((m_players,
+                                t_periods,
+                                len(AUTOMATE_INDEX_ATTRS.keys())),
+                                 dtype=object)
+    # ____          creation of arr_pl_M_T_vars : fin               _________
+    
+    # ____ attribution of players' states in arr_pl_M_T_vars : debut _________
+    t = 0
+    arr_pl_M_T_vars[setA_id_players, t, 
+                    AUTOMATE_INDEX_ATTRS["set"]] = SET_AC[0]                   # setA
+    arr_pl_M_T_vars[setC_id_players, t, 
+                    AUTOMATE_INDEX_ATTRS["set"]] = SET_AC[1]                   # setC
+    
+    (prob_A_A, prob_A_C) = scenario[0]
+    (prob_C_A, prob_C_C) = scenario[1]
+    
+    for t in range(0, t_periods):
+        for num_pl_i in range(0, m_players):
+            Pi_t, Ci_t, Si_t, Si_t_max  = None, None, None, None
+            setX = arr_pl_M_T_vars[num_pl_i, t, 
+                                  AUTOMATE_INDEX_ATTRS["set"]]
+            set_i_t_plus_1 = None
+            if setX == SET_AC[0]:                                              # setA
+                Si_t = 3
+                Si_t_max = 10
+                Ci_t = 20
+                Pi_t = 10
+                # player' set at t+1 prob_A_A = 0.6; prob_A_C = 0.4 
+                set_i_t_plus_1 = np.random.choice(SET_AC, p=[prob_A_A,
+                                                             prob_A_C])
+            elif setX == SET_AC[1]:                                            # setC
+                Si_t = 10
+                Si_t_max = 20
+                Ci_t = 24
+                Pi_t = 32
+                # player' set at t+1 prob_C_A = 0.4; prob_C_C = 0.6; 
+                set_i_t_plus_1 = np.random.choice(SET_AC, p=[prob_C_A,
+                                                             prob_C_C])
+                
+            # update arrays cells with variables
+            cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si",Si_t), ("Si_max",Si_t_max), 
+                    ("mode_i",""), ("state_i",""), ("set",set_i_t_plus_1)]
+            for col, val in cols:
+                if col != "set":
+                    arr_pl_M_T_vars[num_pl_i, t, 
+                                    AUTOMATE_INDEX_ATTRS[col]] = val
+                else:
+                    if t < t_periods-1:
+                        arr_pl_M_T_vars[
+                            num_pl_i, t+1, 
+                            AUTOMATE_INDEX_ATTRS["set"]] = set_i_t_plus_1
+    
+    # ____ attribution of players' states in arr_pl_M_T_vars : fin   _________
+    
+    return arr_pl_M_T_vars
+    
+def get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC(setA_m_players,
+                                      setC_m_players, 
+                                      t_periods, 
+                                      scenario,
+                                      path_to_arr_pl_M_T, used_instances):
+    """
+    get instance if it exists else create instance.
+
+    set1 = {state1, state2} : set of players' states 
+    set2 = {state2, state3}
+    
+    Parameters
+    ----------
+    setA_m_players : integer
+        DESCRIPTION.
+        Number of players having their states belonging to setA.
+    setC_m_players : integer
+        DESCRIPTION.
+        Number of players having their states belonging to setC.
+    t_periods : integer
+        DESCRIPTION.
+        Number of periods in the game
+    scenario : list of tuple. 
+                each tuple is the moving transition from one state to the other sates
+        DESCRIPTION
+        contains the transition probability of each state
+        exple  [(prob_A_A, prob_A_C), 
+                (prob_C_A, prob_C_C)]
+        with 
+            prob_A_A = 0.6; prob_A_C = 0.4;
+            prob_C_A = 0.4; prob_C_C = 0.6 
+                and 
+                prob_A_A : float [0,1] - moving transition probability from A to A
+
+    path_to_arr_pl_M_T : string
+        DESCRIPTION.
+        path to save/get array arr_pl_M_T
+        example: tests/AUTOMATE_INSTANCES_GAMES/\
+                    arr_pl_M_T_players_set1_{m_players_set1}_set2_{m_players_set2}\
+                        _periods_{t_periods}.npy
+    used_instances : boolean
+        DESCRIPTION.
+
+    Returns
+    -------
+    arr_pl_M_T_vars : array of 
+        DESCRIPTION.
+
+    """
+    arr_pl_M_T_vars = None
+    "arr_pl_M_T_players_setA_{}_setC_{}_periods_{}.npy"
+    filename_arr_pl = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT_SETAC.format(
+                        setA_m_players, setC_m_players, 
+                        t_periods)
+    path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    path_to_arr_pl_M_T = os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl])
+    
+    if os.path.exists(path_to_arr_pl_M_T):
+        # read arr_pl_M_T
+        if used_instances:
+            arr_pl_M_T_vars \
+                = np.load(path_to_arr_pl_M_T,
+                          allow_pickle=True)
+            print("READ INSTANCE GENERATED")
+            
+        else:
+            # create arr_pl_M_T when used_instances = False
+            arr_pl_M_T_vars \
+                = generate_Pi_Ci_by_automate_SETAC(setA_m_players,  
+                               setC_m_players, 
+                               t_periods, 
+                               scenario)
+            
+            save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                                 path_to_save=path_to_save)
+            print("CREATE INSTANCE used_instance={}".format(used_instances))
+    else:
+        # create arr_pl_M_T
+        arr_pl_M_T_vars \
+                = generate_Pi_Ci_by_automate_SETAC(setA_m_players, 
+                               setC_m_players, 
+                               t_periods, 
+                               scenario)
+        save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                             path_to_save=path_to_save)
+        print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
+            
+    return arr_pl_M_T_vars    
+    
+def get_or_create_instance_Pi_Ci_one_period_SETAC(setA_m_players, 
+                                      setC_m_players, 
+                                      t_periods, 
+                                      scenario,
+                                      path_to_arr_pl_M_T, used_instances):
+    """
+    get instance if it exists else create instance.
+
+    set1 = {state1, state2} : set of players' states 
+    set2 = {state2, state3}
+    
+    Parameters
+    ----------
+    setA_m_players : integer
+        DESCRIPTION.
+        Number of players having their states belonging to setA.
+    setC_m_players : integer
+        DESCRIPTION.
+        Number of players having their states belonging to setC.
+    t_periods : integer
+        DESCRIPTION.
+        Number of periods in the game
+    scenario : list of tuple. 
+                each tuple is the moving transition from one state to the other sates
+        DESCRIPTION
+        contains the transition probability of each state
+        exple  [(prob_A_A, prob_A_C), 
+                (prob_C_A, prob_C_C)]
+        with 
+            prob_A_A = 0.6; prob_A_C = 0.4;
+            prob_C_A = 0.4; prob_C_C = 0.6 
+                and 
+                prob_A_A : float [0,1] - moving transition probability from A to A
+
+    path_to_arr_pl_M_T : string
+        DESCRIPTION.
+        path to save/get array arr_pl_M_T
+        example: tests/AUTOMATE_INSTANCES_GAMES/\
+                    arr_pl_M_T_players_set1_{m_players_set1}_set2_{m_players_set2}\
+                        _periods_{t_periods}.npy
+    used_instances : boolean
+        DESCRIPTION.
+
+    Returns
+    -------
+    arr_pl_M_T_vars : array of 
+        DESCRIPTION.
+
+    """
+    arr_pl_M_T_vars = None
+    "arr_pl_M_T_players_setA_{}_setC_{}_periods_{}.npy"
+    filename_arr_pl = AUTOMATE_FILENAME_ARR_PLAYERS_ROOT_SETAC.format(
+                        setA_m_players, setC_m_players, 
+                        t_periods)
+    path_to_save = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    path_to_arr_pl_M_T = os.path.join(*[path_to_arr_pl_M_T,filename_arr_pl])
+    
+    if os.path.exists(path_to_arr_pl_M_T):
+        # read arr_pl_M_T
+        if used_instances:
+            arr_pl_M_T_vars \
+                = np.load(path_to_arr_pl_M_T,
+                          allow_pickle=True)
+            print("READ INSTANCE GENERATED")
+            
+        else:
+            # create arr_pl_M_T when used_instances = False
+            arr_pl_M_T_vars \
+                = generate_Pi_Ci_one_period_SETAC(setA_m_players, 
+                               setC_m_players, 
+                               t_periods, 
+                               scenario)
+            
+            save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                                 path_to_save=path_to_save)
+            print("CREATE INSTANCE used_instance={}".format(used_instances))
+    else:
+        # create arr_pl_M_T
+        arr_pl_M_T_vars \
+                = generate_Pi_Ci_one_period_SETAC(setA_m_players,
+                               setC_m_players, 
+                               t_periods, 
+                               scenario)
+        save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
+                             path_to_save=path_to_save)
+        print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
+            
+    return arr_pl_M_T_vars    
+    
+def checkout_values_Pi_Ci_arr_pl_SETAC(arr_pl_M_T_vars_init):
+    m_players = arr_pl_M_T_vars_init.shape[0]
+    t_periods = arr_pl_M_T_vars_init.shape[1]
+    for t in range(0, t_periods):
+        cpt_t_Pi_nok, cpt_t_Pi_ok = 0, 0
+        cpt_t_Ci_ok, cpt_t_Ci_nok = 0, 0
+        cpt_t_Si_ok, cpt_t_Si_nok = 0, 0
+        cpt_t_Simax_ok, cpt_t_Simax_nok = 0, 0
+        nb_setA_t, nb_setC_t = 0, 0
+        for num_pl_i in range(0, m_players):
+            setX = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                        AUTOMATE_INDEX_ATTRS["set"]]
+            Pi = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["Pi"]]
+            Ci = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["Ci"]]
+            Si = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["Si"]]
+            Si_max = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["Si_max"]]
+            
+            if setX == SET_AC[0]:                                              # setA
+                Pis = [10]; Cis = [20]; Sis = [3]; Sis_max=[10]
+                nb_setA_t += 1
+                cpt_t_Pi_ok += 1 if Pi in Pis else 0
+                cpt_t_Pi_nok += 1 if Pi not in Pis else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_ok += 1 if Si in Sis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+                cpt_t_Simax_ok += 1 if Si_max in Sis_max else 0
+                cpt_t_Si_nok += 1 if Si_max not in Sis_max else 0
+            elif setX == SET_AC[1]:                                            # setC
+                Pis = [32]; Cis = [24]; Sis = [10]; Sis_max=[20]
+                nb_setC_t += 1
+                cpt_t_Pi_ok += 1 if Pi in Pis else 0
+                cpt_t_Pi_nok += 1 if Pi not in Pis else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_ok += 1 if Si in Sis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+                cpt_t_Simax_ok += 1 if Si_max in Sis_max else 0
+                cpt_t_Si_nok += 1 if Si_max not in Sis_max else 0
+                
+        # print("t={}, setA={}, setB={}, setC={}, Pi_OK={}, Pi_NOK={}, Ci_OK={}, Ci_NOK={}, Si_NOK={}, Pi={}, Ci={}, Si={}".format(
+        #         t, nb_setA_t, nb_setB_t, nb_setC_t, cpt_t_Pi_ok, cpt_t_Pi_nok,
+        #         cpt_t_Ci_ok, cpt_t_Ci_nok, cpt_t_Si_nok, Pi, Ci, Si))
+        print("t={}, setA={}, setC={}, Pi_OK={}, Ci_OK={}, Si_OK={}".format(
+                t, nb_setA_t, nb_setC_t, 
+                round(cpt_t_Pi_ok/m_players,2), round(cpt_t_Ci_ok/m_players,2), 
+                1-round(cpt_t_Si_nok/m_players,2) ))
+            
+    print("arr_pl_M_T_vars_init={}".format(arr_pl_M_T_vars_init.shape))
+    
+def checkout_values_Pi_Ci_arr_pl_one_period_SETAC(arr_pl_M_T_vars_init):
+    m_players = arr_pl_M_T_vars_init.shape[0]
+    t_periods = arr_pl_M_T_vars_init.shape[1]
+    for t in range(0, t_periods):
+        cpt_t_Pi_nok, cpt_t_Pi_ok = 0, 0
+        cpt_t_Ci_ok, cpt_t_Ci_nok = 0, 0
+        cpt_t_Si_ok, cpt_t_Si_nok = 0, 0
+        nb_setA_t, nb_setC_t = 0, 0
+        for num_pl_i in range(0, m_players):
+            setX = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                        AUTOMATE_INDEX_ATTRS["set"]]
+            Pi = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["Pi"]]
+            Ci = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["Ci"]]
+            Si = arr_pl_M_T_vars_init[num_pl_i, t, 
+                                      AUTOMATE_INDEX_ATTRS["Si"]]
+            
+            if setX == SET_AC[0]:                                              # setA
+                Pis = [10]; Cis = [20]; Sis = [3]
+                nb_setA_t += 1
+                cpt_t_Pi_ok += 1 if Pi in Pis else 0
+                cpt_t_Pi_nok += 1 if Pi not in Pis else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_ok += 1 if Si in Sis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+            elif setX == SET_AC[1]:                                            # setC
+                Pis = [32]; Cis = [24]; Sis = [10]
+                nb_setC_t += 1
+                cpt_t_Pi_ok += 1 if Pi in Pis else 0
+                cpt_t_Pi_nok += 1 if Pi not in Pis else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_ok += 1 if Si in Sis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+                
+                
+        # print("t={}, setA={}, setB={}, setC={}, Pi_OK={}, Pi_NOK={}, Ci_OK={}, Ci_NOK={}, Si_NOK={}, Pi={}, Ci={}, Si={}".format(
+        #         t, nb_setA_t, nb_setB_t, nb_setC_t, cpt_t_Pi_ok, cpt_t_Pi_nok,
+        #         cpt_t_Ci_ok, cpt_t_Ci_nok, cpt_t_Si_nok, Pi, Ci, Si))
+        print("t={}, setA={}, setC={}, Pi_OK={}, Ci_OK={}, Si_OK={}".format(
+                t, nb_setA_t, nb_setC_t, 
+                round(cpt_t_Pi_ok/m_players,2), round(cpt_t_Ci_ok/m_players,2), 
+                1-round(cpt_t_Si_nok/m_players,2) ))
+            
+    print("arr_pl_M_T_vars_init={}".format(arr_pl_M_T_vars_init.shape))
+
+###############################################################################
+#            generate Pi, Ci, Si by automate SET_AB1B2C --> fin
+###############################################################################
+
+###############################################################################
 #           balanced players 4 mode profile at t and k --> debut   
 ###############################################################################
 def balanced_player_game_4_mode_profil(arr_pl_M_T_vars_modif, 
@@ -4448,6 +4949,46 @@ def test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C():
     checkout_values_Pi_Ci_arr_pl_one_period_SETAB1B2C(arr_pl_M_T_vars)
                 
     print("arr_pl_M_T_vars={}".format(arr_pl_M_T_vars.shape))
+    
+def test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC():
+    
+    setA_m_players = 10; setC_m_players = 10
+    t_periods = 20 
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = False#True
+    prob_A_A = 0.6; prob_A_C = 0.4;
+    prob_C_A = 0.4; prob_C_C = 0.6;
+    scenario = [(prob_A_A, prob_A_C), 
+                (prob_C_A, prob_C_C)]
+    
+    arr_pl_M_T_vars = get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC(
+                        setA_m_players, setC_m_players, 
+                        t_periods, 
+                        scenario,
+                        path_to_arr_pl_M_T, used_instances)
+    checkout_values_Pi_Ci_arr_pl_SETAC(arr_pl_M_T_vars)
+    print("arr_pl_M_T_vars={}".format(arr_pl_M_T_vars.shape))
+
+def test_get_or_create_instance_Pi_Ci_one_period_SETAC():
+    
+    print(" \n \n arr_one period = ")
+    setA_m_players = 10; setC_m_players = 10;
+    t_periods = 1 
+    path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
+    used_instances = False#True
+    prob_A_A = 0.6; prob_A_C = 0.4;
+    prob_C_A = 0.4; prob_C_C = 0.6;
+    scenario = [(prob_A_A, prob_A_C), 
+                (prob_C_A, prob_C_C)]
+    
+    arr_pl_M_T_vars = get_or_create_instance_Pi_Ci_one_period_SETAB1B2C(
+                        setA_m_players, setC_m_players,  
+                        t_periods, 
+                        scenario,
+                        path_to_arr_pl_M_T, used_instances)
+    checkout_values_Pi_Ci_arr_pl_one_period_SETAC(arr_pl_M_T_vars)
+                
+    print("arr_pl_M_T_vars={}".format(arr_pl_M_T_vars.shape))
 
 #------------------------------------------------------------------------------
 #           execution
@@ -4472,7 +5013,10 @@ if __name__ == "__main__":
     
     # test_get_or_create_instance_Pi_Ci_one_period()
     
-    test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C()
-    test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C()
+    # test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C()
+    # test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C()
+    
+    test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC()
+    test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC()
     
     print("runtime = {}".format(time.time() - ti))
