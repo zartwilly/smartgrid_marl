@@ -1511,7 +1511,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
     utility_function_version= 2 #1,2
     
     manual_debug= False #True #False #True
-    gamma_version = 2 #1, 2
+    gamma_version = 4 #2 #1 #3: gamma_i_min #4: square_root
     fct_aux.N_DECIMALS = 2
     
     prob_A_A = 0.8; prob_A_B = 0.2; prob_A_C = 0.0;
@@ -1523,6 +1523,7 @@ def test_lri_balanced_player_game_all_pijk_upper_08_Pi_Ci_NEW_AUTOMATE():
     
     t_periods = 3#4
     setA_m_players, setB_m_players, setC_m_players = 10, 6, 5
+    setA_m_players, setB_m_players, setC_m_players = 6, 3, 3                   # 12 players
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
     used_instances = True #False #True
     
