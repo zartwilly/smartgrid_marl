@@ -34,8 +34,8 @@ Ci_LOW = 10
 Ci_HIGH = 60
 
 global PI_0_PLUS_INIT, PI_0_MINUS_INIT
-PI_0_PLUS_INIT = 4 #20
-PI_0_MINUS_INIT = 3 #10
+PI_0_PLUS_INIT = 20 #4 #20
+PI_0_MINUS_INIT = 10 #3 #10
 
 SET_AC = ["setA", "setC"]
 SET_ABC = ["setA", "setB", "setC"]
@@ -67,7 +67,7 @@ ALGO_NAMES_NASH = ["BEST-NASH", "BAD-NASH", "MIDDLE-NASH"]
 MANUEL_DBG_GAMMA_I = np.random.randint(low=2, high=21, size=1)[0]              #5
 MANUEL_DBG_PI_SG_PLUS_T_K = 8
 MANUEL_DBG_PI_SG_MINUS_T_K = 10
-MANUEL_DBG_PI_0_PLUS_T_K = 4#2 
+MANUEL_DBG_PI_0_PLUS_T_K = 4 
 MANUEL_DBG_PI_0_MINUS_T_K = 3
 
 RACINE_PLAYER = "player"
@@ -3688,7 +3688,7 @@ def generate_Pi_Ci_one_period_SETAC(setA_m_players,
                 Pi_t = 10
                 state_i = STATES[0]
                 
-            elif setX == SET_AC[3]:                                            # setC
+            elif setX == SET_AC[1]:                                            # setC
                 Si_t = 10
                 Ci_t = 24
                 Pi_t = 32
@@ -3706,9 +3706,9 @@ def generate_Pi_Ci_one_period_SETAC(setA_m_players,
     return arr_pl_M_T_vars    
 
 def generate_Pi_Ci_by_automate_SETAC(setA_m_players,  
-                                         setC_m_players, 
-                                         t_periods, 
-                                         scenario=None):
+                                    setC_m_players, 
+                                    t_periods, 
+                                    scenario=None):
     """
     generate the variables' values for each player using the automata 
     defined in the section 5.1
@@ -4981,7 +4981,7 @@ def test_get_or_create_instance_Pi_Ci_one_period_SETAC():
     scenario = [(prob_A_A, prob_A_C), 
                 (prob_C_A, prob_C_C)]
     
-    arr_pl_M_T_vars = get_or_create_instance_Pi_Ci_one_period_SETAB1B2C(
+    arr_pl_M_T_vars = get_or_create_instance_Pi_Ci_one_period_SETAC(
                         setA_m_players, setC_m_players,  
                         t_periods, 
                         scenario,
@@ -5013,10 +5013,10 @@ if __name__ == "__main__":
     
     # test_get_or_create_instance_Pi_Ci_one_period()
     
-    # test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C()
-    # test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C()
+    test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C()
+    test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C()
     
     test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC()
-    test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC()
+    test_get_or_create_instance_Pi_Ci_one_period_SETAC()
     
     print("runtime = {}".format(time.time() - ti))
