@@ -563,7 +563,16 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
               
         # print("num_pl_i={},gamma_i={}, gamma_i_min={}, state_i={}, gamma_V{}".format(num_pl_i, 
         #         gamma_i, gamma_i_min, state_i, gamma_version))
-        if gamma_version == 1:
+        if gamma_version == 0:
+            gamma_i = 0
+            variables = [("Si", Si), ("state_i", state_i), ("gamma_i", gamma_i), 
+                     ("Si_minus", Si_t_minus), ("Si_plus", Si_t_plus)]
+            arr_pl_M_T_K_vars = update_variables(
+                                    arr_pl_M_T_K_vars, variables, shape_arr_pl,
+                                    num_pl_i, t, k, gamma_i, Si,
+                                    pi_0_minus, pi_0_plus, 
+                                    pi_hp_minus, pi_hp_plus, dbg)
+        elif gamma_version == 1:
             variables = [("Si", Si), ("state_i", state_i), ("gamma_i", gamma_i), 
                      ("Si_minus", Si_t_minus), ("Si_plus", Si_t_plus)]
             arr_pl_M_T_K_vars = update_variables(
