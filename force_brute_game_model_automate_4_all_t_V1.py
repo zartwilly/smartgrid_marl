@@ -819,6 +819,64 @@ def turn_dico_stats_res_into_df_BF(dico_modes_profs_players_algo,
                                "{}_dico_BF.xlsx".format(algo_name)]), 
                 index=True)
     
+def turn_dico_stats_res_into_df_BF_FAUX(dico_modes_profs_players_algo, 
+                                  path_to_save, 
+                                  t_periods, 
+                                  manual_debug, 
+                                  algo_name):
+    """
+    transform the dico into a DataFrame
+
+    """
+    df = None
+    for t in range(0, t_periods):
+        dico_bf_t = dico_modes_profs_players_algo[t]
+        dico_bf_t_new = dict()
+        
+        Perf_t = dico_bf_t["Perf_t"]
+        b0_t = dico_bf_t["b0_t"] 
+        c0_t = dico_bf_t["c0_t"]
+        Out_sg = dico_bf_t["Out_sg"]
+        In_sg = dico_bf_t["In_sg"]
+        pi_sg_plus_t = dico_bf_t["pi_sg_plus_t"]
+        pi_sg_minus_t = dico_bf_t["pi_sg_minus_t"]
+        pi_0_plus_t = dico_bf_t["pi_0_plus_t"]
+        pi_0_minus_t = dico_bf_t["pi_0_minus_t"]
+        mode_profile = dico_bf_t["mode_profile"]
+        bens_t = dico_bf_t["bens_t"]
+        csts_t = dico_bf_t["csts_t"]
+        dico_keys_2_delete = {'Out_sg':Out_sg, 'In_sg':In_sg, 
+            'Perf_t':Perf_t, 'b0_t':b0_t, 'c0_t':c0_t,
+            'pi_sg_plus_t':pi_sg_plus_t, 'pi_sg_minus_t':pi_sg_minus_t, 
+            'pi_0_plus_t':pi_0_plus_t, 'pi_0_minus_t':pi_0_minus_t}
+        
+        keys_to_delete = ['mode_profile', 'bens_t', 'csts_t']
+        
+        for player, dico_vals in dico_bf_t.items():
+            dico_tmp = dict()
+            for key, val in dico_vals.items():
+                dico_tmp["{}_t{}".format(key,t)] = val
+            if player not in dico_keys_2_delete.keys() \
+                and player not in keys_to_delete:
+                player = player.split('_')[0]
+                cpt_combi = player.split('_')[3]
+                dico_tmp["cpt_comb_"+str(t)] = cpt_combi
+                for k, v in dico_keys_2_delete.items():
+                    dico_tmp["{}_t{}".format(k,t)] = v
+                    
+            dico_bf_t_new[player] = dico_tmp
+        
+        # df_t = pd.DataFrame.from_dict(dico_bf_t_new, orient='columns')
+        df_t = pd.DataFrame.from_dict(dico_bf_t_new)
+        if df is None:
+            df = df_t.copy()
+        else:
+            df = pd.concat([df, df_t], axis=0)
+                
+    # save df to xlsx
+    df.to_excel(os.path.join(*[path_to_save,
+                               "{}_dico_BF.xlsx".format(algo_name)]), 
+                index=True)
 
 # ____________          turn dico in2 df  -->   fin             ______________
 
