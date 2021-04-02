@@ -588,8 +588,10 @@ def compute_gamma_state_4_period_t(arr_pl_M_T_K_vars, t,
             gamma_i = None
             if manual_debug:
                 gamma_i = MANUEL_DBG_GAMMA_I
-            else:
+            elif Si_t_plus_1 < Si_t_minus:
                 gamma_i = gamma_i_min
+            else :
+                gamma_i = gamma_i_max
                 
             variables = [("Si", Si), ("state_i", state_i), ("gamma_i", gamma_i), 
                      ("Si_minus", Si_t_minus), ("Si_plus", Si_t_plus)]
