@@ -86,8 +86,8 @@ if __name__ == "__main__":
         
         pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
-        fct_aux.PI_0_PLUS_INIT = 20 #4
-        fct_aux.PI_0_MINUS_INIT = 10 #3
+        fct_aux.PI_0_PLUS_INIT = 4 # 20
+        fct_aux.PI_0_MINUS_INIT = 3 # 10
         
         algos = ["LRI1", "LRI2", "DETERMINIST"]
         
@@ -108,6 +108,8 @@ if __name__ == "__main__":
         
         pi_hp_plus = [10] #[10] #[0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [20] #[20] #[0.33] #[15, 5]
+        fct_aux.PI_0_PLUS_INIT = 4 # 20
+        fct_aux.PI_0_MINUS_INIT = 3 # 10
         
         algos = ["LRI1", "LRI2", "DETERMINIST"] 
         
@@ -128,6 +130,8 @@ if __name__ == "__main__":
        
         pi_hp_plus = [0.2*pow(10,-3)] #[5, 15]
         pi_hp_minus = [0.33] #[15, 5]
+        fct_aux.PI_0_PLUS_INIT = 4 # 20
+        fct_aux.PI_0_MINUS_INIT = 3 # 10
        
         dbg_234_players = False
         used_storage_det= True #False #True
@@ -135,28 +139,30 @@ if __name__ == "__main__":
         Visualisation = True #False, True
        
        
-    for scenario, gamma_version in it.product( list(dico_scenario.keys()), 
+    for scenario_name, gamma_version in it.product( list(dico_scenario.keys()), 
                                               gamma_versions):
-        date_hhmm_new = "_".join([date_hhmm, scenario, 
+        date_hhmm_new = "_".join([date_hhmm, scenario_name, 
                               "".join(["T", str(t_periods),
                                 "".join(["gammaV", str(gamma_version)])])])
         
         used_instances = True
         arr_pl_M_T_vars_init = None
-        if scenario in ["scenario1", "scenario2"]:
+        if scenario_name in ["scenario1", "scenario2"]:
             arr_pl_M_T_vars_init \
                 = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C(
                             setA_m_players_12, setB1_m_players_12, 
                             setB2_m_players_12, setC_m_players_12, 
                             t_periods, 
-                            dico_scenario[scenario],
+                            dico_scenario[scenario_name],
+                            scenario_name,
                             path_to_arr_pl_M_T, used_instances)
         else:
             arr_pl_M_T_vars_init \
                 = fct_aux.get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC(
                         setA_m_players_0, setC_m_players_0, 
                         t_periods, 
-                        dico_scenario[scenario],
+                        dico_scenario[scenario_name],
+                        scenario_name,
                         path_to_arr_pl_M_T, used_instances)
     
         autoExeGame4T.execute_algos_used_Generated_instances(
