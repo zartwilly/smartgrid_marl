@@ -3066,7 +3066,8 @@ def generate_Pi_Ci_by_automate_SETAB1B2C(setA_m_players,
                                            setB2_m_players, 
                                            setC_m_players, 
                                            t_periods, 
-                                           scenario=None):
+                                           scenario=None, 
+                                           scenario_name="scenario1"):
     """
     generate the variables' values for each player using the automata 
     defined in the section 5.1
@@ -3178,7 +3179,7 @@ def generate_Pi_Ci_by_automate_SETAB1B2C(setA_m_players,
                 Si_t = 3
                 Si_t_max = 10
                 Ci_t = 14
-                x = np.random.randint(low=2, high=8, size=1)[0]
+                x = np.random.randint(low=2, high=4, size=1)[0]
                 Pi_t = x
                 # player' set at t+1 prob_A_A = 0.6; prob_A_B1 = 0.4; prob_A_B2 = 0.0; prob_A_C = 0.0 
                 set_i_t_plus_1 = np.random.choice(SET_AB1B2C, p=[prob_A_A, 
@@ -3196,11 +3197,22 @@ def generate_Pi_Ci_by_automate_SETAB1B2C(setA_m_players,
                                                                  prob_B1_B1, 
                                                                  prob_B1_B2,                     
                                                                  prob_B1_C])
-            elif setX == SET_AB1B2C[2]:                                        # setB2
+            elif setX == SET_AB1B2C[2] and scenario_name == "scenario1":       # setB2
                 Si_t = 10
                 Si_t_max = 20
                 Ci_t = 22
                 x = np.random.randint(low=18, high=22, size=1)[0]
+                Pi_t = x
+                # player' set at t+1 prob_B2_A = 0.0; prob_B2_B1 = 0.0; prob_B2_B2 = 0.4; prob_B2_C = 0.6 
+                set_i_t_plus_1 = np.random.choice(SET_AB1B2C, p=[prob_B2_A, 
+                                                                 prob_B2_B1, 
+                                                                 prob_B2_B2,                     
+                                                                 prob_B2_C])
+            elif setX == SET_AB1B2C[2] and scenario_name == "scenario2":       # setB2
+                Si_t = 10
+                Si_t_max = 20
+                Ci_t = 26
+                x = np.random.randint(low=8, high=18, size=1)[0]
                 Pi_t = x
                 # player' set at t+1 prob_B2_A = 0.0; prob_B2_B1 = 0.0; prob_B2_B2 = 0.4; prob_B2_C = 0.6 
                 set_i_t_plus_1 = np.random.choice(SET_AB1B2C, p=[prob_B2_A, 
@@ -3248,7 +3260,8 @@ def get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C(setA_m_players,
                                       setB2_m_players, 
                                       setC_m_players, 
                                       t_periods, 
-                                      scenario,
+                                      scenario, 
+                                      scenario_name,
                                       path_to_arr_pl_M_T, used_instances):
     """
     get instance if it exists else create instance.
@@ -3329,7 +3342,8 @@ def get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C(setA_m_players,
                                setB2_m_players, 
                                setC_m_players, 
                                t_periods, 
-                               scenario)
+                               scenario, 
+                               scenario_name)
             
             save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
                                  path_to_save=path_to_save)
@@ -3342,7 +3356,8 @@ def get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C(setA_m_players,
                                setB2_m_players, 
                                setC_m_players, 
                                t_periods, 
-                               scenario)
+                               scenario, 
+                               scenario_name)
         save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
                              path_to_save=path_to_save)
         print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
@@ -3455,14 +3470,15 @@ def get_or_create_instance_Pi_Ci_one_period_SETAB1B2C(setA_m_players,
             
     return arr_pl_M_T_vars    
     
-def checkout_values_Pi_Ci_arr_pl_SETAB1B2C(arr_pl_M_T_vars_init):
+def checkout_values_Pi_Ci_arr_pl_SETAB1B2C(arr_pl_M_T_vars_init, 
+                                           scenario_name):
     m_players = arr_pl_M_T_vars_init.shape[0]
     t_periods = arr_pl_M_T_vars_init.shape[1]
     for t in range(0, t_periods):
         cpt_t_Pi_nok, cpt_t_Pi_ok = 0, 0
         cpt_t_Ci_ok, cpt_t_Ci_nok = 0, 0
         cpt_t_Si_ok, cpt_t_Si_nok = 0, 0
-        cpt_t_Simax_ok, cpt_t_Simax_nok = 0, 0
+        cpt_t_Simax_ok = 0
         nb_setA_t, nb_setB1_t, nb_setB2_t, nb_setC_t = 0, 0, 0, 0
         for num_pl_i in range(0, m_players):
             setX = arr_pl_M_T_vars_init[num_pl_i, t, 
@@ -3477,7 +3493,7 @@ def checkout_values_Pi_Ci_arr_pl_SETAB1B2C(arr_pl_M_T_vars_init):
                                       AUTOMATE_INDEX_ATTRS["Si_max"]]
             
             if setX == SET_AB1B2C[0]:                                          # setA
-                Pis = [2,8]; Cis = [14]; Sis = [3]; Sis_max=[10]
+                Pis = [2,4]; Cis = [14]; Sis = [3]; Sis_max=[10]
                 nb_setA_t += 1
                 cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
                 cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
@@ -3498,7 +3514,7 @@ def checkout_values_Pi_Ci_arr_pl_SETAB1B2C(arr_pl_M_T_vars_init):
                 cpt_t_Si_nok += 1 if Si not in Sis else 0
                 cpt_t_Simax_ok += 1 if Si_max in Sis_max else 0
                 cpt_t_Si_nok += 1 if Si_max not in Sis_max else 0
-            elif setX == SET_AB1B2C[2]:                                        # setB2
+            elif setX == SET_AB1B2C[2] and scenario_name == "scenario1":       # setB2
                 Pis = [18,22]; Cis = [22]; Sis = [10]; Sis_max=[20]
                 nb_setB2_t += 1
                 cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
@@ -3509,8 +3525,19 @@ def checkout_values_Pi_Ci_arr_pl_SETAB1B2C(arr_pl_M_T_vars_init):
                 cpt_t_Si_nok += 1 if Si not in Sis else 0
                 cpt_t_Simax_ok += 1 if Si_max in Sis_max else 0
                 cpt_t_Si_nok += 1 if Si_max not in Sis_max else 0
+            elif setX == SET_AB1B2C[2] and scenario_name == "scenario2":       # setB2
+                Pis = [8,18]; Cis = [26]; Sis = [10]; Sis_max=[20]
+                nb_setB2_t += 1
+                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
+                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
+                cpt_t_Si_ok += 1 if Si in Sis else 0
+                cpt_t_Si_nok += 1 if Si not in Sis else 0
+                cpt_t_Simax_ok += 1 if Si_max in Sis_max else 0
+                cpt_t_Si_nok += 1 if Si_max not in Sis_max else 0
             elif setX == SET_AB1B2C[3]:                                        # setC
-                Pis = [24,30]; Cis = [20]; Sis = [10]; Sis_max=[20]
+                Pis = [30,40]; Cis = [20]; Sis = [10]; Sis_max=[20]
                 nb_setC_t += 1
                 cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
                 cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
@@ -3710,7 +3737,8 @@ def generate_Pi_Ci_one_period_SETAC(setA_m_players,
 def generate_Pi_Ci_by_automate_SETAC(setA_m_players,  
                                     setC_m_players, 
                                     t_periods, 
-                                    scenario=None):
+                                    scenario=None,
+                                    scenario_name="scenario0"):
     """
     generate the variables' values for each player using the automata 
     defined in the section 5.1
@@ -3795,8 +3823,8 @@ def generate_Pi_Ci_by_automate_SETAC(setA_m_players,
             elif setX == SET_AC[1]:                                            # setC
                 Si_t = 10
                 Si_t_max = 20
-                Ci_t = 24
-                Pi_t = 32
+                Ci_t = 25
+                Pi_t = 35
                 # player' set at t+1 prob_C_A = 0.4; prob_C_C = 0.6; 
                 set_i_t_plus_1 = np.random.choice(SET_AC, p=[prob_C_A,
                                                              prob_C_C])
@@ -3821,7 +3849,8 @@ def generate_Pi_Ci_by_automate_SETAC(setA_m_players,
 def get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC(setA_m_players,
                                       setC_m_players, 
                                       t_periods, 
-                                      scenario,
+                                      scenario, 
+                                      scenario_name,
                                       path_to_arr_pl_M_T, used_instances):
     """
     get instance if it exists else create instance.
@@ -3889,7 +3918,8 @@ def get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC(setA_m_players,
                 = generate_Pi_Ci_by_automate_SETAC(setA_m_players,  
                                setC_m_players, 
                                t_periods, 
-                               scenario)
+                               scenario, 
+                               scenario_name)
             
             save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
                                  path_to_save=path_to_save)
@@ -3900,7 +3930,8 @@ def get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC(setA_m_players,
                 = generate_Pi_Ci_by_automate_SETAC(setA_m_players, 
                                setC_m_players, 
                                t_periods, 
-                               scenario)
+                               scenario, 
+                               scenario_name)
         save_instances_games(arr_pl_M_T_vars, filename_arr_pl, 
                              path_to_save=path_to_save)
         print("NO PREVIOUS INSTANCE GENERATED: CREATE NOW !!!")
@@ -3996,14 +4027,14 @@ def get_or_create_instance_Pi_Ci_one_period_SETAC(setA_m_players,
             
     return arr_pl_M_T_vars    
     
-def checkout_values_Pi_Ci_arr_pl_SETAC(arr_pl_M_T_vars_init):
+def checkout_values_Pi_Ci_arr_pl_SETAC(arr_pl_M_T_vars_init, scenario_name):
     m_players = arr_pl_M_T_vars_init.shape[0]
     t_periods = arr_pl_M_T_vars_init.shape[1]
     for t in range(0, t_periods):
         cpt_t_Pi_nok, cpt_t_Pi_ok = 0, 0
         cpt_t_Ci_ok, cpt_t_Ci_nok = 0, 0
         cpt_t_Si_ok, cpt_t_Si_nok = 0, 0
-        cpt_t_Simax_ok, cpt_t_Simax_nok = 0, 0
+        cpt_t_Simax_ok = 0
         nb_setA_t, nb_setC_t = 0, 0
         for num_pl_i in range(0, m_players):
             setX = arr_pl_M_T_vars_init[num_pl_i, t, 
@@ -4029,7 +4060,7 @@ def checkout_values_Pi_Ci_arr_pl_SETAC(arr_pl_M_T_vars_init):
                 cpt_t_Simax_ok += 1 if Si_max in Sis_max else 0
                 cpt_t_Si_nok += 1 if Si_max not in Sis_max else 0
             elif setX == SET_AC[1]:                                            # setC
-                Pis = [32]; Cis = [24]; Sis = [10]; Sis_max=[20]
+                Pis = [35]; Cis = [25]; Sis = [10]; Sis_max=[20]
                 nb_setC_t += 1
                 cpt_t_Pi_ok += 1 if Pi in Pis else 0
                 cpt_t_Pi_nok += 1 if Pi not in Pis else 0
@@ -4915,14 +4946,16 @@ def test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C():
                 (prob_B1_A, prob_B1_B1, prob_B1_B2, prob_B1_C),
                 (prob_B2_A, prob_B2_B1, prob_B2_B2, prob_B2_C),
                 (prob_C_A, prob_C_B1, prob_C_B2, prob_C_C)]
+    scenario_name = "scenario1"
     
     arr_pl_M_T_vars = get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C(
                         setA_m_players, setB1_m_players, 
                         setB2_m_players, setC_m_players, 
                         t_periods, 
-                        scenario,
+                        scenario, 
+                        scenario_name,
                         path_to_arr_pl_M_T, used_instances)
-    checkout_values_Pi_Ci_arr_pl_SETAB1B2C(arr_pl_M_T_vars)
+    checkout_values_Pi_Ci_arr_pl_SETAB1B2C(arr_pl_M_T_vars, scenario_name)
     print("arr_pl_M_T_vars={}".format(arr_pl_M_T_vars.shape))
 
 def test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C():
@@ -4941,6 +4974,7 @@ def test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C():
                 (prob_B1_A, prob_B1_B1, prob_B1_B2, prob_B1_C),
                 (prob_B2_A, prob_B2_B1, prob_B2_B2, prob_B2_C),
                 (prob_C_A, prob_C_B1, prob_C_B2, prob_C_C)]
+    
     
     arr_pl_M_T_vars = get_or_create_instance_Pi_Ci_one_period_SETAB1B2C(
                         setA_m_players, setB1_m_players, 
@@ -4962,13 +4996,15 @@ def test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC():
     prob_C_A = 0.4; prob_C_C = 0.6;
     scenario = [(prob_A_A, prob_A_C), 
                 (prob_C_A, prob_C_C)]
+    scenario_name = "scenario0"
     
     arr_pl_M_T_vars = get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC(
                         setA_m_players, setC_m_players, 
                         t_periods, 
                         scenario,
+                        scenario_name,
                         path_to_arr_pl_M_T, used_instances)
-    checkout_values_Pi_Ci_arr_pl_SETAC(arr_pl_M_T_vars)
+    checkout_values_Pi_Ci_arr_pl_SETAC(arr_pl_M_T_vars, scenario_name)
     print("arr_pl_M_T_vars={}".format(arr_pl_M_T_vars.shape))
 
 def test_get_or_create_instance_Pi_Ci_one_period_SETAC():
