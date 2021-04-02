@@ -34,8 +34,8 @@ Ci_LOW = 10
 Ci_HIGH = 60
 
 global PI_0_PLUS_INIT, PI_0_MINUS_INIT
-PI_0_PLUS_INIT = 20 #4 #20
-PI_0_MINUS_INIT = 10 #3 #10
+PI_0_PLUS_INIT = 4 #20
+PI_0_MINUS_INIT = 3 #10
 
 SET_AC = ["setA", "setC"]
 SET_ABC = ["setA", "setB", "setC"]
