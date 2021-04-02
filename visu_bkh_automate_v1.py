@@ -2806,8 +2806,8 @@ if __name__ == "__main__":
     name_simu = "simu_DDMM_HHMM_scenario2_T20"; k_steps_args = 250 #350 #2000#250
     name_simu = "simu_DDMM_HHMM_scenario3_T3gammaV1"; k_steps_args = 5
     
-    name_simu = "simu_DDMM_HHMM_scenario2_T10gammaV4"; k_steps_args = 250
-    
+    name_simu = "simu_DDMM_HHMM_scenario2_T10gammaV4"; k_steps_args = 250; 
+    name_simu = "simu_DDMM_HHMM_scenario3_T50gammaV4"; k_steps_args = 250;
     
     algos_4_no_learning = ["DETERMINIST","RD-DETERMINIST"] \
                             + fct_aux.ALGO_NAMES_BF \
