@@ -2407,26 +2407,29 @@ def generate_Pi_Ci_one_period(setA_m_players=15,
     Si_t_max = 20
     for t in range(0, t_periods):
         for num_pl_i in range(0, setA_m_players+setB_m_players+setC_m_players):
+            prob = np.random.random(size=1)[0]
             Pi_t, Ci_t, Si_t = None, None, None
             setX = arr_pl_M_T_vars[num_pl_i, t, 
                                   AUTOMATE_INDEX_ATTRS["set"]]
-            if setX == SET_ABC[0]:                                             # setA
-                Si_t = 3
-                Ci_t = 13
-                x = np.random.randint(low=2, high=6, size=1)[0]
-                Pi_t = x + 2
+            if setX == SET_ABC[0]:                                             # setA = State1 or Deficit
+                Si_t = 0
+                Ci_t = 15
+                Pi_t = np.random.randint(low=5, high=10, size=1)[0]
                 
-            elif setX == SET_ABC[1]:                                           # setB
-                Si_t = 4
-                y = np.random.randint(low=20, high=30, size=1)[0]
-                Ci_t = y + 3
-                Pi_t = Ci_t -2
+            elif setX == SET_ABC[1] and prob<0.5:                              # setB1 = State2 or Self
+                Si_t = 6
+                Ci_t = 10
+                Pi_t = np.random.randint(low=5, high=8, size=1)[0]
                 
-            elif setX == SET_ABC[2]:                                           # setC
-                Si_t = 10
-                Ci_t = 30
-                x = np.random.randint(low=25, high=35, size=1)[0]
-                Pi_t = x
+            elif setX == SET_ABC[1] and prob>=0.5:                              # setB1 State2 or Self
+                Si_t = 8
+                Ci_t = 31
+                Pi_t = np.random.randint(low=21, high=30, size=1)[0]
+                
+            elif setX == SET_ABC[2]:                                           # setC State3 or Surplus
+                Si_t = 8
+                Ci_t = 20
+                Pi_t = np.random.randint(low=21, high=30, size=1)[0]
 
             # update arrays cells with variables
             cols = [("Pi",Pi_t), ("Ci",Ci_t), ("Si",Si_t), ("Si_max",Si_t_max), 
@@ -2434,13 +2437,6 @@ def generate_Pi_Ci_one_period(setA_m_players=15,
             for col, val in cols:
                 arr_pl_M_T_vars[num_pl_i, t, 
                                 AUTOMATE_INDEX_ATTRS[col]] = val
-                
-            # print("t={}, pl_i={}, Pi,Ci,Si={}".format(t, num_pl_i, 
-            #         arr_pl_M_T_vars[num_pl_i, t,[AUTOMATE_INDEX_ATTRS["Pi"], 
-            #                                      AUTOMATE_INDEX_ATTRS["Ci"],
-            #                                      AUTOMATE_INDEX_ATTRS["Si"], 
-            #                                      AUTOMATE_INDEX_ATTRS["set"]]]
-            #                                           ))
     
     # ____ attribution of players' states in arr_pl_M_T_vars : fin   _________
     
@@ -2855,7 +2851,7 @@ def checkout_values_Pi_Ci_arr_pl_one_period(arr_pl_M_T_vars_init):
                                       AUTOMATE_INDEX_ATTRS["Si"]]
             
             if setX == SET_ABC[0]:                                             # setA
-                Pis = [2+2,6+2]; Cis = [13]; Sis = [3]
+                Pis = [5,10]; Cis = [15]; Sis = [0]
                 nb_setA_t += 1
                 cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
                 cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
@@ -2865,22 +2861,25 @@ def checkout_values_Pi_Ci_arr_pl_one_period(arr_pl_M_T_vars_init):
                 cpt_t_Si_nok += 1 if Si not in Sis else 0
                 
             elif setX == SET_ABC[1]:                                           # setB
-                Pis = [20+3-2,30+3-2]; Cis = [20+3, 30+3]; Sis = [4]
+                Pis_1 = [5,8]; Cis_1 = [10]; Sis_1 = [6]
+                Pis_2 = [21,30]; Cis_2 = [31]; Sis_2 = [8]
                 nb_setB_t += 1
-                cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
-                cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
-                cpt_t_Ci_ok += 1 if Ci >= Cis[0] and Ci <= Cis[1] else 0
-                cpt_t_Ci_nok += 1 if Ci < Cis[0] and Ci > Cis[1] else 0
-                cpt_t_Si_ok += 1 if Si in Sis else 0
-                cpt_t_Si_nok += 1 if Si not in Sis else 0
+                cpt_t_Pi_ok += 1 if (Pi >= Pis_1[0] and Pi <= Pis_1[1]) \
+                                    or (Pi >= Pis_2[0] and Pi <= Pis_2[1]) else 0
+                cpt_t_Pi_nok += 1 if (Pi < Pis_1[0] or Pi > Pis_1[1]) \
+                                     and (Pi < Pis_2[0] or Pi > Pis_2[1]) else 0
+                cpt_t_Ci_ok += 1 if (Ci in Cis_1 or Ci in Cis_2)  else 0
+                cpt_t_Ci_nok += 1 if (Ci not in Cis_1 and Ci not in Cis_2) else 0
+                cpt_t_Si_ok += 1 if Si in Sis_1 or Si in Sis_2 else 0
+                cpt_t_Si_nok += 1 if Si not in Sis_1 and Si not in Sis_2 else 0
                 
             elif setX == SET_ABC[2]:                                           # setC
-                Pis = [25,35]; Cis = [30]; Sis = [10]
+                Pis = [21,30]; Cis = [20]; Sis = [8]
                 nb_setC_t += 1
                 cpt_t_Pi_ok += 1 if Pi >= Pis[0] and Pi <= Pis[1] else 0
                 cpt_t_Pi_nok += 1 if Pi < Pis[0] or Pi > Pis[1] else 0
-                cpt_t_Ci_ok += 1 if Ci >= Cis[0] and Ci <= Cis[0] else 0
-                cpt_t_Ci_nok += 1 if Ci < Cis[0] and Ci > Cis[0] else 0
+                cpt_t_Ci_ok += 1 if Ci in Cis else 0
+                cpt_t_Ci_nok += 1 if Ci not in Cis else 0
                 cpt_t_Si_ok += 1 if Si in Sis else 0
                 cpt_t_Si_nok += 1 if Si not in Sis else 0
                 
@@ -4915,7 +4914,7 @@ def test_get_or_create_instance_Pi_Ci_one_period():
     setA_m_players = 15; setB_m_players = 10; setC_m_players = 10 
     t_periods = 1 
     path_to_arr_pl_M_T = os.path.join(*["tests", "AUTOMATE_INSTANCES_GAMES"])
-    used_instances = True #False#True
+    used_instances = False#True #False#True
     prob_A_A = 0.7; prob_A_B = 0.3; prob_A_C = 0.0;
     prob_B_A = 0.3; prob_B_B = 0.4; prob_B_C = 0.3;
     prob_C_A = 0.1; prob_C_B = 0.2; prob_C_C = 0.7;
@@ -5049,12 +5048,12 @@ if __name__ == "__main__":
     
     # test_get_or_create_instance_Pi_Ci_etat_AUTOMATE()
     
-    # test_get_or_create_instance_Pi_Ci_one_period()
+    test_get_or_create_instance_Pi_Ci_one_period()
     
-    test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C()
-    test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C()
+    # test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAB1B2C()
+    # test_get_or_create_instance_Pi_Ci_one_period_SETAB1B2C()
     
-    test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC()
-    test_get_or_create_instance_Pi_Ci_one_period_SETAC()
+    # test_get_or_create_instance_Pi_Ci_etat_AUTOMATE_SETAC()
+    # test_get_or_create_instance_Pi_Ci_one_period_SETAC()
     
     print("runtime = {}".format(time.time() - ti))
