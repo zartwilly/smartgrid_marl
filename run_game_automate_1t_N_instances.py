@@ -19,7 +19,7 @@ if __name__ == "__main__":
     
     date_hhmm="DDMM_HHMM"
     t_periods = 1 #50 #30 #35 #55 #117 #15 #3
-    k_steps = 5 #250 #5000 #2000 #50 #250
+    k_steps = 250 #5000 #2000 #50 #250
     NB_REPEAT_K_MAX= 10 #3 #15 #30
     learning_rates = [0.1]#[0.1] #[0.001]#[0.00001] #[0.01] #[0.0001]
     fct_aux.N_DECIMALS = 8
